@@ -20,7 +20,9 @@ typedef enum { PreInput, PreOutput, PostInput,PostOutput } VariableType;
 class GR1Context : public VariableInfoContainer {
 protected:
 
-    // Manager and Variables - Computed in the Constructor
+    //@{
+    /** @name BF-related stuff that is computed in the constructor, i.e., with loading the input specification
+     */
     BFManager mgr;
     std::vector<BF> variables;
     std::vector<std::string> variableNames;
@@ -40,15 +42,19 @@ protected:
     BFVarCube varCubePre;
     std::vector<BF> preVars;
     std::vector<BF> postVars;
+    //@}
 
-    // The following variables are set by the realizability checking part. The first one
-    // contains information to be used during strategy extraction - it prodives a sequence
-    // of BFs/BDDs that represent transitions in the game that shall be preferred over those
-    // that come later in the vector. The 'uint' data type in the vector represents the goal
-    // that a BF refers to. The winningPositions BF represents
+    //@{
+    /** @name Information that is computed during realizability checking
+     *  The following variables are set by the realizability checking part. The first one
+     *  contains information to be used during strategy extraction - it prodives a sequence
+     *  of BFs/BDDs that represent transitions in the game that shall be preferred over those
+     *  that come later in the vector. The 'uint' data type in the vector represents the goal
+     *  that a BF refers to. The winningPositions BF represents which positions are winning for the system player.
+     */
     std::vector<std::pair<uint,BF> > strategyDumpingData;
     BF winningPositions;
-
+    //@}
 
 private:
     // The following variables is only used during parsing the input instance.
