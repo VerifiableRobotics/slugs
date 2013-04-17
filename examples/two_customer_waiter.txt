@@ -1,0 +1,82 @@
+[INPUT]
+order_rice
+order_sake
+rice_ready
+sake_ready
+c1_order
+c2_order
+
+[OUTPUT]
+bit0
+bit1
+bit2
+bit3
+pickup
+deliver
+FoodObtained
+Orderc1c2
+SakeOrdered
+RiceOrdered
+
+[ENV_INIT]
+1
+
+[ENV_TRANS]
+1
+
+[ENV_LIVENESS]
+| ! & RiceOrdered ! FoodObtained rice_ready
+| ! & SakeOrdered ! FoodObtained sake_ready
+
+[SYS_INIT]
+| | | | | | | | | | | | | | & & & ! bit0 ! bit1 ! bit2 ! bit3 & & & ! bit0 ! bit1 ! bit2 bit3 & & & ! bit0 ! bit1 bit2 ! bit3 & & & ! bit0 ! bit1 bit2 bit3 & & & ! bit0 bit1 ! bit2 ! bit3 & & & ! bit0 bit1 ! bit2 bit3 & & & ! bit0 bit1 bit2 ! bit3 & & & ! bit0 bit1 bit2 bit3 & & & bit0 ! bit1 ! bit2 ! bit3 & & & bit0 ! bit1 ! bit2 bit3 & & & bit0 ! bit1 bit2 ! bit3 & & & bit0 ! bit1 bit2 bit3 & & & bit0 bit1 ! bit2 ! bit3 & & & bit0 bit1 ! bit2 bit3 & & & bit0 bit1 bit2 ! bit3
+! bit0
+! bit1
+! bit2
+! bit3
+
+[SYS_TRANS]
+| ! & & & ! bit0 ! bit1 ! bit2 ! bit3 | | & & & ! bit0' ! bit1' ! bit2' ! bit3' & & & ! bit0' ! bit1' bit2' ! bit3' & & & bit0' bit1' ! bit2' bit3'
+| ! & & & ! bit0 ! bit1 ! bit2 bit3 | | & & & ! bit0' ! bit1' ! bit2' bit3' & & & ! bit0' ! bit1' bit2' ! bit3' & & & bit0' ! bit1' ! bit2' ! bit3'
+| ! & & & ! bit0 ! bit1 bit2 ! bit3 | | | & & & ! bit0' ! bit1' bit2' ! bit3' & & & ! bit0' ! bit1' ! bit2' ! bit3' & & & ! bit0' ! bit1' ! bit2' bit3' & & & bit0' bit1' ! bit2' bit3'
+| ! & & & ! bit0 ! bit1 bit2 bit3 | | | | | | & & & ! bit0' ! bit1' bit2' bit3' & & & ! bit0' bit1' ! bit2' bit3' & & & ! bit0' bit1' bit2' ! bit3' & & & bit0' ! bit1' bit2' ! bit3' & & & bit0' ! bit1' bit2' bit3' & & & bit0' bit1' ! bit2' ! bit3' & & & bit0' bit1' ! bit2' bit3'
+| ! & & & ! bit0 bit1 ! bit2 ! bit3 | | | | | | & & & ! bit0' bit1' ! bit2' ! bit3' & & & ! bit0' bit1' bit2' ! bit3' & & & ! bit0' bit1' bit2' bit3' & & & bit0' ! bit1' ! bit2' ! bit3' & & & bit0' ! bit1' ! bit2' bit3' & & & bit0' ! bit1' bit2' ! bit3' & & & bit0' bit1' bit2' ! bit3'
+| ! & & & ! bit0 bit1 ! bit2 bit3 | | & & & ! bit0' bit1' ! bit2' bit3' & & & ! bit0' ! bit1' bit2' bit3' & & & bit0' bit1' ! bit2' bit3'
+| ! & & & ! bit0 bit1 bit2 ! bit3 | | | & & & ! bit0' bit1' bit2' ! bit3' & & & ! bit0' ! bit1' bit2' bit3' & & & ! bit0' bit1' ! bit2' ! bit3' & & & bit0' ! bit1' bit2' ! bit3'
+| ! & & & ! bit0 bit1 bit2 bit3 | | | & & & ! bit0' bit1' bit2' bit3' & & & ! bit0' bit1' ! bit2' ! bit3' & & & bit0' ! bit1' ! bit2' ! bit3' & & & bit0' bit1' bit2' ! bit3'
+| ! & & & bit0 ! bit1 ! bit2 ! bit3 | | | | | & & & bit0' ! bit1' ! bit2' ! bit3' & & & ! bit0' ! bit1' ! bit2' bit3' & & & ! bit0' bit1' ! bit2' ! bit3' & & & ! bit0' bit1' bit2' bit3' & & & bit0' ! bit1' ! bit2' bit3' & & & bit0' bit1' bit2' ! bit3'
+| ! & & & bit0 ! bit1 ! bit2 bit3 | | | & & & bit0' ! bit1' ! bit2' bit3' & & & ! bit0' bit1' ! bit2' ! bit3' & & & bit0' ! bit1' ! bit2' ! bit3' & & & bit0' ! bit1' bit2' ! bit3'
+| ! & & & bit0 ! bit1 bit2 ! bit3 | | | | | & & & bit0' ! bit1' bit2' ! bit3' & & & ! bit0' ! bit1' bit2' bit3' & & & ! bit0' bit1' ! bit2' ! bit3' & & & ! bit0' bit1' bit2' ! bit3' & & & bit0' ! bit1' ! bit2' bit3' & & & bit0' ! bit1' bit2' bit3'
+| ! & & & bit0 ! bit1 bit2 bit3 | | | & & & bit0' ! bit1' bit2' bit3' & & & ! bit0' ! bit1' bit2' bit3' & & & bit0' ! bit1' bit2' ! bit3' & & & bit0' bit1' ! bit2' ! bit3'
+| ! & & & bit0 bit1 ! bit2 ! bit3 | | | & & & bit0' bit1' ! bit2' ! bit3' & & & ! bit0' ! bit1' bit2' bit3' & & & bit0' ! bit1' bit2' bit3' & & & bit0' bit1' ! bit2' bit3'
+| ! & & & bit0 bit1 ! bit2 bit3 | | | | | | & & & bit0' bit1' ! bit2' bit3' & & & ! bit0' ! bit1' ! bit2' ! bit3' & & & ! bit0' ! bit1' bit2' ! bit3' & & & ! bit0' ! bit1' bit2' bit3' & & & ! bit0' bit1' ! bit2' bit3' & & & bit0' bit1' ! bit2' ! bit3' & & & bit0' bit1' bit2' ! bit3'
+| ! & & & bit0 bit1 bit2 ! bit3 | | | | & & & bit0' bit1' bit2' ! bit3' & & & ! bit0' bit1' ! bit2' ! bit3' & & & ! bit0' bit1' bit2' bit3' & & & bit0' ! bit1' ! bit2' ! bit3' & & & bit0' bit1' ! bit2' bit3'
+| ! & order_rice' ! deliver RiceOrdered'
+| ! deliver ! RiceOrdered'
+| ! & RiceOrdered ! deliver RiceOrdered'
+| ! & ! RiceOrdered ! order_rice' ! RiceOrdered'
+| ! & order_sake' ! deliver SakeOrdered'
+| ! deliver ! SakeOrdered'
+| ! & SakeOrdered ! deliver SakeOrdered'
+| ! & ! SakeOrdered ! order_sake' ! SakeOrdered'
+| ! & c1_order' ! c2_order' Orderc1c2'
+| ! c2_order' ! Orderc1c2'
+| ! & Orderc1c2 ! c2_order' Orderc1c2'
+| ! & ! Orderc1c2 ! c1_order' ! Orderc1c2'
+| ! & ! c1_order c1_order' & & & | & ! bit0' ! bit0 & bit0' bit0 | & ! bit1' ! bit1 & bit1' bit1 | & ! bit2' ! bit2 & bit2' bit2 | & ! bit3' ! bit3 & bit3' bit3
+| & ! | & & & & & ! bit0' ! bit1' ! bit2' bit3' rice_ready' RiceOrdered' & & & & & ! bit0' ! bit1' ! bit2' ! bit3' sake_ready' SakeOrdered' ! pickup' & | & & & & & ! bit0' ! bit1' ! bit2' bit3' rice_ready' RiceOrdered' & & & & & ! bit0' ! bit1' ! bit2' ! bit3' sake_ready' SakeOrdered' pickup'
+| ! & pickup ! deliver FoodObtained'
+| ! deliver ! FoodObtained'
+| ! & FoodObtained ! deliver FoodObtained'
+| ! & ! FoodObtained ! pickup ! FoodObtained'
+| ! & & & & & & | SakeOrdered' RiceOrdered' FoodObtained' Orderc1c2' ! bit0' bit1' ! bit2' ! bit3' deliver'
+| ! & & & & & & | SakeOrdered' RiceOrdered' FoodObtained' ! Orderc1c2' ! bit0' ! bit1' bit2' bit3' deliver'
+| ! ! | & & & & & ! bit0' bit1' ! bit2' ! bit3' FoodObtained' Orderc1c2' & & & & & ! bit0' ! bit1' bit2' bit3' FoodObtained' ! Orderc1c2' ! deliver'
+| ! ! | SakeOrdered RiceOrdered ! deliver'
+
+[SYS_LIVENESS]
+| ! & & RiceOrdered' rice_ready' ! FoodObtained' & & & ! bit0' ! bit1' ! bit2' bit3'
+| ! & & SakeOrdered' sake_ready' ! FoodObtained' & & & ! bit0' ! bit1' ! bit2' ! bit3'
+| ! & & | SakeOrdered' RiceOrdered' FoodObtained' Orderc1c2' & & & & ! bit0' bit1' ! bit2' ! bit3' deliver'
+| ! & & | SakeOrdered' RiceOrdered' FoodObtained' ! Orderc1c2' & & & & ! bit0' ! bit1' bit2' bit3' deliver'
+
