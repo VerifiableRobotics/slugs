@@ -57,13 +57,17 @@ protected:
     //@}
 
 private:
-    // The following variables is only used during parsing the input instance.
-    // It allows us to get better error messages for parsing.
+    //! This variable is only used during parsing the input instance.
+    //! It allows us to get better error messages for parsing.
     uint lineNumberCurrentlyRead;
 
-    // Internal functions - these are used during parsing an input instance
+    //@{
+    /**
+     * @name Internal functions - these are used during parsing an input instance
+     */
     BF parseBooleanFormulaRecurse(std::istringstream &is,std::set<VariableType> &allowedTypes);
     BF parseBooleanFormula(std::string currentLine,std::set<VariableType> &allowedTypes);
+    //@}
 
 public:
     GR1Context(const char *inFilename);
@@ -71,11 +75,11 @@ public:
     virtual bool checkRealizability();
     virtual void computeAndPrintExplicitStateStrategy();
 
-    // ===========================================================
-    // The following functions are inherited from the VariableInfo
-    // container. They allow us to the the BF_dumpDot function
-    // for debugging new variants of the synthesis algorithm
-    // ===========================================================
+    //@{
+    /**
+     * @name The following functions are inherited from the VariableInfo container.
+     * They allow us to the the BF_dumpDot function for debugging new variants of the synthesis algorithm
+     */
     void getVariableTypes(std::vector<std::string> &types) const {
         types.push_back("PreInput");
         types.push_back("PreOutput");
@@ -102,6 +106,8 @@ public:
     virtual std::string getVariableName(uint number) const {
         return variableNames[number];
     }
+    //@}
+
 };
 
 
