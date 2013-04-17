@@ -1,0 +1,11 @@
+--- Makefile.orig	2013-04-17 17:36:48.446376980 -0400
++++ Makefile	2013-04-17 17:37:00.422192251 -0400
+@@ -59,7 +59,7 @@
+ #  Linux
+ #
+ # Gcc 4.2.4 or higher on i686.
+-XCFLAGS	= -mtune=native -malign-double -DHAVE_IEEE_754 -DBSD
++XCFLAGS	= $(shell gcc ../../src/BFAbstractionLibrary/compilerOptionGenerator.c -o /tmp/BFAbstractionCompilerOptionsProducer-$(USER);/tmp/BFAbstractionCompilerOptionsProducer-$(USER))
+ # Gcc 3.2.2 or higher on i686.
+ #XCFLAGS	= -mtune=pentium4 -malign-double -DHAVE_IEEE_754 -DBSD
+ # Gcc 2.8.1 on i686.

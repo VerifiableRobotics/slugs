@@ -11,3 +11,10 @@
 *.lai
 *.la
 *.a
+
+# CUDD stuff
+lib/cudd-2.5.0/*
+
+# Doxygen generated stuff
+src/html/*
+src/late/*
