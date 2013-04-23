@@ -72,7 +72,7 @@ private:
 public:
     GR1Context(const char *inFilename);
     virtual ~GR1Context() {}
-    virtual bool checkRealizability();
+    virtual bool checkRealizability(bool initSpecialRoboticsSemantics);
     virtual void computeAndPrintExplicitStateStrategy();
 
     //@{

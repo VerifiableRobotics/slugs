@@ -67,9 +67,11 @@ GR1Context::GR1Context(const char *inFileName) {
                 } else if (readMode==2) {
                     std::set<VariableType> allowedTypes;
                     allowedTypes.insert(PreInput);
+                    allowedTypes.insert(PreOutput);
                     initEnv &= parseBooleanFormula(currentLine,allowedTypes);
                 } else if (readMode==3) {
                     std::set<VariableType> allowedTypes;
+                    allowedTypes.insert(PreInput);
                     allowedTypes.insert(PreOutput);
                     initSys &= parseBooleanFormula(currentLine,allowedTypes);
                 } else if (readMode==4) {
@@ -208,12 +210,15 @@ int main(int argc, const char **args) {
 
     std::string filename = "";
     bool onlyCheckRealizability = false;
+    bool initSpecialRoboticsSemantics = false;
 
     for (int i=1;i<argc;i++) {
         std::string arg = args[i];
         if (arg[0]=='-') {
             if (arg=="--onlyRealizability") {
                 onlyCheckRealizability = true;
+            } else if (arg=="--sysInitRoboticsSemantics") {
+                initSpecialRoboticsSemantics = true;
             } else {
                 std::cerr << "Error: Did not understand parameter " << arg << std::endl;
                 return 1;
@@ -230,7 +235,7 @@ int main(int argc, const char **args) {
 
     try {
         GR1Context context(filename.c_str());
-        bool realizable = context.checkRealizability();
+        bool realizable = context.checkRealizability(initSpecialRoboticsSemantics);
         if (realizable) {
             std::cerr << "RESULT: Specification is realizable.\n";
             if (!onlyCheckRealizability) context.computeAndPrintExplicitStateStrategy();

@@ -11,9 +11,13 @@
  *        where the cox operator computes from which positions the system player can enforce that certain *transitions* are taken.
  *        the transitionTo function takes a set of target positions and computes the set of transitions that are allowed for
  *        the system and that lead to the set of target positions
+ * @param initSpecialRoboticsSemantics This variable is set to true if a specification should only be called realizable if
+ *        for every initial state that is admissable by the environment initialization assumptions, we can satisfy the specification from
+ *        there. In classical GR(1) synthesis, it is only required that for every input variable valuation, there is one output
+ *        variable valuation that is is allowed.
  * @return true if the scenario is realizable, and false otherwise
  */
-bool GR1Context::checkRealizability() {
+bool GR1Context::checkRealizability(bool initSpecialRoboticsSemantics) {
 
     // The greatest fixed point - called "Z" in the GR(1) synthesis paper
     BFFixedPoint nu2(mgr.constantTrue());
@@ -91,7 +95,14 @@ bool GR1Context::checkRealizability() {
     winningPositions = nu2.getValue();
 
     // Check if for every possible environment initial position the system has a good system initial position
-    BF result = initEnv.Implies((winningPositions & initSys).ExistAbstract(varCubePreOutput)).UnivAbstract(varCubePreInput);
+    BF result;
+    if (initSpecialRoboticsSemantics) {
+        if (!initSys.isTrue()) std::cerr << "Warning: Initialisation guarantees have been given although these are ignored in semantics-for-robotics mode! \n";
+        result = initEnv.Implies(winningPositions.UnivAbstract(varCubePreOutput)).UnivAbstract(varCubePreInput);
+
+    } else {
+        result = initEnv.Implies((winningPositions & initSys).ExistAbstract(varCubePreOutput)).UnivAbstract(varCubePreInput);
+    }
 
     // Check if the result is well-defind. Might fail after an incorrect modification of the above algorithm
     if (!result.isConstant()) throw "Internal error: Could not establish realizability/unrealizability of the specification.";
