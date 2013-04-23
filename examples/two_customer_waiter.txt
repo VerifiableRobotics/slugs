@@ -18,22 +18,16 @@ Orderc1c2
 SakeOrdered
 RiceOrdered
 
-[ENV_INIT]
-1
-
 [ENV_TRANS]
-1
+| ! c1_order ! c2_order'
+| ! c2_order ! c1_order'
 
 [ENV_LIVENESS]
 | ! & RiceOrdered ! FoodObtained rice_ready
 | ! & SakeOrdered ! FoodObtained sake_ready
 
-[SYS_INIT]
-| | | | | | | | | | | | | | & & & ! bit0 ! bit1 ! bit2 ! bit3 & & & ! bit0 ! bit1 ! bit2 bit3 & & & ! bit0 ! bit1 bit2 ! bit3 & & & ! bit0 ! bit1 bit2 bit3 & & & ! bit0 bit1 ! bit2 ! bit3 & & & ! bit0 bit1 ! bit2 bit3 & & & ! bit0 bit1 bit2 ! bit3 & & & ! bit0 bit1 bit2 bit3 & & & bit0 ! bit1 ! bit2 ! bit3 & & & bit0 ! bit1 ! bit2 bit3 & & & bit0 ! bit1 bit2 ! bit3 & & & bit0 ! bit1 bit2 bit3 & & & bit0 bit1 ! bit2 ! bit3 & & & bit0 bit1 ! bit2 bit3 & & & bit0 bit1 bit2 ! bit3
-! bit0
-! bit1
-! bit2
-! bit3
+[ENV_INIT]
+1
 
 [SYS_TRANS]
 | ! & & & ! bit0 ! bit1 ! bit2 ! bit3 | | & & & ! bit0' ! bit1' ! bit2' ! bit3' & & & ! bit0' ! bit1' bit2' ! bit3' & & & bit0' bit1' ! bit2' bit3'
@@ -59,6 +53,8 @@ RiceOrdered
 | ! deliver ! SakeOrdered'
 | ! & SakeOrdered ! deliver SakeOrdered'
 | ! & ! SakeOrdered ! order_sake' ! SakeOrdered'
+| ! & ! RiceOrdered RiceOrdered' & & & | & ! bit0' ! bit0 & bit0' bit0 | & ! bit1' ! bit1 & bit1' bit1 | & ! bit2' ! bit2 & bit2' bit2 | & ! bit3' ! bit3 & bit3' bit3
+| ! & ! SakeOrdered SakeOrdered' & & & | & ! bit0' ! bit0 & bit0' bit0 | & ! bit1' ! bit1 & bit1' bit1 | & ! bit2' ! bit2 & bit2' bit2 | & ! bit3' ! bit3 & bit3' bit3
 | ! & c1_order' ! c2_order' Orderc1c2'
 | ! c2_order' ! Orderc1c2'
 | ! & Orderc1c2 ! c2_order' Orderc1c2'
@@ -79,4 +75,11 @@ RiceOrdered
 | ! & & SakeOrdered' sake_ready' ! FoodObtained' & & & ! bit0' ! bit1' ! bit2' ! bit3'
 | ! & & | SakeOrdered' RiceOrdered' FoodObtained' Orderc1c2' & & & & ! bit0' bit1' ! bit2' ! bit3' deliver'
 | ! & & | SakeOrdered' RiceOrdered' FoodObtained' ! Orderc1c2' & & & & ! bit0' ! bit1' bit2' bit3' deliver'
+
+[ENV_INIT]
+| | | | | | | | | | | | | | & & & ! bit0 ! bit1 ! bit2 ! bit3 & & & ! bit0 ! bit1 ! bit2 bit3 & & & ! bit0 ! bit1 bit2 ! bit3 & & & ! bit0 ! bit1 bit2 bit3 & & & ! bit0 bit1 ! bit2 ! bit3 & & & ! bit0 bit1 ! bit2 bit3 & & & ! bit0 bit1 bit2 ! bit3 & & & ! bit0 bit1 bit2 bit3 & & & bit0 ! bit1 ! bit2 ! bit3 & & & bit0 ! bit1 ! bit2 bit3 & & & bit0 ! bit1 bit2 ! bit3 & & & bit0 ! bit1 bit2 bit3 & & & bit0 bit1 ! bit2 ! bit3 & & & bit0 bit1 ! bit2 bit3 & & & bit0 bit1 bit2 ! bit3
+! bit0
+! bit1
+! bit2
+! bit3
 

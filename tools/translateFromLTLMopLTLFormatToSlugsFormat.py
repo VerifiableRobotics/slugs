@@ -307,7 +307,7 @@ def parseSimpleFormula(tree, isPrimed):
         raise 123
     
 
-def buildPropertySet(tree,fileprefix,startWithNextOperatorForLivenessProperties):
+def buildPropertySet(tree,fileprefix,startWithNextOperatorForLivenessProperties,handleInitialisationProperties):
     if (tree[0]!="Formula"):
         raise "Wrong tree type"
     tree = tree[1]    
@@ -338,20 +338,26 @@ def buildPropertySet(tree,fileprefix,startWithNextOperatorForLivenessProperties)
         else:
             initializationProperties.append(parseSimpleFormula(c,False))
 
-    print "["+fileprefix+"INIT]"
-    for a in initializationProperties:
-        print " ".join(a)
-    print ""
+    if handleInitialisationProperties:
+        print "["+fileprefix+"INIT]"
+        for a in initializationProperties:
+            print " ".join(a)
+        print ""
+    else:
+        print "["+fileprefix+"TRANS]"
+        for a in safetyProperties:
+            print " ".join(a)
+        print ""
 
-    print "["+fileprefix+"TRANS]"
-    for a in safetyProperties:
-        print " ".join(a)
-    print ""
+        print "["+fileprefix+"LIVENESS]"
+        for a in livenessProperties:
+            print " ".join(a)
+        print ""
 
-    print "["+fileprefix+"LIVENESS]"
-    for a in livenessProperties:
-        print " ".join(a)
-    print ""
-
-buildPropertySet(assumptionTree,"ENV_",False)
-buildPropertySet(guaranteeTree,"SYS_",True)
+# Iterate over the property types. Warning: Initialization guarantees are actually put to the initialization assumptions because of
+# the special GR(1) semantics that treats them alike for robotics (where all positions that satisfy the initial conditions have
+# to be winning in order to call a scenario realizable).
+buildPropertySet(assumptionTree,"ENV_",False,False)
+buildPropertySet(assumptionTree,"ENV_",False,True)
+buildPropertySet(guaranteeTree,"SYS_",True,False)
+buildPropertySet(guaranteeTree,"ENV_",True,True)
