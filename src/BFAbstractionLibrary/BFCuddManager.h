@@ -34,6 +34,7 @@ public:
 	BFBddVarCube computeCube(const BFBdd * vars, const int * phase, int n) const;
 	BFBddVarCube computeCube(const std::vector<BFBdd> &vars) const;
 	BFBddVarVector computeVarVector(const std::vector<BFBdd> &vars) const;
+    BFBdd readBDDFromFile(const char *filename, std::vector<BFBdd> &vars) const;
 	void groupVariables(const std::vector<BFBdd> &which);
 	void printStats();
 

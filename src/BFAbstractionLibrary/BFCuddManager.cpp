@@ -9,6 +9,8 @@
 #include <set>
 #include <limits>
 #include <stdexcept>
+#include <sstream>
+#include "dddmp.h"
 
 /**
  * Creates a new BDDManager.
@@ -116,4 +118,24 @@ BFBddVarVector BFBddManager::computeVarVector(const std::vector<BFBdd> &from) co
 	v.nofNodes = from.size();
 	v.mgr = mgr;
 	return v;
+}
+
+BFBdd BFBddManager::readBDDFromFile(const char *filename, std::vector<BFBdd> &vars) const {
+
+    FILE *file = fopen (filename,"r");
+    if (file == NULL){
+        std::ostringstream os;
+        os << "Error in BFBddManager::readBDDFromFile(const char *filename, std::vector<BFBdd> &vars) - Could not read a BDD from from file '" << filename << "'.";
+        throw std::runtime_error(os.str().c_str());
+    }
+
+    int idMatcher[vars.size()];
+    for (uint i=0;i<vars.size();i++) {
+        idMatcher[i] = vars[i].readNodeIndex();
+    }
+    DdNode *node = Dddmp_cuddBddLoad(mgr, DDDMP_VAR_COMPOSEIDS, NULL, NULL, idMatcher, DDDMP_MODE_DEFAULT,NULL,file);
+    return BFBdd(this,node);
+
+
+    
 }
