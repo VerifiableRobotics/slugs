@@ -134,8 +134,6 @@ BFBdd BFBddManager::readBDDFromFile(const char *filename, std::vector<BFBdd> &va
         idMatcher[i] = vars[i].readNodeIndex();
     }
     DdNode *node = Dddmp_cuddBddLoad(mgr, DDDMP_VAR_COMPOSEIDS, NULL, NULL, idMatcher, DDDMP_MODE_DEFAULT,NULL,file);
-    return BFBdd(this,node);
-
-
-    
+    fclose(file);    
+    return BFBdd(this,node);   
 }
