@@ -1,6 +1,6 @@
 slugs - SmalL bUt Complete GROne Synthesizer
 ============================================
-Slugs is a stand-alone reactive synthesis tool for generalized reactivity(1) synthesis.
+Slugs is a stand-alone reactive synthesis tool for generalized reactivity(1) synthesis.  And that's all.
 
 
 Installation
