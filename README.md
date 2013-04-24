@@ -1,7 +1,6 @@
-slugs
-=====
-
-SmalL bUt Complete GROne Synthesizer
+slugs - SmalL bUt Complete GROne Synthesizer
+============================================
+Slugs is a stand-alone reactive synthesis tool for generalized reactivity(1) synthesis.
 
 
 Installation
@@ -26,7 +25,7 @@ This will modify CUDD's makefile to automatically adapt to 32- or 64-bit archite
 
 Afterwards, we can compile slugs. For this, move into the src directory of slugs and hit:
 
-> qmake Tool.pro
+> qmake Tool.pro  
 > make
 
 The slugs executable will be put into the src directory.
