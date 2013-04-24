@@ -9,7 +9,7 @@
  * @brief Constructor that reads the problem instance from file and prepares the BFManager, the BFVarCubes, and the BFVarVectors
  * @param inFile the input filename
  */
-GR1Context::GR1Context(const char *inFileName) {
+GR1Context::GR1Context(const char *inFileName, const char *robotFileName) {
 
     std::ifstream inFile(inFileName);
     if (inFile.fail()) throw "Error: Cannot open input file";
@@ -31,20 +31,24 @@ GR1Context::GR1Context(const char *inFileName) {
             if (currentLine[0]=='[') {
                 if (currentLine=="[INPUT]") {
                     readMode = 0;
-                } else if (currentLine=="[OUTPUT]") {
+                } else if (currentLine=="[MOTION STATE OUTPUT]") {
                     readMode = 1;
-                } else if (currentLine=="[ENV_INIT]") {
+                } else if (currentLine=="[MOTION CONTROLLER OUTPUT]") {
                     readMode = 2;
-                } else if (currentLine=="[SYS_INIT]") {
+                } else if (currentLine=="[OTHER OUTPUT]") {
                     readMode = 3;
-                } else if (currentLine=="[ENV_TRANS]") {
+                } else if (currentLine=="[ENV_INIT]") {
                     readMode = 4;
-                } else if (currentLine=="[SYS_TRANS]") {
+                } else if (currentLine=="[SYS_INIT]") {
                     readMode = 5;
-                } else if (currentLine=="[ENV_LIVENESS]") {
+                } else if (currentLine=="[ENV_TRANS]") {
                     readMode = 6;
-                } else if (currentLine=="[SYS_LIVENESS]") {
+                } else if (currentLine=="[SYS_TRANS]") {
                     readMode = 7;
+                } else if (currentLine=="[ENV_LIVENESS]") {
+                    readMode = 8;
+                } else if (currentLine=="[SYS_LIVENESS]") {
+                    readMode = 9;
                 } else {
                     std::cerr << "Sorry. Didn't recognize category " << currentLine << "\n";
                     throw "Aborted.";
@@ -60,45 +64,72 @@ GR1Context::GR1Context(const char *inFileName) {
                 } else if (readMode==1) {
                     variables.push_back(mgr.newVariable());
                     variableNames.push_back(currentLine);
-                    variableTypes.push_back(PreOutput);
+                    variableTypes.push_back(PreMotionStateOutput);
                     variables.push_back(mgr.newVariable());
                     variableNames.push_back(currentLine+"'");
-                    variableTypes.push_back(PostOutput);
+                    variableTypes.push_back(PostMotionStateOutput);
                 } else if (readMode==2) {
-                    std::set<VariableType> allowedTypes;
-                    allowedTypes.insert(PreInput);
-                    allowedTypes.insert(PreOutput);
-                    initEnv &= parseBooleanFormula(currentLine,allowedTypes);
+                    variables.push_back(mgr.newVariable());
+                    variableNames.push_back(currentLine);
+                    variableTypes.push_back(PreMotionOutput);
                 } else if (readMode==3) {
-                    std::set<VariableType> allowedTypes;
-                    allowedTypes.insert(PreInput);
-                    allowedTypes.insert(PreOutput);
-                    initSys &= parseBooleanFormula(currentLine,allowedTypes);
+                    variables.push_back(mgr.newVariable());
+                    variableNames.push_back(currentLine);
+                    variableTypes.push_back(PreOtherOutput);
+                    variables.push_back(mgr.newVariable());
+                    variableNames.push_back(currentLine+"'");
+                    variableTypes.push_back(PostOtherOutput);
                 } else if (readMode==4) {
                     std::set<VariableType> allowedTypes;
                     allowedTypes.insert(PreInput);
-                    allowedTypes.insert(PreOutput);
-                    allowedTypes.insert(PostInput);
-                    safetyEnv &= parseBooleanFormula(currentLine,allowedTypes);
+                    allowedTypes.insert(PreMotionStateOutput);
+                    allowedTypes.insert(PreMotionOutput);
+                    allowedTypes.insert(PreOtherOutput);
+                    initEnv &= parseBooleanFormula(currentLine,allowedTypes);
                 } else if (readMode==5) {
                     std::set<VariableType> allowedTypes;
                     allowedTypes.insert(PreInput);
-                    allowedTypes.insert(PreOutput);
-                    allowedTypes.insert(PostInput);
-                    allowedTypes.insert(PostOutput);
-                    safetySys &= parseBooleanFormula(currentLine,allowedTypes);
+                    allowedTypes.insert(PreMotionStateOutput);
+                    allowedTypes.insert(PreMotionOutput);
+                    allowedTypes.insert(PreOtherOutput);
+                    initSys &= parseBooleanFormula(currentLine,allowedTypes);
                 } else if (readMode==6) {
                     std::set<VariableType> allowedTypes;
                     allowedTypes.insert(PreInput);
-                    allowedTypes.insert(PreOutput);
+                    allowedTypes.insert(PreMotionStateOutput);
+                    allowedTypes.insert(PreMotionOutput);
+                    allowedTypes.insert(PreOtherOutput);
                     allowedTypes.insert(PostInput);
-                    livenessAssumptions.push_back(parseBooleanFormula(currentLine,allowedTypes));
+                    allowedTypes.insert(PostMotionStateOutput);
+                    allowedTypes.insert(PostOtherOutput);
+                    safetyEnv &= parseBooleanFormula(currentLine,allowedTypes);
                 } else if (readMode==7) {
                     std::set<VariableType> allowedTypes;
                     allowedTypes.insert(PreInput);
-                    allowedTypes.insert(PreOutput);
+                    allowedTypes.insert(PreMotionStateOutput);
+                    allowedTypes.insert(PreMotionOutput);
+                    allowedTypes.insert(PreOtherOutput);
                     allowedTypes.insert(PostInput);
-                    allowedTypes.insert(PostOutput);
+                    allowedTypes.insert(PostMotionStateOutput);
+                    allowedTypes.insert(PostOtherOutput);
+                    safetySys &= parseBooleanFormula(currentLine,allowedTypes);
+                } else if (readMode==8) {
+                    std::set<VariableType> allowedTypes;
+                    allowedTypes.insert(PreInput);
+                    allowedTypes.insert(PreMotionStateOutput);
+                    allowedTypes.insert(PreMotionOutput);
+                    allowedTypes.insert(PreOtherOutput);
+                    allowedTypes.insert(PostInput);
+                    livenessAssumptions.push_back(parseBooleanFormula(currentLine,allowedTypes));
+                } else if (readMode==9) {
+                    std::set<VariableType> allowedTypes;
+                    allowedTypes.insert(PreInput);
+                    allowedTypes.insert(PreMotionStateOutput);
+                    allowedTypes.insert(PreMotionOutput);
+                    allowedTypes.insert(PreOtherOutput);
+                    allowedTypes.insert(PostInput);
+                    allowedTypes.insert(PostMotionStateOutput);
+                    allowedTypes.insert(PostOtherOutput);
                     livenessGuarantees.push_back(parseBooleanFormula(currentLine,allowedTypes));
                 } else {
                     std::cerr << "Error with line " << lineNumberCurrentlyRead << "!";
@@ -107,6 +138,25 @@ GR1Context::GR1Context(const char *inFileName) {
             }
         }
     }
+
+    std::vector<BF> varsBDDread;
+    for (uint i=0;i<variables.size();i++) {
+        if (variableTypes[i]==PreMotionStateOutput)
+        varsBDDread.push_back(variables[i]);
+    }
+    for (uint i=0;i<variables.size();i++) {
+        if (variableTypes[i]==PreMotionOutput)
+        varsBDDread.push_back(variables[i]);
+    }
+    for (uint i=0;i<variables.size();i++) {
+        if (variableTypes[i]==PostMotionStateOutput)
+        varsBDDread.push_back(variables[i]);
+    }
+    std::cerr << "Numer of bits that we expect the robot abstraction BDD to have: " << varsBDDread.size() << std::endl;
+    robotBDD = mgr.readBDDFromFile(robotFileName,varsBDDread);
+
+    // Read in variables
+
 
     // Compute VarVectors and VarCubes
     std::vector<BF> postOutputVars;
@@ -119,7 +169,15 @@ GR1Context::GR1Context(const char *inFileName) {
             preVars.push_back(variables[i]);
             preInputVars.push_back(variables[i]);
             break;
-        case PreOutput:
+        case PreMotionStateOutput:
+            preVars.push_back(variables[i]);
+            preOutputVars.push_back(variables[i]);
+            break;
+        case PreMotionOutput:
+            //preVars.push_back(variables[i]);
+            //preOutputVars.push_back(variables[i]);
+            break;
+        case PreOtherOutput:
             preVars.push_back(variables[i]);
             preOutputVars.push_back(variables[i]);
             break;
@@ -127,7 +185,11 @@ GR1Context::GR1Context(const char *inFileName) {
             postVars.push_back(variables[i]);
             postInputVars.push_back(variables[i]);
             break;
-        case PostOutput:
+        case PostMotionStateOutput:
+            postVars.push_back(variables[i]);
+            postOutputVars.push_back(variables[i]);
+            break;
+        case PostOtherOutput:
             postVars.push_back(variables[i]);
             postOutputVars.push_back(variables[i]);
             break;
@@ -209,11 +271,13 @@ int main(int argc, const char **args) {
     std::cerr << "SLUGS: SmaLl bUt complete Gr(1) Synthesis tool (see the documentation for an author list).\n";
 
     std::string filename = "";
+    std::string robotfilename = "";
     bool onlyCheckRealizability = false;
     bool initSpecialRoboticsSemantics = false;
 
     for (int i=1;i<argc;i++) {
         std::string arg = args[i];
+
         if (arg[0]=='-') {
             if (arg=="--onlyRealizability") {
                 onlyCheckRealizability = true;
@@ -226,6 +290,8 @@ int main(int argc, const char **args) {
         } else {
             if (filename=="") {
                 filename = arg;
+            } else if (robotfilename==""){
+                robotfilename = arg;
             } else {
                 std::cerr << "Error: More than one input filename given.\n";
                 return 1;
@@ -234,7 +300,7 @@ int main(int argc, const char **args) {
     }
 
     try {
-        GR1Context context(filename.c_str());
+        GR1Context context(filename.c_str(), robotfilename.c_str());
         bool realizable = context.checkRealizability(initSpecialRoboticsSemantics);
         if (realizable) {
             std::cerr << "RESULT: Specification is realizable.\n";

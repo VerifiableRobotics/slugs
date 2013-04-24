@@ -1,0 +1,40 @@
+[INPUT]
+pursuer
+
+[MOTION STATE OUTPUT]
+xbit0
+xbit1
+xbit2
+ybit3
+ybit4
+ybit5
+tbit6
+tbit7
+tbit8
+
+[MOTION CONTROLLER OUTPUT]
+wbit0
+wbit1
+wbit2
+
+[OTHER OUTPUT]
+
+
+[ENV_INIT]
+1
+
+[ENV_TRANS]
+1
+
+[ENV_LIVENESS]
+
+
+[SYS_INIT]
+
+
+[SYS_TRANS]
+
+
+[SYS_LIVENESS]
+
+

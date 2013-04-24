@@ -9,7 +9,7 @@
 #include <vector>
 #include "bddDump.h"
 
-typedef enum { PreInput, PreOutput, PostInput,PostOutput } VariableType;
+typedef enum { PreInput, PreMotionStateOutput, PreMotionOutput, PreOtherOutput, PostInput, PostMotionStateOutput, PostOtherOutput } VariableType;
 
 /**
  * @brief Container class for all GR(1) synthesis related activities
@@ -33,6 +33,7 @@ protected:
     BF initSys;
     BF safetyEnv;
     BF safetySys;
+    BF robotBDD;
     BFVarVector varVectorPre;
     BFVarVector varVectorPost;
     BFVarCube varCubePostInput;
@@ -70,7 +71,7 @@ private:
     //@}
 
 public:
-    GR1Context(const char *inFilename);
+    GR1Context(const char *inFilename, const char *robotFilename);
     virtual ~GR1Context() {}
     virtual bool checkRealizability(bool initSpecialRoboticsSemantics);
     virtual void computeAndPrintExplicitStateStrategy();
@@ -82,17 +83,23 @@ public:
      */
     void getVariableTypes(std::vector<std::string> &types) const {
         types.push_back("PreInput");
-        types.push_back("PreOutput");
+        types.push_back("PreMotionStateOutput");
+        types.push_back("PreMotionOutput");
+        types.push_back("PreOtherOutput");
         types.push_back("PostInput");
-        types.push_back("PostOutput");
+        types.push_back("PostMotionStateOutput");
+        types.push_back("PostOtherOutput");
     }
 
     void getVariableNumbersOfType(std::string typeString, std::vector<uint> &nums) const {
         VariableType type;
         if (typeString=="PreInput") type = PreInput;
-        else if (typeString=="PreOutput") type = PreOutput;
+        else if (typeString=="PreMotionStateOutput") type = PreMotionStateOutput;
+        else if (typeString=="PreMotionOutput") type = PreMotionOutput;
+        else if (typeString=="PreOtherOutput") type = PreOtherOutput;
         else if (typeString=="PostInput") type = PostInput;
-        else if (typeString=="PostOutput") type = PostOutput;
+        else if (typeString=="PostMotionStateOutput") type = PostMotionStateOutput;
+        else if (typeString=="PostOtherOutput") type = PostOtherOutput;
         else throw "Cannot detect variable type for BDD dumping";
         for (uint i=0;i<variables.size();i++) {
             if (variableTypes[i] == type) nums.push_back(i);
