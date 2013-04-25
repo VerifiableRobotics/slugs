@@ -14,6 +14,7 @@ QMAKE_CXXFLAGS_DEBUG += -g -Wextra -std=gnu++0x \
 TEMPLATE = app \
     console
 CONFIG += debug
+CONFIG -= app_bundle
 CONFIG -= qt
 HEADERS += BFAbstractionLibrary/BF.h gr1context.hpp
 
