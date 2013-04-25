@@ -49,17 +49,17 @@ protected:
      *  The following variables are set by the realizability checking part. The first one
      *  contains information to be used during strategy extraction - it prodives a sequence
      *  of BFs/BDDs that represent transitions in the game that shall be preferred over those
-     *  that come later in the vector. The 'uint' data type in the vector represents the goal
+     *  that come later in the vector. The 'unsigned int' data type in the vector represents the goal
      *  that a BF refers to. The winningPositions BF represents which positions are winning for the system player.
      */
-    std::vector<std::pair<uint,BF> > strategyDumpingData;
+    std::vector<std::pair<unsigned int,BF> > strategyDumpingData;
     BF winningPositions;
     //@}
 
 private:
     //! This variable is only used during parsing the input instance.
     //! It allows us to get better error messages for parsing.
-    uint lineNumberCurrentlyRead;
+    unsigned int lineNumberCurrentlyRead;
 
     //@{
     /**
@@ -87,23 +87,23 @@ public:
         types.push_back("PostOutput");
     }
 
-    void getVariableNumbersOfType(std::string typeString, std::vector<uint> &nums) const {
+    void getVariableNumbersOfType(std::string typeString, std::vector<unsigned int> &nums) const {
         VariableType type;
         if (typeString=="PreInput") type = PreInput;
         else if (typeString=="PreOutput") type = PreOutput;
         else if (typeString=="PostInput") type = PostInput;
         else if (typeString=="PostOutput") type = PostOutput;
         else throw "Cannot detect variable type for BDD dumping";
-        for (uint i=0;i<variables.size();i++) {
+        for (unsigned int i=0;i<variables.size();i++) {
             if (variableTypes[i] == type) nums.push_back(i);
         }
     }
 
-    virtual BF getVariableBF(uint number) const {
+    virtual BF getVariableBF(unsigned int number) const {
         return variables[number];
     }
 
-    virtual std::string getVariableName(uint number) const {
+    virtual std::string getVariableName(unsigned int number) const {
         return variableNames[number];
     }
     //@}

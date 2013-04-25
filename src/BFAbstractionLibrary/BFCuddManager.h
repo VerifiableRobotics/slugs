@@ -27,7 +27,7 @@ private:
 	DdManager *mgr;
 
 public:
-	BFBddManager(uint maxMemoryInMB = 3096, float reorderingMaxBlowup = 1.2f);
+	BFBddManager(unsigned int maxMemoryInMB = 3096, float reorderingMaxBlowup = 1.2f);
 	~BFBddManager();
 
 	void setAutomaticOptimisation(bool enable);

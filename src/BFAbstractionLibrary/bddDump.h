@@ -22,9 +22,9 @@ class VariableInfoContainer {
 public:
 	virtual ~VariableInfoContainer() {};
 	virtual void getVariableTypes(std::vector<std::string> &types) const = 0;
-	virtual void getVariableNumbersOfType(std::string type, std::vector<uint> &nums) const = 0;
-	virtual BF getVariableBF(uint number) const = 0;
-	virtual std::string getVariableName(uint number) const = 0;
+	virtual void getVariableNumbersOfType(std::string type, std::vector<unsigned int> &nums) const = 0;
+	virtual BF getVariableBF(unsigned int number) const = 0;
+	virtual std::string getVariableName(unsigned int number) const = 0;
 };
 
 // void BDD_oldDumpDot(const VariableInfoContainer &cont, BF b, const char* filename);

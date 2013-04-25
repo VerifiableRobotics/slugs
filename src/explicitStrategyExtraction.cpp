@@ -39,15 +39,15 @@ void GR1Context::computeAndPrintExplicitStateStrategy() {
     // List of states in existance so far. The first map
     // maps from a BF node pointer (for the pre variable valuation) and a goal
     // to a state number. The vector then contains the concrete valuation.
-    std::map<std::pair<size_t, uint>, uint > lookupTableForPastStates;
+    std::map<std::pair<size_t, unsigned int>, unsigned int > lookupTableForPastStates;
     std::vector<BF> bfsUsedInTheLookupTable;
-    std::list<std::pair<size_t, uint> > todoList;
+    std::list<std::pair<size_t, unsigned int> > todoList;
 
     // Prepare initial to-do list from the allowed initial states
     BF todoInit = (winningPositions & initSys);
     while (!(todoInit.isFalse())) {
         BF concreteState = determinize(todoInit,preVars);
-        std::pair<size_t, uint> lookup = std::pair<size_t, uint>(concreteState.getHashCode(),0);
+        std::pair<size_t, unsigned int> lookup = std::pair<size_t, unsigned int>(concreteState.getHashCode(),0);
         lookupTableForPastStates[lookup] = bfsUsedInTheLookupTable.size();
         bfsUsedInTheLookupTable.push_back(concreteState);
         todoInit &= !concreteState;
@@ -56,7 +56,7 @@ void GR1Context::computeAndPrintExplicitStateStrategy() {
 
     // Prepare positional strategies for the individual goals
     std::vector<BF> positionalStrategiesForTheIndividualGoals(livenessGuarantees.size());
-    for (uint i=0;i<livenessGuarantees.size();i++) {
+    for (unsigned int i=0;i<livenessGuarantees.size();i++) {
         BF casesCovered = mgr.constantFalse();
         BF strategy = mgr.constantFalse();
         for (auto it = strategyDumpingData.begin();it!=strategyDumpingData.end();it++) {
@@ -72,9 +72,9 @@ void GR1Context::computeAndPrintExplicitStateStrategy() {
 
     // Extract strategy
     while (todoList.size()>0) {
-        std::pair<size_t, uint> current = todoList.front();
+        std::pair<size_t, unsigned int> current = todoList.front();
         todoList.pop_front();
-        uint stateNum = lookupTableForPastStates[current];
+        unsigned int stateNum = lookupTableForPastStates[current];
         BF currentPossibilities = bfsUsedInTheLookupTable[stateNum];
 
         /*{
@@ -86,7 +86,7 @@ void GR1Context::computeAndPrintExplicitStateStrategy() {
         // Print state information
         std::cout << "State " << stateNum << " with rank " << current.second << " -> <";
         bool first = true;
-        for (uint i=0;i<variables.size();i++) {
+        for (unsigned int i=0;i<variables.size();i++) {
             if (variableTypes[i] < PostInput) {
                 if (first) {
                     first = false;
@@ -114,8 +114,8 @@ void GR1Context::computeAndPrintExplicitStateStrategy() {
             goalSwitchingTransitions &= !inputCaptured;
 
             // Search for newCombination
-            uint tn;
-            std::pair<size_t, uint> target = std::pair<size_t, uint>(newCombination.getHashCode(),(current.second + 1) % livenessGuarantees.size());
+            unsigned int tn;
+            std::pair<size_t, unsigned int> target = std::pair<size_t, unsigned int>(newCombination.getHashCode(),(current.second + 1) % livenessGuarantees.size());
             if (lookupTableForPastStates.count(target)==0) {
                 tn = lookupTableForPastStates[target] = bfsUsedInTheLookupTable.size();
                 bfsUsedInTheLookupTable.push_back(newCombination);
@@ -143,8 +143,8 @@ void GR1Context::computeAndPrintExplicitStateStrategy() {
             nongoalSwitchingTransitions &= !inputCaptured;
 
             // Search for newCombination
-            uint tn;
-            std::pair<size_t, uint> target = std::pair<size_t, uint>(newCombination.getHashCode(),current.second);
+            unsigned int tn;
+            std::pair<size_t, unsigned int> target = std::pair<size_t, unsigned int>(newCombination.getHashCode(),current.second);
             if (lookupTableForPastStates.count(target)==0) {
                 tn = lookupTableForPastStates[target] = bfsUsedInTheLookupTable.size();
                 bfsUsedInTheLookupTable.push_back(newCombination);

@@ -113,7 +113,7 @@ GR1Context::GR1Context(const char *inFileName) {
     std::vector<BF> postInputVars;
     std::vector<BF> preOutputVars;
     std::vector<BF> preInputVars;
-    for (uint i=0;i<variables.size();i++) {
+    for (unsigned int i=0;i<variables.size();i++) {
         switch (variableTypes[i]) {
         case PreInput:
             preVars.push_back(variables[i]);
@@ -169,7 +169,7 @@ BF GR1Context::parseBooleanFormulaRecurse(std::istringstream &is,std::set<Variab
     if (operation=="0") return mgr.constantFalse();
 
     // Has to be a variable!
-    for (uint i=0;i<variableNames.size();i++) {
+    for (unsigned int i=0;i<variableNames.size();i++) {
         if (variableNames[i]==operation) {
             if (allowedTypes.count(variableTypes[i])==0) {
                 std::cerr << "Error reading line " << lineNumberCurrentlyRead << " from the input file. The variable " << operation << " is not allowed for this type of expression.\n";

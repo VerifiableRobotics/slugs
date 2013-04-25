@@ -19,7 +19,7 @@
  * @param reorderingMaxBlowup The maximal allowed blowup during sifting steps in the reordering algorithm. Standard is 1.2 - use 1.1 to have less reordering done. A value of 1.0 results in greedy reordering.
  * @author ehlers
  */
-BFBddManager::BFBddManager(uint maxMemoryInMB, float reorderingMaxBlowup) {
+BFBddManager::BFBddManager(unsigned int maxMemoryInMB, float reorderingMaxBlowup) {
 
 	mgr = Cudd_Init(0, 0, CUDD_UNIQUE_SLOTS, CUDD_CACHE_SLOTS, (long) maxMemoryInMB * 1024UL * 1024UL);
 
@@ -68,7 +68,7 @@ void BFBddManager::groupVariables(const std::vector<BFBdd> &which) {
 	std::set<DdHalfWord> indices;
 	DdHalfWord min = std::numeric_limits<DdHalfWord>::max();
 	DdHalfWord max = std::numeric_limits<DdHalfWord>::min();
-	for (uint i = 0; i < which.size(); i++) {
+	for (unsigned int i = 0; i < which.size(); i++) {
 		DdNode *node = which[i].node;
 		DdHalfWord index = ((Cudd_Regular(node))->index);
 		if (index < min)
@@ -78,7 +78,7 @@ void BFBddManager::groupVariables(const std::vector<BFBdd> &which) {
 		indices.insert(index);
 	}
 
-	if ((uint) (max - min + 1) != indices.size())
+	if ((unsigned int) (max - min + 1) != indices.size())
 		throw std::runtime_error("Error in BFBddManager::groupVariables(const std::vector<BFBdd> &which) - Can only group continuous variables!\n");
 
 	Cudd_MakeTreeNode(mgr, min, max - min + 1, MTR_DEFAULT);
@@ -130,7 +130,7 @@ BFBdd BFBddManager::readBDDFromFile(const char *filename, std::vector<BFBdd> &va
     }
 
     int idMatcher[vars.size()];
-    for (uint i=0;i<vars.size();i++) {
+    for (unsigned int i=0;i<vars.size();i++) {
         idMatcher[i] = vars[i].readNodeIndex();
     }
     DdNode *node = Dddmp_cuddBddLoad(mgr, DDDMP_VAR_COMPOSEIDS, NULL, NULL, idMatcher, DDDMP_MODE_DEFAULT,NULL,file);

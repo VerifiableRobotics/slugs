@@ -46,25 +46,25 @@ public:
  */
 class RecurseContext {
 public:
-	std::vector<uint> &vars;
+	std::vector<unsigned int> &vars;
 	std::vector<std::vector< MyDumpDotNode > > &nodes;
 	const VariableInfoContainer &io;
-	uint nodesSoFar;
+	unsigned int nodesSoFar;
 	
-	RecurseContext(std::vector<uint> &_vars, std::vector<std::vector< MyDumpDotNode > > &_nodes, const VariableInfoContainer &_io) : vars(_vars), nodes(_nodes), io(_io), nodesSoFar(0) {};
+	RecurseContext(std::vector<unsigned int> &_vars, std::vector<std::vector< MyDumpDotNode > > &_nodes, const VariableInfoContainer &_io) : vars(_vars), nodes(_nodes), io(_io), nodesSoFar(0) {};
 };
 
 /**
  * Internal function for BDD dumping
  */
-std::pair<int,uint> BDD_newDumpDotRecurse(const BF &bdd, int level, RecurseContext &rc) {
+std::pair<int,unsigned int> BDD_newDumpDotRecurse(const BF &bdd, int level, RecurseContext &rc) {
 	
         const BFManager *cudd = bdd.manager();
-	if (rc.nodesSoFar>MAX_NODES_GRAPH) return std::pair<int,uint>(-1,0);
+	if (rc.nodesSoFar>MAX_NODES_GRAPH) return std::pair<int,unsigned int>(-1,0);
 	
 	// Constant nodes?
-    if (bdd==cudd->constantFalse()) return std::pair<int,uint>(-1,0);
-    if (bdd==cudd->constantTrue()) return std::pair<int,uint>(-1,1);
+    if (bdd==cudd->constantFalse()) return std::pair<int,unsigned int>(-1,0);
+    if (bdd==cudd->constantTrue()) return std::pair<int,unsigned int>(-1,1);
 	
 	// int index = bdd.NodeReadIndex();
 	if (level==(int)(rc.vars.size())) {
@@ -119,18 +119,18 @@ std::pair<int,uint> BDD_newDumpDotRecurse(const BF &bdd, int level, RecurseConte
 	}
 		
 	// Search for a suitable node
-	for (uint i=0;i<rc.nodes[level].size();i++) {
+	for (unsigned int i=0;i<rc.nodes[level].size();i++) {
 		MyDumpDotNode &current = rc.nodes[level][i];
 		if ((current.getSuccF()==zeroBranch) && (current.getSuccT()==oneBranch))
-			return std::pair<int,uint>(level,i);
+			return std::pair<int,unsigned int>(level,i);
 	}
 	
 	// Else: Make suitable node
-	std::pair<int,uint> continueZero = BDD_newDumpDotRecurse(zeroBranch, level+1, rc);
-	std::pair<int,uint> continueOne = BDD_newDumpDotRecurse(oneBranch, level+1, rc);
+	std::pair<int,unsigned int> continueZero = BDD_newDumpDotRecurse(zeroBranch, level+1, rc);
+	std::pair<int,unsigned int> continueOne = BDD_newDumpDotRecurse(oneBranch, level+1, rc);
 	rc.nodes[level].push_back(MyDumpDotNode(zeroBranch,oneBranch,continueZero.first,continueZero.second,continueOne.first,continueOne.second));
 	rc.nodesSoFar++;
-	return std::pair<int,uint>(level,rc.nodes[level].size()-1);
+	return std::pair<int,unsigned int>(level,rc.nodes[level].size()-1);
 }
 
 
@@ -159,15 +159,15 @@ void BF_newDumpDot(const VariableInfoContainer &cont, const BF &b, const char* v
 
         // Decoding Variable order
 	std::istringstream order(varOrder);
-	std::vector<uint> vars;
+	std::vector<unsigned int> vars;
 	while (!order.eof()) {
 		std::string part;
 		order >> part;
-		std::vector<uint> newVars;
+		std::vector<unsigned int> newVars;
 		cont.getVariableNumbersOfType(part,newVars);
-		for (uint i=0;i<newVars.size();i++) {
+		for (unsigned int i=0;i<newVars.size();i++) {
 			
-			std::vector<uint>::iterator first_previous_usage;
+			std::vector<unsigned int>::iterator first_previous_usage;
 			first_previous_usage = std::find(vars.begin(),vars.end(),newVars[i]);
 			if (first_previous_usage != vars.end()) {
                 // A variable occurs twice!
@@ -183,7 +183,7 @@ void BF_newDumpDot(const VariableInfoContainer &cont, const BF &b, const char* v
 	// Process the nodes
 	// This is done by pushing a node downwards whenever it is independent of the current variable.
 	std::vector<std::vector< MyDumpDotNode > > nodes;
-	for (uint i=0;i<vars.size();i++)
+	for (unsigned int i=0;i<vars.size();i++)
 		nodes.push_back(std::vector<MyDumpDotNode>());
 	RecurseContext context(vars,nodes,cont);
 	// Process recursively
@@ -204,9 +204,9 @@ void BF_newDumpDot(const VariableInfoContainer &cont, const BF &b, const char* v
 			<< " \"CONST NODES\" [style = invis];\n";
 			
 		std::vector<string> localVarNames;
-		for (uint i=0;i<vars.size();i++) {
+		for (unsigned int i=0;i<vars.size();i++) {
 			if (nodes[i].size()>0) {
-				uint var = vars[i];
+				unsigned int var = vars[i];
 				std::ostringstream thisOne;
                                 std::string varName = cont.getVariableName(var);
                                 std::replace(varName.begin(), varName.end(), '\"', '\'');
@@ -222,11 +222,11 @@ void BF_newDumpDot(const VariableInfoContainer &cont, const BF &b, const char* v
 		dumpFile << "\"CONST NODES\"\n}\n";
 		
 		// Print the normal nodes
-		for (uint i=0;i<vars.size();i++) {
+		for (unsigned int i=0;i<vars.size();i++) {
 			if (nodes[i].size()>0) {
 				dumpFile << "{ rank = same; " << localVarNames[i] << "; ";
 				std::ostringstream thisOne;
-				for (uint j=0;j<nodes[i].size();j++) {
+				for (unsigned int j=0;j<nodes[i].size();j++) {
 					thisOne << " \"" << i << "_" << j << "\"; "; 
 				}
 				dumpFile << thisOne.str() << "\n}\n";
@@ -243,9 +243,9 @@ void BF_newDumpDot(const VariableInfoContainer &cont, const BF &b, const char* v
 		}
 		
 		// Print the Connections
-		for (uint i=0;i<vars.size();i++) {
+		for (unsigned int i=0;i<vars.size();i++) {
 			if (nodes[i].size()>0) {
-				for (uint j=0;j<nodes[i].size();j++) {
+				for (unsigned int j=0;j<nodes[i].size();j++) {
 					std::ostringstream thisOne;
 					
 					// ELSE (But no zero-Transitions)
