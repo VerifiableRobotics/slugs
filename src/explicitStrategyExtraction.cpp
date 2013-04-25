@@ -55,7 +55,7 @@ void GR1Context::computeAndPrintExplicitStateStrategy() {
     }
 
     // Prepare positional strategies for the individual goals
-    BF positionalStrategiesForTheIndividualGoals[livenessGuarantees.size()];
+    std::vector<BF> positionalStrategiesForTheIndividualGoals(livenessGuarantees.size());
     for (uint i=0;i<livenessGuarantees.size();i++) {
         BF casesCovered = mgr.constantFalse();
         BF strategy = mgr.constantFalse();
