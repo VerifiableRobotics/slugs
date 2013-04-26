@@ -67,7 +67,6 @@ GR1Context::GR1Context(std::string inFileName) {
                 } else if (readMode==2) {
                     std::set<VariableType> allowedTypes;
                     allowedTypes.insert(PreInput);
-                    allowedTypes.insert(PreOutput);
                     initEnv &= parseBooleanFormula(currentLine,allowedTypes);
                 } else if (readMode==3) {
                     std::set<VariableType> allowedTypes;
