@@ -97,9 +97,7 @@ bool GR1Context::checkRealizability(bool initSpecialRoboticsSemantics) {
     // Check if for every possible environment initial position the system has a good system initial position
     BF result;
     if (initSpecialRoboticsSemantics) {
-        if (!initSys.isTrue()) std::cerr << "Warning: Initialisation guarantees have been given although these are ignored in semantics-for-robotics mode! \n";
         result = (initEnv & initSys).Implies(winningPositions).UnivAbstract(varCubePreOutput).UnivAbstract(varCubePreInput);
-
     } else {
         result = initEnv.Implies((winningPositions & initSys).ExistAbstract(varCubePreOutput)).UnivAbstract(varCubePreInput);
     }
