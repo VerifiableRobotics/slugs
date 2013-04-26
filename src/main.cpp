@@ -11,7 +11,7 @@
  */
 GR1Context::GR1Context(std::string inFileName) {
 
-    std::ifstream inFile(inFileName);
+    std::ifstream inFile(inFileName.c_str());
     if (inFile.fail()) throw "Error: Cannot open input file";
 
     // Prepare safety and initialization constraints
@@ -282,7 +282,7 @@ int main(int argc, const char **args) {
                 if (filenameOutputFile=="") {
                     context.computeAndPrintExplicitStateStrategy(std::cout);
                 } else {
-                    std::ofstream of(filenameOutputFile);
+                    std::ofstream of(filenameOutputFile.c_str());
                     if (of.fail()) {
                         std::cerr << "Error: Could not open output file'" << filenameOutputFile << "\n";
                         return 1;
