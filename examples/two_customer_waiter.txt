@@ -76,7 +76,7 @@ RiceOrdered
 | ! & & | SakeOrdered' RiceOrdered' FoodObtained' Orderc1c2' & & & & ! bit0' bit1' ! bit2' ! bit3' deliver'
 | ! & & | SakeOrdered' RiceOrdered' FoodObtained' ! Orderc1c2' & & & & ! bit0' ! bit1' bit2' bit3' deliver'
 
-[ENV_INIT]
+[SYS_INIT]
 | | | | | | | | | | | | | | & & & ! bit0 ! bit1 ! bit2 ! bit3 & & & ! bit0 ! bit1 ! bit2 bit3 & & & ! bit0 ! bit1 bit2 ! bit3 & & & ! bit0 ! bit1 bit2 bit3 & & & ! bit0 bit1 ! bit2 ! bit3 & & & ! bit0 bit1 ! bit2 bit3 & & & ! bit0 bit1 bit2 ! bit3 & & & ! bit0 bit1 bit2 bit3 & & & bit0 ! bit1 ! bit2 ! bit3 & & & bit0 ! bit1 ! bit2 bit3 & & & bit0 ! bit1 bit2 ! bit3 & & & bit0 ! bit1 bit2 bit3 & & & bit0 bit1 ! bit2 ! bit3 & & & bit0 bit1 ! bit2 bit3 & & & bit0 bit1 bit2 ! bit3
 ! bit0
 ! bit1

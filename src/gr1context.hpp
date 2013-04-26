@@ -70,10 +70,10 @@ private:
     //@}
 
 public:
-    GR1Context(const char *inFilename);
+    GR1Context(std::string inFilename);
     virtual ~GR1Context() {}
     virtual bool checkRealizability(bool initSpecialRoboticsSemantics);
-    virtual void computeAndPrintExplicitStateStrategy();
+    virtual void computeAndPrintExplicitStateStrategy(std::ostream &outputStream);
 
     //@{
     /**

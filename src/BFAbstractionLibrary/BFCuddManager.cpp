@@ -129,11 +129,12 @@ BFBdd BFBddManager::readBDDFromFile(const char *filename, std::vector<BFBdd> &va
         throw std::runtime_error(os.str().c_str());
     }
 
-    int idMatcher[vars.size()];
+    int *idMatcher = new int[vars.size()];
     for (unsigned int i=0;i<vars.size();i++) {
         idMatcher[i] = vars[i].readNodeIndex();
     }
     DdNode *node = Dddmp_cuddBddLoad(mgr, DDDMP_VAR_COMPOSEIDS, NULL, NULL, idMatcher, DDDMP_MODE_DEFAULT,NULL,file);
-    fclose(file);    
+    fclose(file);
+    delete[] idMatcher;    
     return BFBdd(this,node);   
 }

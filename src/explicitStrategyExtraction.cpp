@@ -33,8 +33,13 @@ BF determinize(BF in, std::vector<BF> vars) {
  *        This function requires that the realizability of the specification has already been
  *        detected and that the variables "strategyDumpingData" and
  *        "winningPositions" have been filled by the synthesis algorithm with meaningful data.
+ * @param outputStream - Where the strategy shall be printed to.
  */
-void GR1Context::computeAndPrintExplicitStateStrategy() {
+void GR1Context::computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
+
+    // We don't want any reordering from this point onwards, as
+    // the BDD manipulations from this point onwards are 'kind of simple'.
+    mgr.setAutomaticOptimisation(false);
 
     // List of states in existance so far. The first map
     // maps from a BF node pointer (for the pre variable valuation) and a goal
@@ -84,21 +89,21 @@ void GR1Context::computeAndPrintExplicitStateStrategy() {
         }*/
 
         // Print state information
-        std::cout << "State " << stateNum << " with rank " << current.second << " -> <";
+        outputStream << "State " << stateNum << " with rank " << current.second << " -> <";
         bool first = true;
         for (unsigned int i=0;i<variables.size();i++) {
             if (variableTypes[i] < PostInput) {
                 if (first) {
                     first = false;
                 } else {
-                    std::cout << ", ";
+                    outputStream << ", ";
                 }
-                std::cout << variableNames[i] << ":";
-                std::cout << (((currentPossibilities & variables[i]).isFalse())?"0":"1");
+                outputStream << variableNames[i] << ":";
+                outputStream << (((currentPossibilities & variables[i]).isFalse())?"0":"1");
             }
         }
 
-        std::cout << ">\n\tWith successors : ";
+        outputStream << ">\n\tWith successors : ";
         first = true;
 
         // Compute successors for all variables that allow these
@@ -128,9 +133,9 @@ void GR1Context::computeAndPrintExplicitStateStrategy() {
             if (first) {
                 first = false;
             } else {
-                std::cout << ", ";
+                outputStream << ", ";
             }
-            std::cout << tn;
+            outputStream << tn;
         }
 
         BF nongoalSwitchingTransitions = currentPossibilities.ExistAbstract(varCubePre);
@@ -157,10 +162,10 @@ void GR1Context::computeAndPrintExplicitStateStrategy() {
             if (first) {
                 first = false;
             } else {
-                std::cout << ", ";
+                outputStream << ", ";
             }
-            std::cout << tn;
+            outputStream << tn;
         }
-        std::cout << "\n";
+        outputStream << "\n";
     }
 }

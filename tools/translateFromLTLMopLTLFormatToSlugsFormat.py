@@ -251,13 +251,11 @@ def performConversion(smvFile, ltlFile):
         print bit
     print ""
 
-    # Iterate over the property types. Warning: Initialization guarantees are actually put to the initialization assumptions because of
-    # the special GR(1) semantics that treats them alike for robotics (where all positions that satisfy the initial conditions have
-    # to be winning in order to call a scenario realizable).
+    # Iterate over the property types.
     buildPropertySet(assumptionTree,"ENV_",False,False)
     buildPropertySet(assumptionTree,"ENV_",False,True)
     buildPropertySet(guaranteeTree,"SYS_",True,False)
-    buildPropertySet(guaranteeTree,"ENV_",True,True)
+    buildPropertySet(guaranteeTree,"SYS_",True,True)
 
 
 # ============================================

@@ -9,7 +9,7 @@
  * @brief Constructor that reads the problem instance from file and prepares the BFManager, the BFVarCubes, and the BFVarVectors
  * @param inFile the input filename
  */
-GR1Context::GR1Context(const char *inFileName) {
+GR1Context::GR1Context(std::string inFileName) {
 
     std::ifstream inFile(inFileName);
     if (inFile.fail()) throw "Error: Cannot open input file";
@@ -202,13 +202,37 @@ BF GR1Context::parseBooleanFormula(std::string currentLine,std::set<VariableType
 }
 
 /**
+ * @brief Prints the help to stderr that the user sees when running "slugs --help" or when supplying
+ *        incorrect parameters
+ */
+void printToolUsageHelp() {
+    std::cerr << "Usage of slugs:\n";
+    std::cerr << "slugs [--onlyRealizability] [--sysInitRoboticsSemantics] <InFile> [OutFile]\n\n";
+    std::cerr << "The input file is supposed to be in 'slugs' format. If no output file name is\n";
+    std::cerr << "given, then in case of realizability, the synthesized controller is printed\n";
+    std::cerr << "to the standard output. The other options are:\n\n";
+    std::cerr << " --onlyRealizability  Use this parameter if no synthesized system should be\n";
+    std::cerr << "                      computed, but only the realizability/unrealizability\n";
+    std::cerr << "                      result is to be computed.\n\n";
+    std::cerr << " --sysInitRoboticsSemantics  In standard GR(1) synthesis, a specification is\n";
+    std::cerr << "                             called realizable if for every initial input\n";
+    std::cerr << "                             proposition valuation that is allowed by the\n";
+    std::cerr << "                             initialization contraints, there is some\n";
+    std::cerr << "                             suitable output proposition valuation. In the\n";
+    std::cerr << "                             modified semantics for robotics applications, the\n";
+    std::cerr << "                             controller has to be fine with any admissible\n";
+    std::cerr << "                             starting position.\n\n";
+}
+
+/**
  * @brief The main function. Parses arguments from the command line and instantiates a synthesizer object accordingly.
  * @return the error code: >0 means that some error has occured. In case of realizability or unrealizability, a value of 0 is returned.
  */
 int main(int argc, const char **args) {
     std::cerr << "SLUGS: SmaLl bUt complete Gr(1) Synthesis tool (see the documentation for an author list).\n";
 
-    std::string filename = "";
+    std::string filenameInputFile = "";
+    std::string filenameOutputFile = "";
     bool onlyCheckRealizability = false;
     bool initSpecialRoboticsSemantics = false;
 
@@ -219,28 +243,61 @@ int main(int argc, const char **args) {
                 onlyCheckRealizability = true;
             } else if (arg=="--sysInitRoboticsSemantics") {
                 initSpecialRoboticsSemantics = true;
+            } else if (arg=="--help") {
+                printToolUsageHelp();
+                return 0;
             } else {
                 std::cerr << "Error: Did not understand parameter " << arg << std::endl;
+                printToolUsageHelp();
                 return 1;
             }
         } else {
-            if (filename=="") {
-                filename = arg;
+            if (filenameInputFile=="") {
+                filenameInputFile = arg;
+            } else if (filenameOutputFile=="") {
+                filenameOutputFile = arg;
             } else {
-                std::cerr << "Error: More than one input filename given.\n";
+                std::cerr << "Error: More than two file names given.\n";
                 return 1;
             }
         }
     }
 
+    if (filenameInputFile == "") {
+        std::cerr << "Error: You did not give an input filename.\n";
+        printToolUsageHelp();
+        return 1;
+    }
+
+    // The output filename might be undefined. In that case, "stdout" is used.
+
     try {
-        GR1Context context(filename.c_str());
+        GR1Context context(filenameInputFile);
         bool realizable = context.checkRealizability(initSpecialRoboticsSemantics);
         if (realizable) {
             std::cerr << "RESULT: Specification is realizable.\n";
-            if (!onlyCheckRealizability) context.computeAndPrintExplicitStateStrategy();
+
+            // Print winning strategy
+            if (!onlyCheckRealizability) {
+                if (filenameOutputFile=="") {
+                    context.computeAndPrintExplicitStateStrategy(std::cout);
+                } else {
+                    std::ofstream of(filenameOutputFile);
+                    if (of.fail()) {
+                        std::cerr << "Error: Could not open output file'" << filenameOutputFile << "\n";
+                        return 1;
+                    }
+                    context.computeAndPrintExplicitStateStrategy(of);
+                    if (of.fail()) {
+                        std::cerr << "Error: Writing to output file'" << filenameOutputFile << "failed. \n";
+                        return 1;
+                    }
+                    of.close();
+                }
+
+            }
         } else {
-            std::cerr << "RESULT: Specification is not realizable.\n";
+            std::cerr << "RESULT: Specification is unrealizable.\n";
         }
 
 
