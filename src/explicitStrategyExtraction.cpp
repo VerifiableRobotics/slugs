@@ -113,6 +113,13 @@ void GR1Context::computeAndPrintExplicitStateStrategy(std::ostream &outputStream
         // Switching goals
         while (!(goalSwitchingTransitions.isFalse())) {
             BF newCombination = determinize(goalSwitchingTransitions,postVars);
+
+            // Jump as much forward  in the liveness guarantee list as possible ("stuttering avoidance")
+            unsigned int nextLivenessGuarantee = (current.second + 1) % livenessGuarantees.size();
+            while ((nextLivenessGuarantee != current.second) && !((livenessGuarantees[nextLivenessGuarantee] & newCombination).isFalse()))
+                nextLivenessGuarantee = (nextLivenessGuarantee + 1) % livenessGuarantees.size();
+
+            // Mark which input has been captured by this case
             BF inputCaptured = newCombination.ExistAbstract(varCubePostOutput);
             newCombination = newCombination.SwapVariables(varVectorPre,varVectorPost);
             currentPossibilities &= !inputCaptured;
@@ -120,7 +127,7 @@ void GR1Context::computeAndPrintExplicitStateStrategy(std::ostream &outputStream
 
             // Search for newCombination
             unsigned int tn;
-            std::pair<size_t, unsigned int> target = std::pair<size_t, unsigned int>(newCombination.getHashCode(),(current.second + 1) % livenessGuarantees.size());
+            std::pair<size_t, unsigned int> target = std::pair<size_t, unsigned int>(newCombination.getHashCode(),nextLivenessGuarantee);
             if (lookupTableForPastStates.count(target)==0) {
                 tn = lookupTableForPastStates[target] = bfsUsedInTheLookupTable.size();
                 bfsUsedInTheLookupTable.push_back(newCombination);
