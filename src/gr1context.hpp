@@ -9,7 +9,7 @@
 #include <vector>
 #include "bddDump.h"
 
-typedef enum { PreInput, PreMotionStateOutput, PreMotionOutput, PreOtherOutput, PostInput, PostMotionStateOutput, PostOtherOutput } VariableType;
+typedef enum { PreInput, PreMotionState, PreMotionControlOutput, PreOtherOutput, PostInput, PostMotionState, PostMotionControlOutput, PostOtherOutput } VariableType;
 
 /**
  * @brief Container class for all GR(1) synthesis related activities
@@ -39,7 +39,7 @@ protected:
     BFVarCube varCubePostInput;
     BFVarCube varCubePostOutput;
     BFVarCube varCubePostControllerOutput;
-    BFVarCube varCubePostMotionStateOutput;
+    BFVarCube varCubePostMotionState;
     BFVarCube varCubePreInput;
     BFVarCube varCubePreOutput;
     BFVarCube varCubePre;
@@ -85,22 +85,24 @@ public:
      */
     void getVariableTypes(std::vector<std::string> &types) const {
         types.push_back("PreInput");
-        types.push_back("PreMotionStateOutput");
-        types.push_back("PreMotionOutput");
+        types.push_back("PreMotionState");
+        types.push_back("PreMotionControlOutput");
         types.push_back("PreOtherOutput");
         types.push_back("PostInput");
-        types.push_back("PostMotionStateOutput");
+        types.push_back("PostMotionControlOutput");
+        types.push_back("PostMotionState");
         types.push_back("PostOtherOutput");
     }
 
     void getVariableNumbersOfType(std::string typeString, std::vector<uint> &nums) const {
         VariableType type;
         if (typeString=="PreInput") type = PreInput;
-        else if (typeString=="PreMotionStateOutput") type = PreMotionStateOutput;
-        else if (typeString=="PreMotionOutput") type = PreMotionOutput;
+        else if (typeString=="PreMotionState") type = PreMotionState;
+        else if (typeString=="PreMotionControlOutput") type = PreMotionControlOutput;
         else if (typeString=="PreOtherOutput") type = PreOtherOutput;
         else if (typeString=="PostInput") type = PostInput;
-        else if (typeString=="PostMotionStateOutput") type = PostMotionStateOutput;
+        else if (typeString=="PostMotionControlOutput") type = PostMotionControlOutput;
+        else if (typeString=="PostMotionState") type = PostMotionState;
         else if (typeString=="PostOtherOutput") type = PostOtherOutput;
         else throw "Cannot detect variable type for BDD dumping";
         for (uint i=0;i<variables.size();i++) {

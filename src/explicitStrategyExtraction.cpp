@@ -61,7 +61,7 @@ void GR1Context::computeAndPrintExplicitStateStrategy() {
         BF strategy = mgr.constantFalse();
         for (auto it = strategyDumpingData.begin();it!=strategyDumpingData.end();it++) {
             if (it->first == i) {
-                BF newCases = it->second.ExistAbstract(varCubePostOutput) & !casesCovered;
+                BF newCases = it->second.ExistAbstract(varCubePostControllerOutput) & !casesCovered;
                 strategy |= newCases & it->second;
                 casesCovered |= newCases;
             }
@@ -109,6 +109,7 @@ void GR1Context::computeAndPrintExplicitStateStrategy() {
         while (!(goalSwitchingTransitions.isFalse())) {
             BF newCombination = determinize(goalSwitchingTransitions,postVars);
             BF inputCaptured = newCombination.ExistAbstract(varCubePostOutput);
+            for  {
             newCombination = newCombination.SwapVariables(varVectorPre,varVectorPost);
             currentPossibilities &= !inputCaptured;
             goalSwitchingTransitions &= !inputCaptured;
@@ -131,6 +132,7 @@ void GR1Context::computeAndPrintExplicitStateStrategy() {
                 std::cout << ", ";
             }
             std::cout << tn;
+        }
         }
 
         BF nongoalSwitchingTransitions = currentPossibilities.ExistAbstract(varCubePre);

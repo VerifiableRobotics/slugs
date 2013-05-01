@@ -64,14 +64,17 @@ GR1Context::GR1Context(const char *inFileName, const char *robotFileName) {
                 } else if (readMode==1) {
                     variables.push_back(mgr.newVariable());
                     variableNames.push_back(currentLine);
-                    variableTypes.push_back(PreMotionStateOutput);
+                    variableTypes.push_back(PreMotionState);
                     variables.push_back(mgr.newVariable());
                     variableNames.push_back(currentLine+"'");
-                    variableTypes.push_back(PostMotionStateOutput);
+                    variableTypes.push_back(PostMotionState);
                 } else if (readMode==2) {
                     variables.push_back(mgr.newVariable());
                     variableNames.push_back(currentLine);
-                    variableTypes.push_back(PreMotionOutput);
+                    variableTypes.push_back(PreMotionControlOutput);
+                    variables.push_back(mgr.newVariable());
+                    variableNames.push_back(currentLine);
+                    variableTypes.push_back(PostMotionControlOutput);
                 } else if (readMode==3) {
                     variables.push_back(mgr.newVariable());
                     variableNames.push_back(currentLine);
@@ -82,53 +85,53 @@ GR1Context::GR1Context(const char *inFileName, const char *robotFileName) {
                 } else if (readMode==4) {
                     std::set<VariableType> allowedTypes;
                     allowedTypes.insert(PreInput);
-                    allowedTypes.insert(PreMotionStateOutput);
-                    allowedTypes.insert(PreMotionOutput);
+                    allowedTypes.insert(PreMotionState);
+                    allowedTypes.insert(PreMotionControlOutput);
                     allowedTypes.insert(PreOtherOutput);
                     initEnv &= parseBooleanFormula(currentLine,allowedTypes);
                 } else if (readMode==5) {
                     std::set<VariableType> allowedTypes;
                     allowedTypes.insert(PreInput);
-                    allowedTypes.insert(PreMotionStateOutput);
-                    allowedTypes.insert(PreMotionOutput);
+                    allowedTypes.insert(PreMotionState);
+                    allowedTypes.insert(PreMotionControlOutput);
                     allowedTypes.insert(PreOtherOutput);
                     initSys &= parseBooleanFormula(currentLine,allowedTypes);
                 } else if (readMode==6) {
                     std::set<VariableType> allowedTypes;
                     allowedTypes.insert(PreInput);
-                    allowedTypes.insert(PreMotionStateOutput);
-                    allowedTypes.insert(PreMotionOutput);
+                    allowedTypes.insert(PreMotionState);
+                    allowedTypes.insert(PreMotionControlOutput);
                     allowedTypes.insert(PreOtherOutput);
                     allowedTypes.insert(PostInput);
-                    allowedTypes.insert(PostMotionStateOutput);
+                    allowedTypes.insert(PostMotionState);
                     allowedTypes.insert(PostOtherOutput);
                     safetyEnv &= parseBooleanFormula(currentLine,allowedTypes);
                 } else if (readMode==7) {
                     std::set<VariableType> allowedTypes;
                     allowedTypes.insert(PreInput);
-                    allowedTypes.insert(PreMotionStateOutput);
-                    allowedTypes.insert(PreMotionOutput);
+                    allowedTypes.insert(PreMotionState);
+                    allowedTypes.insert(PreMotionControlOutput);
                     allowedTypes.insert(PreOtherOutput);
                     allowedTypes.insert(PostInput);
-                    allowedTypes.insert(PostMotionStateOutput);
+                    allowedTypes.insert(PostMotionState);
                     allowedTypes.insert(PostOtherOutput);
                     safetySys &= parseBooleanFormula(currentLine,allowedTypes);
                 } else if (readMode==8) {
                     std::set<VariableType> allowedTypes;
                     allowedTypes.insert(PreInput);
-                    allowedTypes.insert(PreMotionStateOutput);
-                    allowedTypes.insert(PreMotionOutput);
+                    allowedTypes.insert(PreMotionState);
+                    allowedTypes.insert(PreMotionControlOutput);
                     allowedTypes.insert(PreOtherOutput);
                     allowedTypes.insert(PostInput);
                     livenessAssumptions.push_back(parseBooleanFormula(currentLine,allowedTypes));
                 } else if (readMode==9) {
                     std::set<VariableType> allowedTypes;
                     allowedTypes.insert(PreInput);
-                    allowedTypes.insert(PreMotionStateOutput);
-                    allowedTypes.insert(PreMotionOutput);
+                    allowedTypes.insert(PreMotionState);
+                    allowedTypes.insert(PreMotionControlOutput);
                     allowedTypes.insert(PreOtherOutput);
                     allowedTypes.insert(PostInput);
-                    allowedTypes.insert(PostMotionStateOutput);
+                    allowedTypes.insert(PostMotionState);
                     allowedTypes.insert(PostOtherOutput);
                     livenessGuarantees.push_back(parseBooleanFormula(currentLine,allowedTypes));
                 } else {
@@ -141,15 +144,15 @@ GR1Context::GR1Context(const char *inFileName, const char *robotFileName) {
 
     std::vector<BF> varsBDDread;
     for (uint i=0;i<variables.size();i++) {
-        if (variableTypes[i]==PreMotionStateOutput)
+        if (variableTypes[i]==PreMotionState)
         varsBDDread.push_back(variables[i]);
     }
     for (uint i=0;i<variables.size();i++) {
-        if (variableTypes[i]==PreMotionOutput)
+        if (variableTypes[i]==PreMotionControlOutput)
         varsBDDread.push_back(variables[i]);
     }
     for (uint i=0;i<variables.size();i++) {
-        if (variableTypes[i]==PostMotionStateOutput)
+        if (variableTypes[i]==PostMotionState)
         varsBDDread.push_back(variables[i]);
     }
     std::cerr << "Numer of bits that we expect the robot abstraction BDD to have: " << varsBDDread.size() << std::endl;
@@ -162,19 +165,19 @@ GR1Context::GR1Context(const char *inFileName, const char *robotFileName) {
     std::vector<BF> preInputVars;
     std::vector<BF> preControllerOutputVars;
     std::vector<BF> postControllerOutputVars;
-    std::vector<BF> postMotionStateOutputVars;
+    std::vector<BF> postMotionStateVars;
     for (uint i=0;i<variables.size();i++) {
         switch (variableTypes[i]) {
         case PreInput:
             preVars.push_back(variables[i]);
             preInputVars.push_back(variables[i]);
             break;
-        case PreMotionStateOutput:
+        case PreMotionState:
             preVars.push_back(variables[i]);
             preOutputVars.push_back(variables[i]);
-            postControllerOutputVars.push_back(variables[i]);
             break;
-        case PreMotionOutput:
+        case PreMotionControlOutput:
+            preVars.push_back(variables[i]);
             preControllerOutputVars.push_back(variables[i]);
             break;
         case PreOtherOutput:
@@ -185,10 +188,10 @@ GR1Context::GR1Context(const char *inFileName, const char *robotFileName) {
             postVars.push_back(variables[i]);
             postInputVars.push_back(variables[i]);
             break;
-        case PostMotionStateOutput:
+        case PostMotionState:
             postVars.push_back(variables[i]);
             postOutputVars.push_back(variables[i]);
-            postMotionStateOutputVars.push_back(variables[i]);
+            postMotionStateVars.push_back(variables[i]);
             break;
         case PostOtherOutput:
             postVars.push_back(variables[i]);
@@ -204,7 +207,7 @@ GR1Context::GR1Context(const char *inFileName, const char *robotFileName) {
     varCubePostInput = mgr.computeCube(postInputVars);
     varCubePostOutput = mgr.computeCube(postOutputVars);
     varCubePostControllerOutput = mgr.computeCube(postControllerOutputVars);
-    varCubePostMotionStateOutput = mgr.computeCube(postMotionStateOutputVars);
+    varCubePostMotionState = mgr.computeCube(postMotionStateVars);
     varCubePreInput = mgr.computeCube(preInputVars);
     varCubePreOutput = mgr.computeCube(preOutputVars);
     varCubePre = mgr.computeCube(preVars);
