@@ -65,9 +65,10 @@ bool GR1Context::checkRealizability(bool initSpecialRoboticsSemantics) {
                         // Compute a set of paths that are safe to take - used for the enforceable predecessor operator ('cox')
                         foundPaths = livetransitions | (nu0.getValue().SwapVariables(varVectorPre,varVectorPost) & !(livenessAssumptions[i]));
                         foundPaths &= safetySys;
+                        foundPaths = robotBDD.Implies(foundPaths).UnivAbstract(varCubePostMotionStateOutput);
 
                         // Update the inner-most fixed point with the result of applying the enforcable predecessor operator
-                        nu0.update(safetyEnv.Implies(foundPaths).ExistAbstract(varCubePostOutput).UnivAbstract(varCubePostInput));
+                        nu0.update(safetyEnv.Implies(foundPaths).ExistAbstract(varCubePostControllerOutput).UnivAbstract(varCubePostInput));
                     }
 
                     // Update the set of positions that are winning for some liveness assumption

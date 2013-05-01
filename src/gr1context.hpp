@@ -38,6 +38,8 @@ protected:
     BFVarVector varVectorPost;
     BFVarCube varCubePostInput;
     BFVarCube varCubePostOutput;
+    BFVarCube varCubePostControllerOutput;
+    BFVarCube varCubePostMotionStateOutput;
     BFVarCube varCubePreInput;
     BFVarCube varCubePreOutput;
     BFVarCube varCubePre;

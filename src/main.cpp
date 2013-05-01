@@ -155,14 +155,14 @@ GR1Context::GR1Context(const char *inFileName, const char *robotFileName) {
     std::cerr << "Numer of bits that we expect the robot abstraction BDD to have: " << varsBDDread.size() << std::endl;
     robotBDD = mgr.readBDDFromFile(robotFileName,varsBDDread);
 
-    // Read in variables
-
-
     // Compute VarVectors and VarCubes
     std::vector<BF> postOutputVars;
     std::vector<BF> postInputVars;
     std::vector<BF> preOutputVars;
     std::vector<BF> preInputVars;
+    std::vector<BF> preControllerOutputVars;
+    std::vector<BF> postControllerOutputVars;
+    std::vector<BF> postMotionStateOutputVars;
     for (uint i=0;i<variables.size();i++) {
         switch (variableTypes[i]) {
         case PreInput:
@@ -172,10 +172,10 @@ GR1Context::GR1Context(const char *inFileName, const char *robotFileName) {
         case PreMotionStateOutput:
             preVars.push_back(variables[i]);
             preOutputVars.push_back(variables[i]);
+            postControllerOutputVars.push_back(variables[i]);
             break;
         case PreMotionOutput:
-            //preVars.push_back(variables[i]);
-            //preOutputVars.push_back(variables[i]);
+            preControllerOutputVars.push_back(variables[i]);
             break;
         case PreOtherOutput:
             preVars.push_back(variables[i]);
@@ -188,10 +188,12 @@ GR1Context::GR1Context(const char *inFileName, const char *robotFileName) {
         case PostMotionStateOutput:
             postVars.push_back(variables[i]);
             postOutputVars.push_back(variables[i]);
+            postMotionStateOutputVars.push_back(variables[i]);
             break;
         case PostOtherOutput:
             postVars.push_back(variables[i]);
             postOutputVars.push_back(variables[i]);
+            postControllerOutputVars.push_back(variables[i]);
             break;
         default:
             throw "Error: Found a variable of unknown type";
@@ -201,6 +203,8 @@ GR1Context::GR1Context(const char *inFileName, const char *robotFileName) {
     varVectorPost = mgr.computeVarVector(postVars);
     varCubePostInput = mgr.computeCube(postInputVars);
     varCubePostOutput = mgr.computeCube(postOutputVars);
+    varCubePostControllerOutput = mgr.computeCube(postControllerOutputVars);
+    varCubePostMotionStateOutput = mgr.computeCube(postMotionStateOutputVars);
     varCubePreInput = mgr.computeCube(preInputVars);
     varCubePreOutput = mgr.computeCube(preOutputVars);
     varCubePre = mgr.computeCube(preVars);
