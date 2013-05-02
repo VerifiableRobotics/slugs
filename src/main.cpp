@@ -180,6 +180,11 @@ GR1Context::GR1Context(const char *inFileName, const char *robotFileName) {
             preVars.push_back(variables[i]);
             preControllerOutputVars.push_back(variables[i]);
             break;
+        case PostMotionControlOutput:
+            postVars.push_back(variables[i]);
+            postOutputVars.push_back(variables[i]);
+            postControllerOutputVars.push_back(variables[i]);
+            break;
         case PreOtherOutput:
             preVars.push_back(variables[i]);
             preOutputVars.push_back(variables[i]);

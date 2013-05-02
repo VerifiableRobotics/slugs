@@ -103,66 +103,52 @@ void GR1Context::computeAndPrintExplicitStateStrategy() {
 
         // Compute successors for all variables that allow these
         currentPossibilities &= positionalStrategiesForTheIndividualGoals[current.second];
-        BF goalSwitchingTransitions = (currentPossibilities & livenessGuarantees[current.second]).ExistAbstract(varCubePre);
 
-        // Switching goals
-        while (!(goalSwitchingTransitions.isFalse())) {
-            BF newCombination = determinize(goalSwitchingTransitions,postVars);
-            BF inputCaptured = newCombination.ExistAbstract(varCubePostOutput);
-            for  {
-            newCombination = newCombination.SwapVariables(varVectorPre,varVectorPost);
+        // For every possible input to the controller, compute a controller output (aux+model input) that is allowed
+        // according to the general strategy computed above. For every controller output, compute where we can
+        // get in the model for this combination, and iterate over all of these cases. Move to the respective next states
+        // with a higher rank whenever this transition has just satisfied some liveness guarantee, or stay in the same rank if not.
+        while (!(currentPossibilities.isFalse())) {
+
+            BF nextInput = determinize(currentPossibilities,postVars);
+            BF inputCaptured = nextInput.ExistAbstract(varCubePostControllerOutput);
             currentPossibilities &= !inputCaptured;
-            goalSwitchingTransitions &= !inputCaptured;
 
-            // Search for newCombination
-            uint tn;
-            std::pair<size_t, uint> target = std::pair<size_t, uint>(newCombination.getHashCode(),(current.second + 1) % livenessGuarantees.size());
-            if (lookupTableForPastStates.count(target)==0) {
-                tn = lookupTableForPastStates[target] = bfsUsedInTheLookupTable.size();
-                bfsUsedInTheLookupTable.push_back(newCombination);
-                todoList.push_back(target);
-            } else {
-                tn = lookupTableForPastStates[target];
-            }
+            BF possibleNextStatesOverTheModel = nextInput & robotBDD;
+            while (!(possibleNextStatesOverTheModel.isFalse())) {
 
-            // Print
-            if (first) {
-                first = false;
-            } else {
-                std::cout << ", ";
+                BF thisCase = determinize(possibleNextStatesOverTheModel,postVars);
+
+                // Liveness guarantee fulfilled? Then increase guarantee pointer
+                uint nextLivenessGuarantee = current.second;
+                bool firstTry = true;
+                while ((firstTry | (current.second!= nextLivenessGuarantee)) && !( (thisCase & livenessGuarantees[nextLivenessGuarantee]).isFalse())) {
+                    nextLivenessGuarantee = (nextLivenessGuarantee + 1) & livenessGuarantees.size();
+                    firstTry = false;
+                }
+
+                // Search for the next state - add if not already present
+                BF nextState = thisCase.ExistAbstract(varCubePre).SwapVariables(varVectorPre,varVectorPost);
+                uint tn;
+                std::pair<size_t, uint> target = std::pair<size_t, uint>(nextState.getHashCode(),nextLivenessGuarantee);
+                if (lookupTableForPastStates.count(target)==0) {
+                    tn = lookupTableForPastStates[target] = bfsUsedInTheLookupTable.size();
+                    bfsUsedInTheLookupTable.push_back(nextState);
+                    todoList.push_back(target);
+                } else {
+                    tn = lookupTableForPastStates[target];
+                }
+
+                // Print
+                if (first) {
+                    first = false;
+                } else {
+                    std::cout << ", ";
+                }
+                std::cout << tn;
+
             }
-            std::cout << tn;
         }
-        }
 
-        BF nongoalSwitchingTransitions = currentPossibilities.ExistAbstract(varCubePre);
-
-        while (!(nongoalSwitchingTransitions.isFalse())) {
-            // Get new input
-            BF newCombination = determinize(nongoalSwitchingTransitions,postVars);
-            BF inputCaptured = newCombination.ExistAbstract(varCubePostOutput);
-            newCombination = newCombination.SwapVariables(varVectorPre,varVectorPost);
-            nongoalSwitchingTransitions &= !inputCaptured;
-
-            // Search for newCombination
-            uint tn;
-            std::pair<size_t, uint> target = std::pair<size_t, uint>(newCombination.getHashCode(),current.second);
-            if (lookupTableForPastStates.count(target)==0) {
-                tn = lookupTableForPastStates[target] = bfsUsedInTheLookupTable.size();
-                bfsUsedInTheLookupTable.push_back(newCombination);
-                todoList.push_back(target);
-            } else {
-                tn = lookupTableForPastStates[target];
-            }
-
-            // Print
-            if (first) {
-                first = false;
-            } else {
-                std::cout << ", ";
-            }
-            std::cout << tn;
-        }
-        std::cout << "\n";
     }
 }
