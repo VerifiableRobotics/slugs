@@ -221,7 +221,10 @@ GR1Context::GR1Context(const char *inFileName, const char *robotFileName) {
     // The synthesis algorithm might be unsound otherwise
     if (livenessAssumptions.size()==0) livenessAssumptions.push_back(mgr.constantTrue());
     if (livenessGuarantees.size()==0) livenessGuarantees.push_back(mgr.constantTrue());
+
+    BF_newDumpDot(*this,robotBDD,"PreMotionState PreMotionControlOutput PostMotionState","/tmp/sometestbdd.dot");
 }
+
 
 /**
  * @brief Recurse internal function to parse a Boolean formula from a line in the input file
