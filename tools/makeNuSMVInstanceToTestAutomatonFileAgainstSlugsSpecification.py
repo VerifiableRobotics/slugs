@@ -77,7 +77,7 @@ while (autLineNumber < len(autLines)):
         # Reading successors
         lineparts = secondLineSplitter.split(autLines[autLineNumber+1].strip())
         successors = []
-        if lineparts[0]!="With successors":
+        if not lineparts[0].startswith("With successors"):
             raise Exception("Automaton file is invalid: expecting 'With successors'")
         for i in xrange(1,len(lineparts)):
             successors.append(int(lineparts[i]))
@@ -263,8 +263,8 @@ def slugsInitToLTL(reverseTokens):
             raise Exception("No 'next's allowed in slugsInitToLTL")
     raise Exception("slugsInitToLTL: Could not decipger operator "+op)
 
-allInitChecker = "("+"&".join(["TRUE"]+[slugsInitToLTLNotYetReversed(line.split(" ")) for line in slugsLines["[SYS_INIT]"]]+[slugsInitToLTLNotYetReversed(line.split(" ")) for line in slugsLines["[ENV_INIT]"]])+")"
-allSafetyAssumptions = "("+"&".join(["TRUE"]+[slugsToLTLNotYetReversed(line.split(" ")) for line in slugsLines["[ENV_TRANS]"]])+")"
+allInitChecker = "("+" & ".join(["TRUE"]+[slugsInitToLTLNotYetReversed(line.split(" ")) for line in slugsLines["[SYS_INIT]"]]+[slugsInitToLTLNotYetReversed(line.split(" ")) for line in slugsLines["[ENV_INIT]"]])+")"
+allSafetyAssumptions = "("+" & ".join(["TRUE"]+[slugsToLTLNotYetReversed(line.split(" ")) for line in slugsLines["[ENV_TRANS]"]])+")"
 allInitAssumptions = "("+allInitChecker+" & (X state!="+str(len(automatonStates))+"))"
 
 # Write Safety specs
@@ -273,9 +273,9 @@ for safetyGuarantee in slugsLines["[SYS_TRANS]"]:
     nuSMVFile.write("LTLSPEC " + allInitAssumptions+" -> ((!"+allSafetyAssumptions+") V ("+thisSafetyGuarantee+" | ! "+allSafetyAssumptions+"));\n")
 
 # Write Liveness specs
-allLivenessAssumptions = "("+"&".join(["TRUE"]+["G F "+slugsToLTLNotYetReversed(line.split(" ")) for line in slugsLines["[ENV_LIVENESS]"]])+")"
+allLivenessAssumptions = "("+" & ".join(["TRUE"]+["G F "+slugsToLTLNotYetReversed(line.split(" ")) for line in slugsLines["[ENV_LIVENESS]"]])+")"
 for livenessGuarantee in slugsLines["[SYS_LIVENESS]"]:
     thisLivenessGuarantee = slugsToLTLNotYetReversed(livenessGuarantee.split(" "))
-    nuSMVFile.write("LTLSPEC (" + allInitAssumptions+" & G " + allSafetyAssumptions+") -> G F "+thisLivenessGuarantee+";\n")
+    nuSMVFile.write("LTLSPEC (" + allInitAssumptions+" & G " + allSafetyAssumptions+" & "+allLivenessAssumptions+") -> G F "+thisLivenessGuarantee+";\n")
 
 

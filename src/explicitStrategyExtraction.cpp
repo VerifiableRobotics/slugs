@@ -108,22 +108,24 @@ void GR1Context::computeAndPrintExplicitStateStrategy(std::ostream &outputStream
 
         // Compute successors for all variables that allow these
         currentPossibilities &= positionalStrategiesForTheIndividualGoals[current.second];
-        BF goalSwitchingTransitions = (currentPossibilities & livenessGuarantees[current.second]).ExistAbstract(varCubePre);
+        BF remainingTransitions = (currentPossibilities).ExistAbstract(varCubePre);
 
         // Switching goals
-        while (!(goalSwitchingTransitions.isFalse())) {
-            BF newCombination = determinize(goalSwitchingTransitions,postVars);
+        while (!(remainingTransitions.isFalse())) {
+            BF newCombination = determinize(remainingTransitions,postVars);
 
             // Jump as much forward  in the liveness guarantee list as possible ("stuttering avoidance")
-            unsigned int nextLivenessGuarantee = (current.second + 1) % livenessGuarantees.size();
-            while ((nextLivenessGuarantee != current.second) && !((livenessGuarantees[nextLivenessGuarantee] & newCombination).isFalse()))
+            unsigned int nextLivenessGuarantee = current.second;
+            bool firstTry = true;
+            while (((nextLivenessGuarantee != current.second) | firstTry) && !((livenessGuarantees[nextLivenessGuarantee] & newCombination).isFalse())) {
                 nextLivenessGuarantee = (nextLivenessGuarantee + 1) % livenessGuarantees.size();
+                firstTry = false;
+            }
 
             // Mark which input has been captured by this case
             BF inputCaptured = newCombination.ExistAbstract(varCubePostOutput);
             newCombination = newCombination.SwapVariables(varVectorPre,varVectorPost);
-            currentPossibilities &= !inputCaptured;
-            goalSwitchingTransitions &= !inputCaptured;
+            remainingTransitions &= !inputCaptured;
 
             // Search for newCombination
             unsigned int tn;
@@ -145,34 +147,6 @@ void GR1Context::computeAndPrintExplicitStateStrategy(std::ostream &outputStream
             outputStream << tn;
         }
 
-        BF nongoalSwitchingTransitions = currentPossibilities.ExistAbstract(varCubePre);
-
-        while (!(nongoalSwitchingTransitions.isFalse())) {
-            // Get new input
-            BF newCombination = determinize(nongoalSwitchingTransitions,postVars);
-            BF inputCaptured = newCombination.ExistAbstract(varCubePostOutput);
-            newCombination = newCombination.SwapVariables(varVectorPre,varVectorPost);
-            nongoalSwitchingTransitions &= !inputCaptured;
-
-            // Search for newCombination
-            unsigned int tn;
-            std::pair<size_t, unsigned int> target = std::pair<size_t, unsigned int>(newCombination.getHashCode(),current.second);
-            if (lookupTableForPastStates.count(target)==0) {
-                tn = lookupTableForPastStates[target] = bfsUsedInTheLookupTable.size();
-                bfsUsedInTheLookupTable.push_back(newCombination);
-                todoList.push_back(target);
-            } else {
-                tn = lookupTableForPastStates[target];
-            }
-
-            // Print
-            if (first) {
-                first = false;
-            } else {
-                outputStream << ", ";
-            }
-            outputStream << tn;
-        }
         outputStream << "\n";
     }
 }
