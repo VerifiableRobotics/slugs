@@ -73,7 +73,7 @@ GR1Context::GR1Context(const char *inFileName, const char *robotFileName) {
                     variableNames.push_back(currentLine);
                     variableTypes.push_back(PreMotionControlOutput);
                     variables.push_back(mgr.newVariable());
-                    variableNames.push_back(currentLine+"'");
+                    variableNames.push_back(currentLine);
                     variableTypes.push_back(PostMotionControlOutput);
                 } else if (readMode==3) {
                     variables.push_back(mgr.newVariable());
@@ -148,7 +148,7 @@ GR1Context::GR1Context(const char *inFileName, const char *robotFileName) {
         varsBDDread.push_back(variables[i]);
     }
     for (uint i=0;i<variables.size();i++) {
-        if (variableTypes[i]==PostMotionControlOutput)
+        if (variableTypes[i]==PreMotionControlOutput)
         varsBDDread.push_back(variables[i]);
     }
     for (uint i=0;i<variables.size();i++) {
@@ -166,6 +166,7 @@ GR1Context::GR1Context(const char *inFileName, const char *robotFileName) {
     std::vector<BF> preControllerOutputVars;
     std::vector<BF> postControllerOutputVars;
     std::vector<BF> postMotionStateVars;
+    std::vector<BF> preMotionStateVars;
     for (uint i=0;i<variables.size();i++) {
         switch (variableTypes[i]) {
         case PreInput:
@@ -175,6 +176,7 @@ GR1Context::GR1Context(const char *inFileName, const char *robotFileName) {
         case PreMotionState:
             preVars.push_back(variables[i]);
             preOutputVars.push_back(variables[i]);
+            preMotionStateVars.push_back(variables[i]);
             break;
         case PreMotionControlOutput:
             preVars.push_back(variables[i]);
@@ -217,12 +219,26 @@ GR1Context::GR1Context(const char *inFileName, const char *robotFileName) {
     varCubePreOutput = mgr.computeCube(preOutputVars);
     varCubePre = mgr.computeCube(preVars);
 
+    // Create a new liveness assumption that says that always eventually, if an action/pre-state
+    // combination may lead to a different position, then it is taken
+    BF prePostMotionStatesDifferent = mgr.constantFalse();
+    for (uint i=0;i<preMotionStateVars.size();i++) {
+        prePostMotionStatesDifferent |= (preMotionStateVars[i] ^ postMotionStateVars[i]);
+    }
+    BF preMotionInputCombinationsThatCanChangeState = (prePostMotionStatesDifferent & robotBDD).ExistAbstract(varCubePostMotionState);
+    BF newLivenessAssumption = (!preMotionInputCombinationsThatCanChangeState) | prePostMotionStatesDifferent;
+    livenessAssumptions.push_back(newLivenessAssumption);
+    if (!(newLivenessAssumption.isTrue())) {
+        std::cerr << "Note: Added a liveness assumption that always eventually, we are moving if an action is taken at allows moving.\n";
+    }
+    BF_newDumpDot(*this,newLivenessAssumption,"PreMotionState PreMotionControlOutput PostMotionState","/tmp/changeMotionStateLivenessAssumption.dot");
+
     // Make sure that there is at least one liveness assumption and one liveness guarantee
     // The synthesis algorithm might be unsound otherwise
-    if (livenessAssumptions.size()==0) livenessAssumptions.push_back(mgr.constantTrue());
     if (livenessGuarantees.size()==0) livenessGuarantees.push_back(mgr.constantTrue());
+    if (livenessAssumptions.size()==0) livenessAssumptions.push_back(mgr.constantTrue());
 
-    //BF_newDumpDot(*this,robotBDD,"PreMotionState PostMotionControlOutput PostMotionState","/tmp/sometestbdd.dot");
+    BF_newDumpDot(*this,robotBDD,"PreMotionState PreMotionControlOutput PostMotionState","/tmp/sometestbdd.dot");
 }
 
 
