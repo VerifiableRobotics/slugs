@@ -118,12 +118,14 @@ void GR1Context::computeAndPrintExplicitStateStrategy() {
             while (!(possibleNextStatesOverTheModel.isFalse())) {
 
                 BF thisCase = determinize(possibleNextStatesOverTheModel,postVars);
+                possibleNextStatesOverTheModel &= !thisCase;
 
                 // Liveness guarantee fulfilled? Then increase guarantee pointer
                 uint nextLivenessGuarantee = current.second;
                 bool firstTry = true;
+                //BF_newDumpDot(*this,(thisCase & livenessGuarantees[nextLivenessGuarantee]),NULL,"/tmp/candidatetransition.dot");
                 while ((firstTry | (current.second!= nextLivenessGuarantee)) && !( (thisCase & livenessGuarantees[nextLivenessGuarantee]).isFalse())) {
-                    nextLivenessGuarantee = (nextLivenessGuarantee + 1) & livenessGuarantees.size();
+                    nextLivenessGuarantee = (nextLivenessGuarantee + 1) % livenessGuarantees.size();
                     firstTry = false;
                 }
 
@@ -149,6 +151,6 @@ void GR1Context::computeAndPrintExplicitStateStrategy() {
 
             }
         }
-
+        std::cout << "\n";
     }
 }

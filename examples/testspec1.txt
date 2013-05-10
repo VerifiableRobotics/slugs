@@ -1,0 +1,32 @@
+[INPUT]
+
+
+[MOTION STATE OUTPUT]
+xbit
+ybit
+
+[MOTION CONTROLLER OUTPUT]
+ubit
+vbit
+
+[OTHER OUTPUT]
+
+
+[ENV_INIT]
+1
+
+[ENV_TRANS]
+1
+
+[ENV_LIVENESS]
+1
+
+[SYS_INIT]
+1
+
+[SYS_TRANS]
+1
+
+[SYS_LIVENESS]
+& ! xbit' ! ybit'
+& xbit' ybit'

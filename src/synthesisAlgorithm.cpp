@@ -41,6 +41,7 @@ bool GR1Context::checkRealizability(bool initSpecialRoboticsSemantics) {
             // Start with the ones that actually represent reaching the goal (which is a transition in this implementation as we can have
             // nexts in the goal descriptions).
             BF livetransitions = livenessGuarantees[j] & (nu2.getValue().SwapVariables(varVectorPre,varVectorPost));
+            //BF_newDumpDot(*this,livetransitions,NULL,"/tmp/liveTransitions.dot");
 
             // Compute the middle least-fixed point (called 'Y' in the GR(1) paper)
             BFFixedPoint mu1(mgr.constantFalse());
@@ -65,7 +66,9 @@ bool GR1Context::checkRealizability(bool initSpecialRoboticsSemantics) {
                         // Compute a set of paths that are safe to take - used for the enforceable predecessor operator ('cox')
                         foundPaths = livetransitions | (nu0.getValue().SwapVariables(varVectorPre,varVectorPost) & !(livenessAssumptions[i]));
                         foundPaths &= safetySys;
+                        //BF_newDumpDot(*this,foundPaths,NULL,"/tmp/foundPathsPreRobot.dot");
                         foundPaths = robotBDD.Implies(foundPaths).UnivAbstract(varCubePostMotionState);
+                        //BF_newDumpDot(*this,foundPaths,NULL,"/tmp/foundPathsPostRobot.dot");
 
                         // Update the inner-most fixed point with the result of applying the enforcable predecessor operator
                         nu0.update(safetyEnv.Implies(foundPaths).ExistAbstract(varCubePostControllerOutput).UnivAbstract(varCubePostInput));
