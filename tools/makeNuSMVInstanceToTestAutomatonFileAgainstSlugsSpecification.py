@@ -93,7 +93,6 @@ nuSMVFile = open(nusmvFileName,"w")
 nuSMVFile.write("MODULE main\n IVAR\n")
 for var in slugsLines["[INPUT]"]:
     nuSMVFile.write("  v_"+var+" : boolean;\n")
-    nuSMVFile.write("  i_"+var+" : boolean;\n")
 for var in slugsLines["[OUTPUT]"]:
     nuSMVFile.write("  i_"+var+" : boolean;\n")
 nuSMVFile.write(" VAR\n")
@@ -125,7 +124,7 @@ for prestate in xrange(0,len(automatonStates)):
         nuSMVFile.write(" & ")
         if value==0:
             nuSMVFile.write("!")
-        nuSMVFile.write("i_"+a)
+        nuSMVFile.write("v_"+a)
     for a in slugsLines["[OUTPUT]"]:
         value = automatonStates[prestate][0][a]
         nuSMVFile.write(" & ")
@@ -180,7 +179,7 @@ for outputBit in slugsLines["[OUTPUT]"]:
             nuSMVFile.write(" & ")
             if value==0:
                 nuSMVFile.write("!")
-            nuSMVFile.write("i_"+a)
+            nuSMVFile.write("v_"+a)
         for a in slugsLines["[OUTPUT]"]:
             value = automatonStates[prestate][0][a]
             nuSMVFile.write(" & ")
