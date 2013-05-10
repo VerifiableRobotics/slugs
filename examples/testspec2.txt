@@ -25,8 +25,8 @@ vbit
 1
 
 [SYS_TRANS]
-| ! & ! ybit door ! ybit'
-| ! & ybit door ybit'
+| ! & ! ybit door' ! ybit'
+| ! & ybit door' ybit'
 
 [SYS_LIVENESS]
 & ! xbit' ! ybit'
