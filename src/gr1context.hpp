@@ -6,6 +6,7 @@
 
 #include "BF.h"
 #include <set>
+#include <list>
 #include <vector>
 #include "bddDump.h"
 
@@ -53,6 +54,7 @@ protected:
      *  that a BF refers to. The winningPositions BF represents which positions are winning for the system player.
      */
     std::vector<std::pair<unsigned int,BF> > strategyDumpingData;
+    bool realizable;
     BF winningPositions;
     //@}
 
@@ -70,10 +72,12 @@ private:
     //@}
 
 public:
-    GR1Context(std::string inFilename);
+    GR1Context(std::list<std::string> &filenames);
     virtual ~GR1Context() {}
-    virtual bool checkRealizability(bool initSpecialRoboticsSemantics);
+    virtual void computeWinningPositions();
+    virtual void checkRealizability();
     virtual void computeAndPrintExplicitStateStrategy(std::ostream &outputStream);
+    virtual void execute();
 
     //@{
     /**
@@ -108,6 +112,10 @@ public:
     }
     //@}
 
+    static GR1Context* makeInstance(std::list<std::string> &filenames) {
+        return new GR1Context(filenames);
+    }
+
 };
 
 
@@ -129,6 +137,23 @@ public:
     }
     bool isFixedPointReached() const { return reachedFixedPoint; }
     BF getValue() { return currentValue; }
+};
+
+/**
+ * @brief A customized class for Exceptions in Slugs - Can trigger printing the comman line parameters of Slugs
+ */
+class SlugsException {
+private:
+    std::ostringstream message;
+    bool shouldPrintUsage;
+public:
+    SlugsException(bool _shouldPrintUsage) : shouldPrintUsage(_shouldPrintUsage) {}
+    SlugsException(bool _shouldPrintUsage, std::string msg) : shouldPrintUsage(_shouldPrintUsage) { message << msg; }
+    SlugsException(SlugsException const &other) : shouldPrintUsage(other.shouldPrintUsage) { message << other.message.str();}
+    bool getShouldPrintUsage() const { return shouldPrintUsage; }
+    SlugsException& operator<<(const std::string str) { message << str; return *this; }
+    SlugsException& operator<<(const double str) { message << str; return *this; }
+    SlugsException& operator<<(const int str) { message << str; return *this; }
 };
 
 
