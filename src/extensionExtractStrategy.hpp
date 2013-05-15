@@ -13,7 +13,6 @@ protected:
     using T::realizable;
     using T::computeAndPrintExplicitStateStrategy;
 
-public:
     XExtractStrategy<T>(std::list<std::string> &filenames) : T(filenames) {
         if (filenames.size()==0) {
             outputFilename = "";
@@ -22,6 +21,8 @@ public:
             filenames.pop_front();
         }
     }
+
+public:
 
     void execute() {
         T::execute();

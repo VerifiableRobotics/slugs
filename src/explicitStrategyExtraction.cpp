@@ -15,7 +15,7 @@
  * @param vars the care set of variables
  * @return the determinized BF
  */
-BF determinize(BF in, std::vector<BF> vars) {
+BF GR1Context::determinize(BF in, std::vector<BF> vars) {
     for (auto it = vars.begin();it!=vars.end();it++) {
         BF res = in & !(*it);
         if (res.isFalse()) {

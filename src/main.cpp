@@ -2,6 +2,7 @@
 #include <cstring>
 #include "extensionExtractStrategy.hpp"
 #include "extensionRoboticsSemantics.hpp"
+#include "extensionWeakenSafetyAssumptions.hpp"
 #undef fail
 
 //===================================================================================
@@ -9,7 +10,8 @@
 //===================================================================================
 const char *commandLineArguments[] = {
     "--onlyRealizability","Use this parameter if no synthesized system should be computed, but only the realizability/unrealizability result is to be computed. If this option is *not* given, an automaton is computed. In case of realizability, the synthesized controller is printed to an output file name if it is given, and to stdout otherwise.",
-    "--sysInitRoboticsSemantics","In standard GR(1) synthesis, a specification is called realizable if for every initial input proposition valuation that is allowed by the initialization contraints, there is some suitable output proposition valuation. In the modified semantics for robotics applications, the controller has to be fine with any admissible initial position in the game."
+    "--sysInitRoboticsSemantics","In standard GR(1) synthesis, a specification is called realizable if for every initial input proposition valuation that is allowed by the initialization contraints, there is some suitable output proposition valuation. In the modified semantics for robotics applications, the controller has to be fine with any admissible initial position in the game.",
+    "--computeWeakenedSafetyAssumptions","Extract a minimal conjunctive normal form Boolean formula that represents some minimal CNF for a set of safety assumptions that leads to realiazability and is a weakened form of the safety assumptions given. Requires the option '--onlyRealizability' to be given as well."
 };
 
 //===================================================================================
@@ -24,7 +26,9 @@ OptionCombination optionCombinations[] = {
     OptionCombination("",XExtractStrategy<GR1Context>::makeInstance),
     OptionCombination("--onlyRealizability",GR1Context::makeInstance),
     OptionCombination("--sysInitRoboticsSemantics",XExtractStrategy<XRoboticsSemantics<GR1Context> >::makeInstance),
-    OptionCombination("--onlyRealizability --sysInitRoboticsSemantics",XRoboticsSemantics<GR1Context>::makeInstance)
+    OptionCombination("--onlyRealizability --sysInitRoboticsSemantics",XRoboticsSemantics<GR1Context>::makeInstance),
+    OptionCombination("--computeWeakenedSafetyAssumptions --onlyRealizability",XComputeWeakenedSafetyAssumptions<GR1Context>::makeInstance),
+    OptionCombination("--computeWeakenedSafetyAssumptions --onlyRealizability --sysInitRoboticsSemantics",XComputeWeakenedSafetyAssumptions<XRoboticsSemantics<GR1Context> >::makeInstance)
 };
 
 /**

@@ -20,8 +20,8 @@ protected:
     using T::varCubePreInput;
     using T::realizable;
 
-public:
     XRoboticsSemantics<T>(std::list<std::string> &filenames) : T(filenames) {}
+public:
 
     void checkRealizability() {
         computeWinningPositions();

@@ -16,7 +16,7 @@ TEMPLATE = app \
 CONFIG += debug
 CONFIG -= app_bundle
 CONFIG -= qt
-HEADERS += BFAbstractionLibrary/BF.h gr1context.hpp extensionExtractStrategy.hpp extensionRoboticsSemantics.hpp
+HEADERS += BFAbstractionLibrary/BF.h gr1context.hpp extensionExtractStrategy.hpp extensionRoboticsSemantics.hpp extensionWeakenSafetyAssumptions.hpp
 
 SOURCES += main.cpp BFAbstractionLibrary/bddDump.cpp BFAbstractionLibrary/BFCuddVarVector.cpp BFAbstractionLibrary/BFCudd.cpp BFAbstractionLibrary/BFCuddManager.cpp BFAbstractionLibrary/BFCuddVarCube.cpp explicitStrategyExtraction.cpp synthesisAlgorithm.cpp synthesisContextBasics.cpp
 
