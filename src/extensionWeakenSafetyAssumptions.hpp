@@ -28,7 +28,7 @@ public:
         variableTypesOfInterest.push_back(PreOutput);
         variableTypesOfInterest.push_back(PreInput);
         for (auto it = variableTypesOfInterest.begin();it!=variableTypesOfInterest.end();it++) {
-            for (uint i=0;i<variables.size();i++) {
+            for (unsigned int i=0;i<variables.size();i++) {
                 if (variableTypes[i]==*it) {
                     safetyEnv = currentAssumptions.ExistAbstractSingleVar(variables[i]);
                     checkRealizability();
@@ -40,13 +40,13 @@ public:
         }
 
         // Translate to CNF. Sort by size
-        std::map<uint,std::vector<std::pair<std::vector<int>,BF> > > clauses; // clauses as cube (-1,0,1) over *all* variables & corresponding BF
+        std::map<unsigned int,std::vector<std::pair<std::vector<int>,BF> > > clauses; // clauses as cube (-1,0,1) over *all* variables & corresponding BF
         while (!(currentAssumptions.isTrue())) {
             BF thisClause = determinize(!currentAssumptions,variables);
 
             std::vector<int> thisClauseInt;
-            uint elementsInThisClause = 0;
-            for (uint i=0;i<variables.size();i++) {
+            unsigned int elementsInThisClause = 0;
+            for (unsigned int i=0;i<variables.size();i++) {
                 BF thisTry = thisClause.ExistAbstractSingleVar(variables[i]);
                 if ((thisTry & currentAssumptions).isFalse()) {
                     thisClauseInt.push_back(0);
@@ -100,7 +100,7 @@ public:
         // Print the final set of clauses to stdout
         std::cout << "# Simplified safety assumption CNF clauses:\n";
         for (auto it = clausesFoundSoFarInt.begin();it!=clausesFoundSoFarInt.end();it++) {
-            for (uint i=0;i<variables.size();i++) {
+            for (unsigned int i=0;i<variables.size();i++) {
                 if ((*it)[i]!=0) {
                     if ((*it)[i]<0) {
                         std::cout << "!";

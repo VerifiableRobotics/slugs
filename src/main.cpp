@@ -39,11 +39,11 @@ void printToolUsageHelp() {
     std::cerr << "Usage of slugs:\n";
     std::cerr << "slugs [options] <FileNames> \n\n";
     std::cerr << "The first input file is supposed to be in 'slugs' format. The others are in the format required by the options used. \n\n";
-    for (uint i=0;i<sizeof(commandLineArguments)/sizeof(const char*);i+=2) {
-        uint leftStuff = strlen(commandLineArguments[i]);
+    for (unsigned int i=0;i<sizeof(commandLineArguments)/sizeof(const char*);i+=2) {
+        unsigned int leftStuff = strlen(commandLineArguments[i]);
         std::cerr << commandLineArguments[i] << " ";
         std::istringstream is(commandLineArguments[i+1]);
-        uint left = 80-leftStuff-1;
+        unsigned int left = 80-leftStuff-1;
         while (!(is.eof())) {
             std::string next;
             is >> next;
@@ -53,7 +53,7 @@ void printToolUsageHelp() {
             } else {
                 left = 80-leftStuff-1;
                 std::cerr << "\n";
-                for (uint i=0;i<leftStuff+1;i++) std::cerr << " ";
+                for (unsigned int i=0;i<leftStuff+1;i++) std::cerr << " ";
             }
         }
         std::cerr << "\n";
@@ -76,7 +76,7 @@ int main(int argc, const char **args) {
         std::string arg = args[i];
         if (arg[0]=='-') {
             bool found = false;
-            for (uint i=0;i<sizeof(commandLineArguments)/sizeof(const char*);i+=2) {
+            for (unsigned int i=0;i<sizeof(commandLineArguments)/sizeof(const char*);i+=2) {
                 if (commandLineArguments[i] == arg) {
                     found = true;
                 }
@@ -107,7 +107,7 @@ int main(int argc, const char **args) {
             os << *it;
         }
         std::string totalParameters = os.str();
-        for (uint i=0;i<sizeof(optionCombinations)/sizeof(OptionCombination);i++) {
+        for (unsigned int i=0;i<sizeof(optionCombinations)/sizeof(OptionCombination);i++) {
             if (optionCombinations[i].params==totalParameters) {
                 GR1Context *context = (*(optionCombinations[i].factory))(filenames);
                 context->execute();
