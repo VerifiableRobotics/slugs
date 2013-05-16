@@ -20,12 +20,16 @@ protected:
 public:
 
     void execute() {
-        // Try to make the safety assumptions deal with as few variables as possible.
 
+        // Try to make the safety assumptions deal with as few variables as possible.
         BF currentAssumptions = safetyEnv;
-        for (VariableType t : {PostInput, PreOutput, PreInput}) {
+        std::vector<VariableType> variableTypesOfInterest;
+        variableTypesOfInterest.push_back(PostInput);
+        variableTypesOfInterest.push_back(PreOutput);
+        variableTypesOfInterest.push_back(PreInput);
+        for (auto it = variableTypesOfInterest.begin();it!=variableTypesOfInterest.end();it++) {
             for (uint i=0;i<variables.size();i++) {
-                if (variableTypes[i]==t) {
+                if (variableTypes[i]==*it) {
                     safetyEnv = currentAssumptions.ExistAbstractSingleVar(variables[i]);
                     checkRealizability();
                     if (realizable) {
