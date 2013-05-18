@@ -4,6 +4,9 @@
 #include "gr1context.hpp"
 #include <string>
 
+/**
+ * An extension that triggers that a strategy is actually extracted.
+ */
 template<class T> class XExtractStrategy : public T {
 protected:
     // New variables

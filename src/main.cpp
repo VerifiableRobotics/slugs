@@ -1,5 +1,6 @@
 #include <fstream>
 #include <cstring>
+#include "extensionBiasForAction.hpp"
 #include "extensionExtractStrategy.hpp"
 #include "extensionRoboticsSemantics.hpp"
 #include "extensionWeakenSafetyAssumptions.hpp"
@@ -11,7 +12,8 @@
 const char *commandLineArguments[] = {
     "--onlyRealizability","Use this parameter if no synthesized system should be computed, but only the realizability/unrealizability result is to be computed. If this option is *not* given, an automaton is computed. In case of realizability, the synthesized controller is printed to an output file name if it is given, and to stdout otherwise.",
     "--sysInitRoboticsSemantics","In standard GR(1) synthesis, a specification is called realizable if for every initial input proposition valuation that is allowed by the initialization contraints, there is some suitable output proposition valuation. In the modified semantics for robotics applications, the controller has to be fine with any admissible initial position in the game.",
-    "--computeWeakenedSafetyAssumptions","Extract a minimal conjunctive normal form Boolean formula that represents some minimal CNF for a set of safety assumptions that leads to realiazability and is a weakened form of the safety assumptions given. Requires the option '--onlyRealizability' to be given as well."
+    "--computeWeakenedSafetyAssumptions","Extract a minimal conjunctive normal form Boolean formula that represents some minimal CNF for a set of safety assumptions that leads to realiazability and is a weakened form of the safety assumptions given. Requires the option '--onlyRealizability' to be given as well.",
+    "--biasForAction","Extract controllers that rely on the liveness assumptions being satisfies as little as possible."
 };
 
 //===================================================================================
@@ -20,6 +22,13 @@ const char *commandLineArguments[] = {
 // -> Parameters need to be ordered lexicographically
 // -> File names will be read from the inside-out. "XExtractStrategy" must therefore
 //    be outermost, as it represents an *optional* parameter
+//
+// Constraints on the parameter combinations:
+// - 'computeWeakenedSafetyAssumptions' requires 'onlyRealizability' - No strategy can be computed in this case
+// - 'biasForAction' is not compatible with 'onlyRealizability' - 'biasForAction' only makes a difference for extracting a strategy
+//
+// Constraints on the ordering of the templates:
+// - XExtractStratey is always last, to make sure that the last file name provided is the output file.
 //===================================================================================
 struct OptionCombination { std::string params; GR1Context* (*factory)(std::list<std::string> &l); OptionCombination(std::string _p, GR1Context* (*_f)(std::list<std::string> &l)) : params(_p), factory(_f) {} };
 OptionCombination optionCombinations[] = {
@@ -28,7 +37,9 @@ OptionCombination optionCombinations[] = {
     OptionCombination("--sysInitRoboticsSemantics",XExtractStrategy<XRoboticsSemantics<GR1Context> >::makeInstance),
     OptionCombination("--onlyRealizability --sysInitRoboticsSemantics",XRoboticsSemantics<GR1Context>::makeInstance),
     OptionCombination("--computeWeakenedSafetyAssumptions --onlyRealizability",XComputeWeakenedSafetyAssumptions<GR1Context>::makeInstance),
-    OptionCombination("--computeWeakenedSafetyAssumptions --onlyRealizability --sysInitRoboticsSemantics",XComputeWeakenedSafetyAssumptions<XRoboticsSemantics<GR1Context> >::makeInstance)
+    OptionCombination("--computeWeakenedSafetyAssumptions --onlyRealizability --sysInitRoboticsSemantics",XComputeWeakenedSafetyAssumptions<XRoboticsSemantics<GR1Context> >::makeInstance),
+    OptionCombination("--biasForAction",XExtractStrategy<XBiasForAction<GR1Context> >::makeInstance),
+    OptionCombination("--biasForAction --sysInitRoboticsSemantics",XExtractStrategy<XRoboticsSemantics<XBiasForAction<GR1Context> > >::makeInstance)
 };
 
 /**
@@ -92,10 +103,10 @@ int main(int argc, const char **args) {
         }
     }
 
-    // Try to run
+    // Catch all errors from this point onwards
     try {
 
-        // Prepare context
+        // Prepare list of parameters as string to look up the combination used in the list 'optionCombinations'
         std::ostringstream os;
         bool first = true;
         for (auto it = parameters.begin();it!=parameters.end();it++) {
@@ -109,7 +120,13 @@ int main(int argc, const char **args) {
         std::string totalParameters = os.str();
         for (unsigned int i=0;i<sizeof(optionCombinations)/sizeof(OptionCombination);i++) {
             if (optionCombinations[i].params==totalParameters) {
+
+                // Found the combination - then instantiate context and perform synthesis.
                 GR1Context *context = (*(optionCombinations[i].factory))(filenames);
+                if (filenames.size()>0) {
+                    std::cerr << "Error: You provided too many file names!\n";
+                    return 1;
+                }
                 context->execute();
                 delete context;
                 return 0;
@@ -127,5 +144,4 @@ int main(int argc, const char **args) {
         return 1;
     }
 
-    return 0;
 }

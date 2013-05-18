@@ -4,6 +4,13 @@
 #include "gr1context.hpp"
 #include <map>
 
+/**
+ * This extension modifies the execute() function such that rather than synthesizing an implementation,
+ * we search for a minimal CNF formula that represents safety assumptions such that for a realizable input specification,
+ * the CNF obtained is a safety assumption set that is as-weak-as-possible, but generalizes the one in the input
+ * specification, and still leads to a realizable synthesis problem if we replace the safety assumptions in the
+ * input specification by our new CNF.
+ */
 template<class T> class XComputeWeakenedSafetyAssumptions : public T {
 protected:
     // Inherit stuff that we actually use here.
