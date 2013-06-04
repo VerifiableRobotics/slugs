@@ -65,9 +65,9 @@ protected:
 
     // Constructor
     XYourExtension<T>(std::list<std::string> &filenames) : T(filenames) {}
-
+  
 public:
-
+  
     static GR1Context* makeInstance(std::list<std::string> &filenames) {
         return new XYourExtension<T>(filenames);
     }

@@ -252,12 +252,12 @@ def slugsInitToLTL(reverseTokens):
     # Atomic proposition? Translate from Mealy-type-semantics to Moore-type
     for ap in slugsLines["[INPUT]"]:
         if ap==op:
-            return "i_"+ap
+            return "v_"+ap
         if ap+"'"==op:
             raise Exception("No 'next's allowed in slugsInitToLTL")
     for ap in slugsLines["[OUTPUT]"]:
         if ap==op:
-            return "X i_"+ap
+            return "X v_"+ap
         if ap+"'"==op:
             raise Exception("No 'next's allowed in slugsInitToLTL")
     raise Exception("slugsInitToLTL: Could not decipger operator "+op)

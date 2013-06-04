@@ -6,7 +6,7 @@
  *        The algorithm implemented is transition-based, and not state-based (as the one in the GR(1) synthesis paper).
  *        So it rather computes:
  *
- *        nu Z. /\_j mu Y. \/_i nu X. cox( G^sys_j \/ transitionTo(Y) \/ (!G^env_i /\ transitionTo(X))
+ *        nu Z. /\_j mu Y. \/_i nu X. cox( transitionTo(Z) /\ G^sys_j \/ transitionTo(Y) \/ (!G^env_i /\ transitionTo(X))
  *
  *        where the cox operator computes from which positions the system player can enforce that certain *transitions* are taken.
  *        the transitionTo function takes a set of target positions and computes the set of transitions that are allowed for
