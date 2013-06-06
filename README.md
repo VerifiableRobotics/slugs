@@ -57,21 +57,21 @@ The way in which this is done in slugs is by *template-based* inheritance. It al
 1. Add a new header file whose name should start with "extension" and should end with ".hpp" to the project. Add it to the list of header files in the file Tool.pro.
 2. Implement the header file. It should start and end with the standard C preprocessor directives that make sure that include the file twice is no problem. Then, it should include "gr1context.hpp". Then, start with the following template for the template:
 ```c++
-template<class T> class XYourExtension : public T {
-protected:
+    template<class T> class XYourExtension : public T {
+    protected:
 
-    // Inherited stuff used
+        // Inherited stuff used
 
 
-    // Constructor
-    XYourExtension<T>(std::list<std::string> &filenames) : T(filenames) {}
-  
-public:
-  
-    static GR1Context* makeInstance(std::list<std::string> &filenames) {
-        return new XYourExtension<T>(filenames);
-    }
-};
+        // Constructor
+        XYourExtension<T>(std::list<std::string> &filenames) : T(filenames) {}
+      
+    public:
+      
+        static GR1Context* makeInstance(std::list<std::string> &filenames) {
+            return new XYourExtension<T>(filenames);
+        }
+    };
 ```
 Replace "XYourExtension" by the name of your extension. Please let its name start with "X" (naming convention). The template can derive from an arbitrary class, namely class "T". This ensures that we can daisy-chain extensions statically. For example, "XExtractStrategy<XRoboticsSemantics<GR1Context> >" is a valid class in slugs that combines the extensions for extracting a strategy and using the special robotics semantics for initialization contraints. You can then overwrite methods from the GR1Context to implement your derived extension. Note that you will need to put under the line "// Inherited stuff used" some directives that give you access to the variables and methods from GR1Context that you use (e.g., "using T::mgr;"). This comes from the multi-stage compilation process in C++, and then the compiler basically deferres checking if variables are accessible to the stage in which the code for the template is actually implemented. The file "extensionBiasForAction.hpp" contains a nice overall example. Note that forgetting the "using" statement will result in strange compilation errors that are hard to interpret.
 
