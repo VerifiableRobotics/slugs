@@ -2,9 +2,9 @@
 #include <cstring>
 #include "extensionComputeCNFFormOfTheSpecification.hpp"
 #include "extensionBiasForAction.hpp"
-#include "extensionExtractStrategy.hpp"
+#include "extensionExtractExplicitStrategy.hpp"
 #include "extensionCounterstrategy.hpp"
-#include "extensionExplicitCounterstrategy.hpp"
+#include "extensionExtractExplicitCounterstrategy.hpp"
 #include "extensionRoboticsSemantics.hpp"
 #include "extensionWeakenSafetyAssumptions.hpp"
 #undef fail
@@ -38,16 +38,16 @@ const char *commandLineArguments[] = {
 //===================================================================================
 struct OptionCombination { std::string params; GR1Context* (*factory)(std::list<std::string> &l); OptionCombination(std::string _p, GR1Context* (*_f)(std::list<std::string> &l)) : params(_p), factory(_f) {} };
 OptionCombination optionCombinations[] = {
-    OptionCombination("",XExtractStrategy<GR1Context>::makeInstance),
+    OptionCombination("",XExtractExplicitStrategy<GR1Context>::makeInstance),
     OptionCombination("--onlyRealizability",GR1Context::makeInstance),
-    OptionCombination("--sysInitRoboticsSemantics",XExtractStrategy<XRoboticsSemantics<GR1Context> >::makeInstance),
+    OptionCombination("--sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<GR1Context> >::makeInstance),
     OptionCombination("--onlyRealizability --sysInitRoboticsSemantics",XRoboticsSemantics<GR1Context>::makeInstance),
     OptionCombination("--computeWeakenedSafetyAssumptions --onlyRealizability",XComputeWeakenedSafetyAssumptions<GR1Context>::makeInstance),
     OptionCombination("--computeWeakenedSafetyAssumptions --onlyRealizability --sysInitRoboticsSemantics",XComputeWeakenedSafetyAssumptions<XRoboticsSemantics<GR1Context> >::makeInstance),
-    OptionCombination("--biasForAction",XExtractStrategy<XBiasForAction<GR1Context> >::makeInstance),
-    OptionCombination("--biasForAction --sysInitRoboticsSemantics",XExtractStrategy<XRoboticsSemantics<XBiasForAction<GR1Context> > >::makeInstance),
+    OptionCombination("--biasForAction",XExtractExplicitStrategy<XBiasForAction<GR1Context> >::makeInstance),
+    OptionCombination("--biasForAction --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<XBiasForAction<GR1Context> > >::makeInstance),
     OptionCombination("--computeCNFFormOfTheSpecification --sysInitRoboticsSemantics",XComputeCNFFormOfTheSpecification<GR1Context>::makeInstance),
-    OptionCombination("--counterStrategy",XExplicitCounterStrategy<XCounterStrategy<GR1Context> >::makeInstance)
+    OptionCombination("--counterStrategy",XExtractExplicitCounterStrategy<XCounterStrategy<GR1Context> >::makeInstance)
 };
 
 /**

@@ -16,11 +16,11 @@ TEMPLATE = app \
 CONFIG += debug
 CONFIG -= app_bundle
 CONFIG -= qt
-HEADERS += BFAbstractionLibrary/BF.h gr1context.hpp extensionExtractStrategy.hpp extensionRoboticsSemantics.hpp \
+HEADERS += BFAbstractionLibrary/BF.h gr1context.hpp extensionExtractExplicitStrategy.hpp extensionRoboticsSemantics.hpp \
     extensionWeakenSafetyAssumptions.hpp extensionBiasForAction.hpp \
-    extensionComputeCNFFormOfTheSpecification.hpp extensionCounterstrategy.hpp extensionExplicitCounterstrategy.hpp
+    extensionComputeCNFFormOfTheSpecification.hpp extensionCounterstrategy.hpp extensionExtractExplicitCounterstrategy.hpp
 
-SOURCES += main.cpp BFAbstractionLibrary/bddDump.cpp BFAbstractionLibrary/BFCuddVarVector.cpp BFAbstractionLibrary/BFCudd.cpp BFAbstractionLibrary/BFCuddManager.cpp BFAbstractionLibrary/BFCuddVarCube.cpp explicitStrategyExtraction.cpp synthesisAlgorithm.cpp synthesisContextBasics.cpp
+SOURCES += main.cpp BFAbstractionLibrary/bddDump.cpp BFAbstractionLibrary/BFCuddVarVector.cpp BFAbstractionLibrary/BFCudd.cpp BFAbstractionLibrary/BFCuddManager.cpp BFAbstractionLibrary/BFCuddVarCube.cpp tools.cpp synthesisAlgorithm.cpp synthesisContextBasics.cpp
 
 TARGET = slugs
 INCLUDEPATH = ../lib/cudd-2.5.0/include BFAbstractionLibrary

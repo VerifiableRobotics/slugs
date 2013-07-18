@@ -76,7 +76,6 @@ public:
     virtual ~GR1Context() {}
     virtual void computeWinningPositions();
     virtual void checkRealizability();
-    virtual void computeAndPrintExplicitStateStrategy(std::ostream &outputStream);
     virtual void execute();
     static BF determinize(BF in, std::vector<BF> vars);
 

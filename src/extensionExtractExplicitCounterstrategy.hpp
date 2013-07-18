@@ -7,7 +7,7 @@
 /**
  * A class that computes an explicit state counterstrategy for an unrealizable specification
  */
-template<class T> class XExplicitCounterStrategy : public T {
+template<class T> class XExtractExplicitCounterStrategy : public T {
 protected:
     // New variables
     std::string outputFilename;
@@ -34,9 +34,8 @@ protected:
     using T::variableNames;
     using T::realizable;
     using T::determinize;
-    using T::computeAndPrintExplicitStateStrategy;
 
-    XExplicitCounterStrategy<T>(std::list<std::string> &filenames) : T(filenames) {
+    XExtractExplicitCounterStrategy<T>(std::list<std::string> &filenames) : T(filenames) {
         if (filenames.size()==0) {
             outputFilename = "";
         } else {
@@ -263,7 +262,7 @@ void addDeadlocked(BF remainingTransitions, std::pair<size_t, std::pair<unsigned
 
 
     static GR1Context* makeInstance(std::list<std::string> &filenames) {
-        return new XExplicitCounterStrategy<T>(filenames);
+        return new XExtractExplicitCounterStrategy<T>(filenames);
     }
 };
 
