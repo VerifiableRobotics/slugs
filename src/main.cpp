@@ -3,6 +3,8 @@
 #include "extensionComputeCNFFormOfTheSpecification.hpp"
 #include "extensionBiasForAction.hpp"
 #include "extensionExtractStrategy.hpp"
+#include "extensionCounterstrategy.hpp"
+#include "extensionExplicitCounterstrategy.hpp"
 #include "extensionRoboticsSemantics.hpp"
 #include "extensionWeakenSafetyAssumptions.hpp"
 #undef fail
@@ -15,7 +17,8 @@ const char *commandLineArguments[] = {
     "--sysInitRoboticsSemantics","In standard GR(1) synthesis, a specification is called realizable if for every initial input proposition valuation that is allowed by the initialization contraints, there is some suitable output proposition valuation. In the modified semantics for robotics applications, the controller has to be fine with any admissible initial position in the game.",
     "--computeWeakenedSafetyAssumptions","Extract a minimal conjunctive normal form Boolean formula that represents some minimal CNF for a set of safety assumptions that leads to realiazability and is a weakened form of the safety assumptions given. Requires the option '--onlyRealizability' to be given as well.",
     "--biasForAction","Extract controllers that rely on the liveness assumptions being satisfies as little as possible.",
-    "--computeCNFFormOfTheSpecification","Lets the Synthesis tool skip the synthesis step, and only compute a version of the specification that can be used by other synthesis tools that require it to be CNF-based."
+    "--computeCNFFormOfTheSpecification","Lets the Synthesis tool skip the synthesis step, and only compute a version of the specification that can be used by other synthesis tools that require it to be CNF-based.",
+    "--counterStrategy","Computes the Environment Counterstrategy"
 };
 
 //===================================================================================
@@ -43,7 +46,8 @@ OptionCombination optionCombinations[] = {
     OptionCombination("--computeWeakenedSafetyAssumptions --onlyRealizability --sysInitRoboticsSemantics",XComputeWeakenedSafetyAssumptions<XRoboticsSemantics<GR1Context> >::makeInstance),
     OptionCombination("--biasForAction",XExtractStrategy<XBiasForAction<GR1Context> >::makeInstance),
     OptionCombination("--biasForAction --sysInitRoboticsSemantics",XExtractStrategy<XRoboticsSemantics<XBiasForAction<GR1Context> > >::makeInstance),
-    OptionCombination("--computeCNFFormOfTheSpecification --sysInitRoboticsSemantics",XComputeCNFFormOfTheSpecification<GR1Context>::makeInstance)
+    OptionCombination("--computeCNFFormOfTheSpecification --sysInitRoboticsSemantics",XComputeCNFFormOfTheSpecification<GR1Context>::makeInstance),
+    OptionCombination("--counterStrategy",XExplicitCounterStrategy<XExtractStrategy<XCounterStrategy<GR1Context>>>::makeInstance)
 };
 
 /**
