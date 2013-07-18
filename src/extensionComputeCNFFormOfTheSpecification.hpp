@@ -35,7 +35,7 @@ public:
     void execute() {
 
         // Variable lists
-        for (uint i=0;i<variableNames.size();i++) {
+        for (unsigned int i=0;i<variableNames.size();i++) {
             if (i==variableNames.size()-1) throw "Error: The ComputeCNFFormOfTheSpecification extension assumes that pre- and post-variabels are assigned alternatingly (error case 1).\n";
             if (variableTypes[i]==PreInput) {
                 std::cout << "Input: " << variableNames[i] << " " << i+1 << " " << i+2 << "\n";
@@ -53,14 +53,14 @@ public:
         }
 
         // Work on the safety assumptions, safety guarantees, and initialization constraints
-        for (uint type=0;type<3;type++) {
+        for (unsigned int type=0;type<3;type++) {
             BF rest = type==0?safetySys:(type==1?safetyEnv:(initEnv&initSys));
             BF found = mgr.constantFalse();
             std::string typeString = type==0?"SafetyGuarantee: ":(type==1?"SafetyAssumption: ":"Init: ");
             while ((rest | found)!=mgr.constantTrue()) {
                 BF thisCube = determinize((!rest) & (!found), variables);
                 std::cout << typeString;
-                for (uint i=0;i<variables.size();i++) {
+                for (unsigned int i=0;i<variables.size();i++) {
                     BF candidate = thisCube.ExistAbstractSingleVar(variables[i]);
                     if ((candidate & rest & !found).isFalse()) {
                         thisCube = candidate;
@@ -78,7 +78,7 @@ public:
 
         // Operate on the Liveness conditions
         // Translate all clauses that only concern post variables to only pre-variables along the way
-        for (uint type=0;type<2;type++) {
+        for (unsigned int type=0;type<2;type++) {
             std::vector<BF> &rest = type==0?livenessGuarantees:livenessAssumptions;
             std::string typeString = type==0?"LivenessGuarantee:":"LivenessAssumption:";
             for (auto it = rest.begin();it!=rest.end();it++) {
@@ -89,7 +89,7 @@ public:
                     std::vector<int> literals;
                     bool allPostSoFar = true;
                     BF thisCube = determinize((*it) & (!found), variables);
-                    for (uint i=0;i<variables.size();i++) {
+                    for (unsigned int i=0;i<variables.size();i++) {
                         BF candidate = thisCube.ExistAbstractSingleVar(variables[i]);
                         if ((candidate & !*it).isFalse()) {
                             thisCube = candidate;
