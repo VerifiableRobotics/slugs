@@ -9,6 +9,8 @@
  */
 template<class T> class XExplicitCounterStrategy : public T {
 protected:
+    // New variables
+    std::string outputFilename;
 
     // Inherited stuff used
     using T::mgr;
@@ -30,13 +32,18 @@ protected:
     using T::variableTypes;
     using T::variables;
     using T::variableNames;
-    using T::outputFilename;
     using T::realizable;
     using T::determinize;
     using T::computeAndPrintExplicitStateStrategy;
 
-    // Constructor
-    XExplicitCounterStrategy<T>(std::list<std::string> &filenames) : T(filenames) {}
+    XExplicitCounterStrategy<T>(std::list<std::string> &filenames) : T(filenames) {
+        if (filenames.size()==0) {
+            outputFilename = "";
+        } else {
+            outputFilename = filenames.front();
+            filenames.pop_front();
+        }
+    }
 
 public:
 
@@ -48,8 +55,6 @@ public:
  *        "winningPositions" have been filled by the synthesis algorithm with meaningful data.
  * @param outputStream - Where the strategy shall be printed to.
  */
-
-
 void execute() {
         T::execute();
         if (!realizable) {
@@ -83,14 +88,14 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
     // List of states in existance so far. The first map
     // maps from a BF node pointer (for the pre variable valuation) and a goal
     // to a state number. The vector then contains the concrete valuation.
-    std::map<std::pair<size_t, std::pair<unsigned int, unsigned int>>, unsigned int > lookupTableForPastStates;
+    std::map<std::pair<size_t, std::pair<unsigned int, unsigned int> >, unsigned int > lookupTableForPastStates;
     std::vector<BF> bfsUsedInTheLookupTable;
-    std::list<std::pair<size_t, std::pair<unsigned int, unsigned int>> > todoList;
+    std::list<std::pair<size_t, std::pair<unsigned int, unsigned int> > > todoList;
 
     
 
     // Prepare positional strategies for the individual goals
-    std::vector<std::vector<BF>> positionalStrategiesForTheIndividualGoals(livenessAssumptions.size(),livenessGuarantees.size());
+    std::vector<std::vector<BF> > positionalStrategiesForTheIndividualGoals(livenessAssumptions.size());
     for (unsigned int i=0;i<livenessAssumptions.size();i++) {
         BF casesCovered = mgr.constantFalse();
         std::vector<BF> strategy(livenessGuarantees.size()+1);
@@ -124,7 +129,7 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
             }
         }
             
-        std::pair<size_t, std::pair<unsigned int, unsigned int>> lookup = std::pair<size_t, std::pair<unsigned int, unsigned int>>(concreteState.getHashCode(),std::pair<unsigned int, unsigned int>(0,found_j_index));
+        std::pair<size_t, std::pair<unsigned int, unsigned int> > lookup = std::pair<size_t, std::pair<unsigned int, unsigned int> >(concreteState.getHashCode(),std::pair<unsigned int, unsigned int>(0,found_j_index));
         lookupTableForPastStates[lookup] = bfsUsedInTheLookupTable.size();
         bfsUsedInTheLookupTable.push_back(concreteState);
         todoInit &= !concreteState;
@@ -133,7 +138,7 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
 
     // Extract strategy
     while (todoList.size()>0) {
-        std::pair<size_t, std::pair<unsigned int, unsigned int>> current = todoList.front();
+        std::pair<size_t, std::pair<unsigned int, unsigned int> > current = todoList.front();
         todoList.pop_front();
         unsigned int stateNum = lookupTableForPastStates[current];
         BF currentPossibilities = bfsUsedInTheLookupTable[stateNum];
@@ -153,9 +158,7 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
         }
 
         outputStream << ">\n\tWith successors : ";
-        first = true;
-
-        
+        first = true;      
         
         currentPossibilities &= positionalStrategiesForTheIndividualGoals[current.second.first][current.second.second];
         BF remainingTransitions = ((currentPossibilities).ExistAbstract(varCubePre));
@@ -195,9 +198,9 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
             //}
             unsigned int tn;
             
-            std::pair<size_t, std::pair<unsigned int, unsigned int>> target;
+            std::pair<size_t, std::pair<unsigned int, unsigned int> > target;
             
-            target = std::pair<size_t, std::pair<unsigned int, unsigned int>>(newCombination.getHashCode(),std::pair<unsigned int, unsigned int>(nextLivenessAssumption, current.second.second));
+            target = std::pair<size_t, std::pair<unsigned int, unsigned int> >(newCombination.getHashCode(),std::pair<unsigned int, unsigned int>(nextLivenessAssumption, current.second.second));
             
             if (lookupTableForPastStates.count(target)==0) {
                 tn = lookupTableForPastStates[target] = bfsUsedInTheLookupTable.size();
@@ -225,7 +228,7 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
     //The outputvalues are omitted (indeed, no valuation exists that satisfies the system safeties)
     //Format compatible with JTLV counterstrategy
 
-void addDeadlocked(BF remainingTransitions, std::pair<size_t, std::pair<unsigned int, unsigned int>> current, std::vector<BF> bfsUsedInTheLookupTable, std::ostream &outputStream) {
+void addDeadlocked(BF remainingTransitions, std::pair<size_t, std::pair<unsigned int, unsigned int> > current, std::vector<BF> bfsUsedInTheLookupTable, std::ostream &outputStream) {
     BF newCombination;
                 
     if ((remainingTransitions & livenessAssumptions[current.second.first]).isFalse()) {

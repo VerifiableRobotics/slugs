@@ -71,7 +71,7 @@ public:
             // Start computing the transitions that lead closer to the goal and lead to a position that is not yet known to be losing (for the environment).
             // Start with the ones that actually represent reaching the goal (which is a transition in this implementation as we can have
             // nexts in the goal descriptions).
-            BF livetransitions = !livenessGuarantees[j] | (mu2.getValue().SwapVariables(varVectorPre,varVectorPost));
+            BF livetransitions = (!livenessGuarantees[j]) | (mu2.getValue().SwapVariables(varVectorPre,varVectorPost));
 
             // Compute the middle least-fixed point (called 'Y' in the GR(1) paper)
             BFFixedPoint nu1(mgr.constantTrue());
