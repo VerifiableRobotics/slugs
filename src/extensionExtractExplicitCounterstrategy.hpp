@@ -21,6 +21,8 @@ protected:
     using T::varVectorPost;
     using T::varCubePostOutput;
     using T::varCubePostInput;
+    using T::varCubePreOutput;
+    using T::varCubePreInput;
     using T::varCubePre;
     using T::safetyEnv;
     using T::safetySys;
@@ -111,18 +113,20 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
                 }
             }
         }
+        
         positionalStrategiesForTheIndividualGoals[i] = strategy;
         //BF_newDumpDot(*this,strategy,"PreInput PreOutput PostInput PostOutput","/tmp/generalStrategy.dot");
     }
     
-    // Prepare initial to-do list from the allowed initial states
+    // Prepare initial to-do list from the allowed initial states. Select a single initial input valuation.
     BF todoInit = (winningPositions & initEnv & initSys);
     while (!(todoInit.isFalse())) {
         BF concreteState = determinize(todoInit,preVars);
         
+        //find which liveness guarantee is being prevented (finds the first liveness in order specified)
         unsigned int found_j_index = 0;
         for (unsigned int j=0;j<livenessGuarantees.size();j++) {
-            if (!(concreteState & positionalStrategiesForTheIndividualGoals[0][j]).isFalse()) {
+            if (!(concreteState & !livenessGuarantees[j] & positionalStrategiesForTheIndividualGoals[0][j]).isFalse()) {
                 found_j_index = j;
                 break;
             }
@@ -131,7 +135,8 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
         std::pair<size_t, std::pair<unsigned int, unsigned int> > lookup = std::pair<size_t, std::pair<unsigned int, unsigned int> >(concreteState.getHashCode(),std::pair<unsigned int, unsigned int>(0,found_j_index));
         lookupTableForPastStates[lookup] = bfsUsedInTheLookupTable.size();
         bfsUsedInTheLookupTable.push_back(concreteState);
-        todoInit &= !concreteState;
+        //from now on use the same initial input valuation (but consider all other initial output valuations)
+        todoInit &= concreteState.ExistAbstract(varCubePreOutput) & !concreteState;
         todoList.push_back(lookup);
     }
 
@@ -160,21 +165,26 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
         first = true;      
         
         currentPossibilities &= positionalStrategiesForTheIndividualGoals[current.second.first][current.second.second];
-        BF remainingTransitions = ((currentPossibilities).ExistAbstract(varCubePre));
         
-        if ((remainingTransitions & safetySys).isFalse()) {
-                addDeadlocked(remainingTransitions, current, bfsUsedInTheLookupTable, outputStream);
-        }
+        BF remainingTransitions = ((currentPossibilities & safetySys).ExistAbstract(varCubePre));
         
+        //check if there exists inputs that force a safety violation in the next time step
+        if ((remainingTransitions & safetySys).isFalse() | !(remainingTransitions & ((mgr.constantFalse())).UnivAbstract(varCubePostOutput).ExistAbstract(varCubePostInput)).isFalse()) {
+                addDeadlocked(remainingTransitions & ((mgr.constantFalse())).UnivAbstract(varCubePostOutput).ExistAbstract(varCubePostInput), current, bfsUsedInTheLookupTable,  lookupTableForPastStates, outputStream);
+        } else {
+        
+        BF inputCaptured = mgr.constantTrue();
+    
+            
         // Switching goals
         while (!(remainingTransitions & safetySys).isFalse()) {
             
             BF newCombination;
              
             if ((remainingTransitions & livenessAssumptions[current.second.first]).isFalse()) {
-                newCombination = determinize(remainingTransitions,postVars)  & safetySys;
+                newCombination = determinize(remainingTransitions & safetySys, postVars);
             } else {
-                newCombination = determinize((remainingTransitions & livenessAssumptions[current.second.first]),postVars) & safetySys;           
+                newCombination = determinize((remainingTransitions & safetySys & livenessAssumptions[current.second.first]),postVars);          
             }
             // Jump as much forward  in the liveness assumption list as possible ("stuttering avoidance")
             unsigned int nextLivenessAssumption = current.second.first;
@@ -183,18 +193,27 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
                 nextLivenessAssumption  = (nextLivenessAssumption + 1) % livenessAssumptions.size();
                 firstTry = false;
             }
-            //newCombination &= livenessAssumptions[current.second.first];
+            
+            
 
-            //Mark which input has been captured by this case
-            BF inputCaptured = newCombination.ExistAbstract(varCubePostOutput);
+            //Mark which input has been captured by this case. Use the same input for other successors
+            inputCaptured = newCombination.ExistAbstract(varCubePostInput);
             remainingTransitions &= inputCaptured;
             remainingTransitions &= !newCombination;
+           
+            newCombination = newCombination.SwapVariables(varVectorPre,varVectorPost);
             
+            if (nextLivenessAssumption != current.second.second) {
+                unsigned int found_j_index = 0;
+                for (unsigned int j=0;j<livenessGuarantees.size();j++) {
+                    if (!(newCombination & !livenessGuarantees[j] & positionalStrategiesForTheIndividualGoals[current.second.first][j]).isFalse()) {
+                        found_j_index = j;
+                        break;
+                    }
+                }
+                current.second.second = found_j_index;
+            }
             
-            newCombination = newCombination.SwapVariables(varVectorPre,varVectorPost);          // Search for newCombination
-            //if ((newCombination & livenessAssumptions[current.second.first]).isFalse()) {
-            //   std::cout << "does it really?"; 
-            //}
             unsigned int tn;
             
             std::pair<size_t, std::pair<unsigned int, unsigned int> > target;
@@ -218,6 +237,7 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
             outputStream << tn;
             
         }
+        }
 
         outputStream << "\n";
     }
@@ -227,7 +247,7 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
     //The outputvalues are omitted (indeed, no valuation exists that satisfies the system safeties)
     //Format compatible with JTLV counterstrategy
 
-void addDeadlocked(BF remainingTransitions, std::pair<size_t, std::pair<unsigned int, unsigned int> > current, std::vector<BF> bfsUsedInTheLookupTable, std::ostream &outputStream) {
+void addDeadlocked(BF remainingTransitions, std::pair<size_t, std::pair<unsigned int, unsigned int> > current, std::vector<BF> &bfsUsedInTheLookupTable, std::map<std::pair<size_t, std::pair<unsigned int, unsigned int> >, unsigned int > &lookupTableForPastStates, std::ostream &outputStream) {
     BF newCombination;
                 
     if ((remainingTransitions & livenessAssumptions[current.second.first]).isFalse()) {
@@ -236,8 +256,9 @@ void addDeadlocked(BF remainingTransitions, std::pair<size_t, std::pair<unsigned
         newCombination = determinize((remainingTransitions & livenessAssumptions[current.second.first]),postVars) ;           
     }
     
-    unsigned int tn = bfsUsedInTheLookupTable.size();
-    
+                
+    std::pair<size_t, std::pair<unsigned int, unsigned int> > target = std::pair<size_t, std::pair<unsigned int, unsigned int> >(newCombination.getHashCode(),std::pair<unsigned int, unsigned int>(current.second.first, current.second.second));
+    unsigned int tn = lookupTableForPastStates[target] = bfsUsedInTheLookupTable.size();
     bfsUsedInTheLookupTable.push_back(newCombination);
                 
     outputStream << tn << "\n";

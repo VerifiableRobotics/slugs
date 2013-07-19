@@ -9,17 +9,15 @@ deliver
 
 [ENV_LIVENESS]
 order_rice'
-! order_rice'
 
 [ENV_INIT]
 order_rice
 
 [SYS_TRANS]
-! deliver'
-deliver
+| ! order_rice ! deliver'
 
 [SYS_LIVENESS]
-! deliver
+! deliver'
 deliver
 
 
