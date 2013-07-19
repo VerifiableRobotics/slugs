@@ -47,7 +47,8 @@ OptionCombination optionCombinations[] = {
     OptionCombination("--biasForAction",XExtractExplicitStrategy<XBiasForAction<GR1Context> >::makeInstance),
     OptionCombination("--biasForAction --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<XBiasForAction<GR1Context> > >::makeInstance),
     OptionCombination("--computeCNFFormOfTheSpecification --sysInitRoboticsSemantics",XComputeCNFFormOfTheSpecification<GR1Context>::makeInstance),
-    OptionCombination("--counterStrategy",XExtractExplicitCounterStrategy<XCounterStrategy<GR1Context> >::makeInstance)
+    OptionCombination("--counterStrategy",XExtractExplicitCounterStrategy<XCounterStrategy<GR1Context,false> >::makeInstance),
+    OptionCombination("--counterStrategy --sysInitRoboticsSemantics",XExtractExplicitCounterStrategy<XCounterStrategy<GR1Context,true> >::makeInstance)
 };
 
 /**

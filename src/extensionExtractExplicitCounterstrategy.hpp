@@ -96,18 +96,18 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
     // Prepare positional strategies for the individual goals
     std::vector<std::vector<BF> > positionalStrategiesForTheIndividualGoals(livenessAssumptions.size());
     for (unsigned int i=0;i<livenessAssumptions.size();i++) {
-        BF casesCovered = mgr.constantFalse();
+        //BF casesCovered = mgr.constantFalse();
         std::vector<BF> strategy(livenessGuarantees.size()+1);
         for (unsigned int j=0;j<livenessGuarantees.size()+1;j++) {
             strategy[j] = mgr.constantFalse();
         }
         for (auto it = strategyDumpingData.begin();it!=strategyDumpingData.end();it++) {
-            if (it->first.first == i) {
+            if (boost::get<0>(*it) == i) {
                 //Have to cover each guarantee (since the winning strategy depends on which guarantee is being pursued)
                 //Essentially, the choice of which guarantee to pursue can be thought of as a system "move".
                 //The environment always to chooses that prevent the appropriate guarantee.
-                if (strategy[it->first.second].isFalse()) {
-                    strategy[it->first.second] = it->second;
+                if (strategy[boost::get<1>(*it)].isFalse()) {
+                    strategy[boost::get<1>(*it)] = boost::get<2>(*it);
                 }
             }
         }

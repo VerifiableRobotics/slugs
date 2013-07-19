@@ -3,11 +3,14 @@
 
 #include "gr1context.hpp"
 #include <string>
+#include "boost/tuple/tuple.hpp"
 
 /**
  * A class that computes a counterstrategy for an unrealizable specification
+ *
+ * Includes support for the special robotics semantic
  */
-template<class T> class XCounterStrategy : public T {
+template<class T, bool specialRoboticsSemantics> class XCounterStrategy : public T {
 protected:
 
     // Inherited stuff used
@@ -27,10 +30,10 @@ protected:
     using T::winningPositions;
     using T::realizable;
 
-    std::vector<std::pair<std::pair<unsigned int, unsigned int>,BF> > strategyDumpingData;
+    std::vector<boost::tuple<unsigned int, unsigned int,BF> > strategyDumpingData;
     
     // Constructor
-    XCounterStrategy<T>(std::list<std::string> &filenames) : T(filenames) {}
+    XCounterStrategy<T,specialRoboticsSemantics>(std::list<std::string> &filenames) : T(filenames) {}
 
 public:
 
@@ -95,18 +98,19 @@ public:
 
                         // Compute a set of paths that are safe to take - used for the enforceable predecessor operator ('cox')
                         foundPaths = livetransitions & (mu0.getValue().SwapVariables(varVectorPre,varVectorPost) | (livenessAssumptions[i]));
-                        foundPaths &= safetyEnv;
+                        foundPaths = safetyEnv & safetySys.Implies(foundPaths);
+
+                        // Dump the paths that we just found into 'strategyDumpingData' - store the current goal
+                        // with the BDD
+                        strategyDumpingData.push_back(boost::make_tuple(i,j,foundPaths));
 
                         // Update the inner-most fixed point with the result of applying the enforcable predecessor operator
-                        mu0.update(safetySys.Implies(foundPaths).UnivAbstract(varCubePostOutput).ExistAbstract(varCubePostInput));
+                        mu0.update(foundPaths.UnivAbstract(varCubePostOutput).ExistAbstract(varCubePostInput));
                     }
 
                     // Update the set of positions that are winning for some liveness assumption
                     goodForAllLivenessAssumptions &= mu0.getValue();
 
-                    // Dump the paths that we just found into 'strategyDumpingData' - store the current goal long
-                    // with the BDD
-                    strategyDumpingData.push_back(std::pair<std::pair<unsigned int, unsigned int>,BF>(std::pair<unsigned int, unsigned int>(i,j),foundPaths));
                 }
 
                 // Update the middle fixed point
@@ -132,7 +136,11 @@ void checkRealizability() {
 
     // Check if for every possible environment initial position the system has a good system initial position
     BF result;
-    result = (initEnv & (initSys.Implies(winningPositions)).UnivAbstract(varCubePreOutput)).ExistAbstract(varCubePreInput);
+    if (specialRoboticsSemantics) {
+        result = (initEnv & initSys & winningPositions).ExistAbstract(varCubePreOutput).ExistAbstract(varCubePreInput);
+    } else {
+        result = (initEnv & (initSys.Implies(winningPositions)).UnivAbstract(varCubePreOutput)).ExistAbstract(varCubePreInput);
+    }
 
     // Check if the result is well-defind. Might fail after an incorrect modification of the above algorithm
     if (!result.isConstant()) throw "Internal error: Could not establish realizability/unrealizability of the specification.";
@@ -143,7 +151,7 @@ void checkRealizability() {
 
 
     static GR1Context* makeInstance(std::list<std::string> &filenames) {
-        return new XCounterStrategy<T>(filenames);
+        return new XCounterStrategy<T,specialRoboticsSemantics>(filenames);
     }
 };
 
