@@ -1,0 +1,22 @@
+[INPUT]
+person
+
+[OUTPUT]
+bit0
+
+
+[ENV_TRANS]
+
+[ENV_LIVENESS]
+person
+! person
+
+[ENV_INIT]
+
+[SYS_TRANS]
+bit0
+
+[SYS_LIVENESS]
+
+[SYS_INIT]
+

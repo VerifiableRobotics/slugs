@@ -1,0 +1,27 @@
+[INPUT]
+order_rice
+
+[OUTPUT]
+deliver
+
+[ENV_TRANS]
+1
+
+[ENV_LIVENESS]
+order_rice'
+! order_rice'
+
+[ENV_INIT]
+order_rice
+
+[SYS_TRANS]
+! deliver'
+
+[SYS_LIVENESS]
+! deliver
+deliver
+
+
+[SYS_INIT]
+! deliver
+
