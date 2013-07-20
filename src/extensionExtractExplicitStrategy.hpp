@@ -7,7 +7,7 @@
 /**
  * An extension that triggers that a strategy is actually extracted.
  */
-template<class T> class XExtractExplicitStrategy : public T {
+template<class T, bool oneStepRecovery> class XExtractExplicitStrategy : public T {
 protected:
     // New variables
     std::string outputFilename;
@@ -20,6 +20,7 @@ protected:
     using T::livenessGuarantees;
     using T::strategyDumpingData;
     using T::variables;
+    using T::safetyEnv;
     using T::variableTypes;
     using T::realizable;
     using T::postVars;
@@ -30,7 +31,7 @@ protected:
     using T::varCubePostOutput;
     using T::determinize;
 
-    XExtractExplicitStrategy<T>(std::list<std::string> &filenames) : T(filenames) {
+    XExtractExplicitStrategy<T,oneStepRecovery>(std::list<std::string> &filenames) : T(filenames) {
         if (filenames.size()==0) {
             outputFilename = "";
         } else {
@@ -145,7 +146,10 @@ public:
 
             // Compute successors for all variables that allow these
             currentPossibilities &= positionalStrategiesForTheIndividualGoals[current.second];
-            BF remainingTransitions = (currentPossibilities).ExistAbstract(varCubePre);
+            BF remainingTransitions =
+                    (oneStepRecovery)?
+                    (currentPossibilities).ExistAbstract(varCubePre):
+                    (currentPossibilities & safetyEnv).ExistAbstract(varCubePre);
 
             // Switching goals
             while (!(remainingTransitions.isFalse())) {
@@ -189,7 +193,7 @@ public:
     }
 
     static GR1Context* makeInstance(std::list<std::string> &filenames) {
-        return new XExtractExplicitStrategy<T>(filenames);
+        return new XExtractExplicitStrategy<T,oneStepRecovery>(filenames);
     }
 };
 

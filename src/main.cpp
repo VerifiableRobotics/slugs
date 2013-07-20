@@ -18,7 +18,8 @@ const char *commandLineArguments[] = {
     "--computeWeakenedSafetyAssumptions","Extract a minimal conjunctive normal form Boolean formula that represents some minimal CNF for a set of safety assumptions that leads to realiazability and is a weakened form of the safety assumptions given. Requires the option '--onlyRealizability' to be given as well.",
     "--biasForAction","Extract controllers that rely on the liveness assumptions being satisfies as little as possible.",
     "--computeCNFFormOfTheSpecification","Lets the Synthesis tool skip the synthesis step, and only compute a version of the specification that can be used by other synthesis tools that require it to be CNF-based.",
-    "--counterStrategy","Computes the Environment Counterstrategy"
+    "--counterStrategy","Computes the environment counterstrategy",
+    "--simpleRecovery","Adds transitions to the system implementation that allow it to recover from sparse environment safety assumption faults in many cases"
 };
 
 //===================================================================================
@@ -38,14 +39,18 @@ const char *commandLineArguments[] = {
 //===================================================================================
 struct OptionCombination { std::string params; GR1Context* (*factory)(std::list<std::string> &l); OptionCombination(std::string _p, GR1Context* (*_f)(std::list<std::string> &l)) : params(_p), factory(_f) {} };
 OptionCombination optionCombinations[] = {
-    OptionCombination("",XExtractExplicitStrategy<GR1Context>::makeInstance),
+    OptionCombination("",XExtractExplicitStrategy<GR1Context,false>::makeInstance),
+    OptionCombination("--simpleRecovery",XExtractExplicitStrategy<GR1Context,true>::makeInstance),
     OptionCombination("--onlyRealizability",GR1Context::makeInstance),
-    OptionCombination("--sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<GR1Context> >::makeInstance),
+    OptionCombination("--sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<GR1Context>,false>::makeInstance),
+    OptionCombination("--simpleRecovery --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<GR1Context>,true>::makeInstance),
     OptionCombination("--onlyRealizability --sysInitRoboticsSemantics",XRoboticsSemantics<GR1Context>::makeInstance),
     OptionCombination("--computeWeakenedSafetyAssumptions --onlyRealizability",XComputeWeakenedSafetyAssumptions<GR1Context>::makeInstance),
     OptionCombination("--computeWeakenedSafetyAssumptions --onlyRealizability --sysInitRoboticsSemantics",XComputeWeakenedSafetyAssumptions<XRoboticsSemantics<GR1Context> >::makeInstance),
-    OptionCombination("--biasForAction",XExtractExplicitStrategy<XBiasForAction<GR1Context> >::makeInstance),
-    OptionCombination("--biasForAction --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<XBiasForAction<GR1Context> > >::makeInstance),
+    OptionCombination("--biasForAction",XExtractExplicitStrategy<XBiasForAction<GR1Context>,false>::makeInstance),
+    OptionCombination("--biasForAction --simpleRecovery",XExtractExplicitStrategy<XBiasForAction<GR1Context>,true>::makeInstance),
+    OptionCombination("--biasForAction --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<XBiasForAction<GR1Context> >,false>::makeInstance),
+    OptionCombination("--biasForAction --simpleRecovery --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<XBiasForAction<GR1Context> >,true>::makeInstance),
     OptionCombination("--computeCNFFormOfTheSpecification --sysInitRoboticsSemantics",XComputeCNFFormOfTheSpecification<GR1Context>::makeInstance),
     OptionCombination("--counterStrategy",XExtractExplicitCounterStrategy<XCounterStrategy<GR1Context,false> >::makeInstance),
     OptionCombination("--counterStrategy --sysInitRoboticsSemantics",XExtractExplicitCounterStrategy<XCounterStrategy<GR1Context,true> >::makeInstance)
