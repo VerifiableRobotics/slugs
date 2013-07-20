@@ -1,0 +1,104 @@
+[INPUT]
+before_I_0
+before_F2_0
+
+[OUTPUT]
+src_Auth
+src_Guest
+purpose_Web
+purpose_Other
+port_I_0
+port_F1_0
+port_F2_0
+port_F3_0
+port_START
+port_WORLD
+port_DROP
+update_I_0
+update_F2_0
+mem_DROP
+mem_WORLD
+
+[ENV_TRANS]
+| update_I_0 before_I_0'
+| update_F2_0 before_F2_0'
+| before_I_0 ! before_I_0'
+| before_F2_0 ! before_F2_0'
+
+[ENV_LIVENESS]
+| ! update_I_0 ! before_I_0'
+| ! update_F2_0 ! before_F2_0'
+
+[ENV_INIT]
+before_I_0
+before_F2_0
+
+[SYS_TRANS]
+| ! src_Auth ! src_Guest
+| src_Auth src_Guest
+
+| ! purpose_Web ! purpose_Other
+| purpose_Web purpose_Other
+
+| | | | | | port_I_0 port_F1_0 port_F2_0 port_F3_0 port_START port_WORLD port_DROP
+
+| ! port_I_0 & & & & & ! port_F1_0 ! port_F2_0 ! port_F3_0 ! port_START ! port_WORLD ! port_DROP
+| ! port_F1_0 & & & & & ! port_I_0 ! port_F2_0 ! port_F3_0 ! port_START ! port_WORLD ! port_DROP
+| ! port_F2_0 & & & & & ! port_I_0 ! port_F1_0 ! port_F3_0 ! port_START ! port_WORLD ! port_DROP
+| ! port_F3_0 & & & & & ! port_I_0 ! port_F1_0 ! port_F2_0 ! port_START ! port_WORLD ! port_DROP
+| ! port_START & & & & & ! port_I_0 ! port_F1_0 ! port_F2_0 ! port_F3_0 ! port_WORLD ! port_DROP
+| ! port_WORLD & & & & & ! port_I_0 ! port_F1_0 ! port_F2_0 ! port_F3_0 ! port_START ! port_DROP
+| ! port_DROP & & & & & ! port_I_0 ! port_F1_0 ! port_F2_0 ! port_F3_0 ! port_START ! port_WORLD
+
+| ! port_START port_I_0'
+| ! before_I_0 | ! & port_I_0 src_Auth | port_F1_0' port_F2_0'
+| before_I_0 | ! & port_I_0 src_Auth port_F1_0'
+| ! before_I_0 | ! & port_I_0 src_Guest port_F3_0'
+| before_I_0 | ! & port_I_0 src_Guest | port_F2_0' port_F3_0'
+| ! port_F1_0 port_WORLD'
+| ! before_F2_0 | ! port_F2_0 port_WORLD'
+| before_F2_0 | ! & port_F2_0 purpose_Web port_WORLD'
+| before_F2_0 | ! & port_F2_0 purpose_Web port_WORLD'
+| ! & port_F3_0 purpose_Web port_WORLD'
+| ! & port_F3_0 purpose_Other port_DROP'
+| ! port_WORLD port_WORLD'
+| ! port_DROP port_DROP'
+
+| ! src_Guest src_Guest'
+| ! src_Auth src_Auth'
+
+| ! purpose_Web purpose_Web'
+| ! purpose_Other purpose_Other'
+
+| ! | & purpose_Other src_Guest & mem_DROP ! port_DROP' mem_DROP'
+| | & purpose_Other src_Guest & mem_DROP ! port_DROP' ! mem_DROP'
+
+| ! | | src_Auth & src_Guest purpose_Web & mem_WORLD ! port_WORLD' mem_WORLD'
+| | | src_Auth & src_Guest purpose_Web & mem_WORLD ! port_WORLD' ! mem_WORLD'
+
+| ! update_I_0 update_I_0'
+| ! update_F2_0 update_F2_0'
+
+[SYS_LIVENESS]
+& update_I_0 update_F2_0
+| ! mem_DROP port_DROP'
+| ! mem_WORLD port_WORLD'
+
+
+[SYS_INIT]
+! mem_DROP
+! mem_WORLD
+! update_I_0
+! update_F2_0
+
+
+
+
+
+
+
+
+
+
+
+
