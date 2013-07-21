@@ -1,0 +1,62 @@
+#======================================
+# Fire fighting example from LTLMoP
+#======================================
+[INPUT]
+person
+hazardous_item
+
+[OUTPUT]
+bit0
+bit1
+bit2
+pick_up
+drop
+radio
+carrying_item
+
+[ENV_TRANS]
+| ! & & ! bit0 ! bit1 ! bit2 ! hazardous_item'
+| ! & & ! bit0 ! bit1 ! bit2 ! person'
+
+[ENV_LIVENESS]
+1
+
+[ENV_INIT]
+! person
+! hazardous_item
+
+[SYS_TRANS]
+| ! & & ! bit0 ! bit1 ! bit2 | | & & ! bit0' ! bit1' ! bit2' & & ! bit0' bit1' bit2' & & bit0' ! bit1' ! bit2'
+| ! & & ! bit0 ! bit1 bit2 | | & & ! bit0' ! bit1' bit2' & & ! bit0' bit1' bit2' & & bit0' ! bit1' ! bit2'
+| ! & & ! bit0 bit1 ! bit2 | | & & ! bit0' bit1' ! bit2' & & bit0' ! bit1' ! bit2' & & bit0' ! bit1' bit2'
+| ! & & ! bit0 bit1 bit2 | | | & & ! bit0' bit1' bit2' & & ! bit0' ! bit1' ! bit2' & & ! bit0' ! bit1' bit2' & & bit0' ! bit1' bit2'
+| ! & & bit0 ! bit1 ! bit2 | | | & & bit0' ! bit1' ! bit2' & & ! bit0' ! bit1' ! bit2' & & ! bit0' ! bit1' bit2' & & ! bit0' bit1' ! bit2'
+| ! & & bit0 ! bit1 bit2 | | & & bit0' ! bit1' bit2' & & ! bit0' bit1' ! bit2' & & ! bit0' bit1' bit2'
+| & ! & hazardous_item' ! carrying_item' ! pick_up' & & hazardous_item' ! carrying_item' pick_up'
+| ! & pick_up ! drop carrying_item'
+| ! drop ! carrying_item'
+| ! & carrying_item ! drop carrying_item'
+| ! & ! carrying_item ! pick_up ! carrying_item'
+| & ! & & & ! bit0' ! bit1' ! bit2' carrying_item' ! drop' & & & & ! bit0' ! bit1' ! bit2' carrying_item' drop'
+| ! ! carrying_item ! & & ! bit0' ! bit1' ! bit2'
+| & ! person' ! radio' & person' radio'
+| ! | radio' radio & & | & ! bit0' ! bit0 & bit0' bit0 | & ! bit1' ! bit1 & bit1' bit1 | & ! bit2' ! bit2 & bit2' bit2
+
+[SYS_LIVENESS]
+| ! & ! carrying_item' ! radio' & & ! bit0' bit1' bit2'
+| ! & ! carrying_item' ! radio' & & bit0' ! bit1' bit2'
+| ! & ! carrying_item' ! radio' & & ! bit0' bit1' ! bit2'
+| ! & ! carrying_item' ! radio' & & bit0' ! bit1' ! bit2'
+| ! & ! carrying_item' ! radio' & & ! bit0' ! bit1' bit2'
+| ! & carrying_item' ! radio' & & ! bit0' ! bit1' ! bit2'
+
+[SYS_INIT]
+| | | | | & & ! bit0 ! bit1 ! bit2 & & ! bit0 ! bit1 bit2 & & ! bit0 bit1 ! bit2 & & ! bit0 bit1 bit2 & & bit0 ! bit1 ! bit2 & & bit0 ! bit1 bit2
+! bit0
+! bit1
+! bit2
+! pick_up
+! drop
+! radio
+! carrying_item
+
