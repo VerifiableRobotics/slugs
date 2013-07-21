@@ -7,7 +7,7 @@
 #include "extensionExtractExplicitCounterstrategy.hpp"
 #include "extensionRoboticsSemantics.hpp"
 #include "extensionWeakenSafetyAssumptions.hpp"
-#undef fail
+#include "extensionIncrementalSynthesis.hpp"
 
 //===================================================================================
 // List of command line arguments
@@ -19,7 +19,8 @@ const char *commandLineArguments[] = {
     "--biasForAction","Extract controllers that rely on the liveness assumptions being satisfies as little as possible.",
     "--computeCNFFormOfTheSpecification","Lets the Synthesis tool skip the synthesis step, and only compute a version of the specification that can be used by other synthesis tools that require it to be CNF-based.",
     "--counterStrategy","Computes the environment counterstrategy",
-    "--simpleRecovery","Adds transitions to the system implementation that allow it to recover from sparse environment safety assumption faults in many cases"
+    "--simpleRecovery","Adds transitions to the system implementation that allow it to recover from sparse environment safety assumption faults in many cases",
+    "--experimentalIncrementalSynthesis","A very experimental implementation of incremental synthesis for sequences of changing GR(1) specifications. By no means stable yet!"
 };
 
 //===================================================================================
@@ -53,7 +54,8 @@ OptionCombination optionCombinations[] = {
     OptionCombination("--biasForAction --simpleRecovery --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<XBiasForAction<GR1Context> >,true>::makeInstance),
     OptionCombination("--computeCNFFormOfTheSpecification --sysInitRoboticsSemantics",XComputeCNFFormOfTheSpecification<GR1Context>::makeInstance),
     OptionCombination("--counterStrategy",XExtractExplicitCounterStrategy<XCounterStrategy<GR1Context,false> >::makeInstance),
-    OptionCombination("--counterStrategy --sysInitRoboticsSemantics",XExtractExplicitCounterStrategy<XCounterStrategy<GR1Context,true> >::makeInstance)
+    OptionCombination("--counterStrategy --sysInitRoboticsSemantics",XExtractExplicitCounterStrategy<XCounterStrategy<GR1Context,true> >::makeInstance),
+    OptionCombination("--experimentalIncrementalSynthesis",XIncrementalSynthesis<GR1Context>::makeInstance)
 };
 
 /**
@@ -154,7 +156,11 @@ int main(int argc, const char **args) {
         std::cerr << "Error: " << error << std::endl;
         return 1;
     } catch (SlugsException e) {
-        std::cerr << "Error: " << e.getShouldPrintUsage() << std::endl;
+        std::cerr << "Error: " << e.getMessage() << std::endl;
+        if (e.getShouldPrintUsage()) {
+            std::cerr << std::endl;
+            printToolUsageHelp();
+        }
         return 1;
     }
 

@@ -23,9 +23,10 @@
 
 #include "BFCuddInlines.h"
 
+#undef fail
+
 #else
 #error Unknown Boolean function engine.
-
 #endif
 
 #endif /* BF_H_ */

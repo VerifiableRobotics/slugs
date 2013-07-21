@@ -18,7 +18,8 @@ CONFIG -= app_bundle
 CONFIG -= qt
 HEADERS += BFAbstractionLibrary/BF.h gr1context.hpp extensionExtractExplicitStrategy.hpp extensionRoboticsSemantics.hpp \
     extensionWeakenSafetyAssumptions.hpp extensionBiasForAction.hpp \
-    extensionComputeCNFFormOfTheSpecification.hpp extensionCounterstrategy.hpp extensionExtractExplicitCounterstrategy.hpp
+    extensionComputeCNFFormOfTheSpecification.hpp extensionCounterstrategy.hpp extensionExtractExplicitCounterstrategy.hpp \
+    extensionIncrementalSynthesis.hpp
 
 SOURCES += main.cpp BFAbstractionLibrary/bddDump.cpp BFAbstractionLibrary/BFCuddVarVector.cpp BFAbstractionLibrary/BFCudd.cpp BFAbstractionLibrary/BFCuddManager.cpp BFAbstractionLibrary/BFCuddVarCube.cpp tools.cpp synthesisAlgorithm.cpp synthesisContextBasics.cpp
 

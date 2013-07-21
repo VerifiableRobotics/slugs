@@ -58,7 +58,6 @@ protected:
     BF winningPositions;
     //@}
 
-private:
     //! This variable is only used during parsing the input instance.
     //! It allows us to get better error messages for parsing.
     unsigned int lineNumberCurrentlyRead;
@@ -70,6 +69,10 @@ private:
     BF parseBooleanFormulaRecurse(std::istringstream &is,std::set<VariableType> &allowedTypes);
     BF parseBooleanFormula(std::string currentLine,std::set<VariableType> &allowedTypes);
     //@}
+
+    //! A protected default constructor - to be used if input parsing is to be performed by
+    //! the plugin, which must know what it is doing then!
+    GR1Context() {}
 
 public:
     GR1Context(std::list<std::string> &filenames);
@@ -154,6 +157,7 @@ public:
     SlugsException& operator<<(const std::string str) { message << str; return *this; }
     SlugsException& operator<<(const double str) { message << str; return *this; }
     SlugsException& operator<<(const int str) { message << str; return *this; }
+    std::string getMessage() { return message.str(); }
 };
 
 
