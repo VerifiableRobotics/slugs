@@ -149,10 +149,16 @@ GR1Context::GR1Context(std::list<std::string> &filenames) {
     varCubePreOutput = mgr.computeCube(preOutputVars);
     varCubePre = mgr.computeCube(preVars);
 
+    // Check if variable names have been used twice
+    std::set<std::string> variableNameSet(variableNames.begin(),variableNames.end());
+    if (variableNameSet.size()!=variableNames.size()) throw SlugsException(false,"Error in input file: some variable name has been used twice!\nPlease keep in mind that for every variable used, a second one with the same name but with a \"'\" appended to it is automacically created.");
+
     // Make sure that there is at least one liveness assumption and one liveness guarantee
     // The synthesis algorithm might be unsound otherwise
     if (livenessAssumptions.size()==0) livenessAssumptions.push_back(mgr.constantTrue());
     if (livenessGuarantees.size()==0) livenessGuarantees.push_back(mgr.constantTrue());
+
+
 }
 
 /**
@@ -165,8 +171,9 @@ BF GR1Context::parseBooleanFormulaRecurse(std::istringstream &is,std::set<Variab
     std::string operation = "";
     is >> operation;
     if (operation=="") {
-        std::cerr << "Error reading line " << lineNumberCurrentlyRead << " from the input file. Premature end of line.\n";
-        throw "Fatal Error";
+        SlugsException e(false);
+        e << "Error reading line " << lineNumberCurrentlyRead << ". Premature end of line.";
+        throw e;
     }
     if (operation=="|") return parseBooleanFormulaRecurse(is,allowedTypes) | parseBooleanFormulaRecurse(is,allowedTypes);
     if (operation=="&") return parseBooleanFormulaRecurse(is,allowedTypes) & parseBooleanFormulaRecurse(is,allowedTypes);
@@ -178,14 +185,16 @@ BF GR1Context::parseBooleanFormulaRecurse(std::istringstream &is,std::set<Variab
     for (unsigned int i=0;i<variableNames.size();i++) {
         if (variableNames[i]==operation) {
             if (allowedTypes.count(variableTypes[i])==0) {
-                std::cerr << "Error reading line " << lineNumberCurrentlyRead << " from the input file. The variable " << operation << " is not allowed for this type of expression.\n";
-                throw "Fatal Error";
+                SlugsException e(false);
+                e << "Error reading line " << lineNumberCurrentlyRead << ". The variable " << operation << " is not allowed for this type of expression.";
+                throw e;
             }
             return variables[i];
         }
     }
-    std::cerr << "Error reading line " << lineNumberCurrentlyRead << " from the input file. The variable " << operation << " has not been found.\n";
-    throw "Fatal Error";
+    SlugsException e(false);
+    e << "Error reading line " << lineNumberCurrentlyRead << ". The variable " << operation << " has not been found.";
+    throw e;
 }
 
 /**
@@ -203,8 +212,9 @@ BF GR1Context::parseBooleanFormula(std::string currentLine,std::set<VariableType
     is >> nextPart;
     if (nextPart=="") return result;
 
-    std::cerr << "Error reading line " << lineNumberCurrentlyRead << " from the input file. There are stray characters: '" << nextPart << "'" << std::endl;
-    throw "Fatal Error";
+    SlugsException e(false);
+    e << "Error reading line " << lineNumberCurrentlyRead << ". There are stray characters: '" << nextPart << "'";
+    throw e;
 }
 
 

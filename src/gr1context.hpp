@@ -155,8 +155,9 @@ public:
     SlugsException(SlugsException const &other) : shouldPrintUsage(other.shouldPrintUsage) { message << other.message.str();}
     bool getShouldPrintUsage() const { return shouldPrintUsage; }
     SlugsException& operator<<(const std::string str) { message << str; return *this; }
-    SlugsException& operator<<(const double str) { message << str; return *this; }
-    SlugsException& operator<<(const int str) { message << str; return *this; }
+    SlugsException& operator<<(const double value) { message << value; return *this; }
+    SlugsException& operator<<(const int value) { message << value; return *this; }
+    SlugsException& operator<<(const unsigned int value) { message << value; return *this; }
     std::string getMessage() { return message.str(); }
 };
 
