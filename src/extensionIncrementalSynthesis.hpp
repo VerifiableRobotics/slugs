@@ -25,7 +25,7 @@ protected:
     using T::initEnv;
     using T::lineNumberCurrentlyRead;
     using T::parseBooleanFormula;
-    using T::winningPositions;
+    //using T::winningPositions; - SUPERSEEDED (in this context) BY Level1IntermediateResults.winningPositons (so that the Level1 functions can revert them to TRUE)
     using T::varVectorPre;
     using T::varVectorPost;
     using T::varCubePostOutput;
@@ -46,20 +46,64 @@ protected:
     std::map<std::string,BF> separateInitGuarantees;
     std::map<std::string,BF> separateLivenessAssumptions;
     std::map<std::string,BF> separateLivenessGuarantees;
-    unsigned int oldLivenessGuaranteesSize;
-    unsigned int oldLivenessAssumptionsSize;
 
     // Special options for execution
     bool exitOnError;
 
-    // Keeping track of the state
-    bool madeLifeHarderForTheSystem;
-    bool madeLifeEasierForTheSystem;
+    // Classes for storing the intermediate data
+    // Levels:
+    // 1: Outer fixed point
+    // 2: Iteration over the livness guarantees
+    // 3: Middle fixed point
+    // 4: Iteration over the liveness assumptions
+    // 5: Inner-most fixed point
 
-    // Intermediate data
-    std::vector<BF> ZHistory;
-    std::vector<std::vector<BF> > YHistory;
-    std::vector<std::vector<std::vector<BF> > > XHistory;
+    class Level5IntermediateResults {
+
+    };
+
+    class Level4IntermediateResults {
+
+    };
+
+    class Level3IntermediateResults {
+
+    };
+
+    class Level2IntermediateResults {
+    public:
+        unsigned int level1IterationNumber;
+        Level2IntermediateResults() : level1IterationNumber(0) {}
+    };
+
+    class Level1IntermediateResults {
+    public:
+        // Important Variables
+        BF winningPositions;
+        unsigned int iterationNumber;
+        std::vector<Level2IntermediateResults*> sub;
+
+        // Functions
+        void clearEverythingExceptForTheWinningPositions() {
+            for (auto it = sub.begin();it!=sub.end();it++) {
+                delete *it;
+            }
+            sub.clear();
+        }
+        bool isEmpty() {
+            return sub.size()==0;
+        }
+        void addNewLevel2() {
+            sub.push_back(new Level2IntermediateResults());
+        }
+
+        ~Level1IntermediateResults() {
+            clearEverythingExceptForTheWinningPositions(); // No need to delete the winning positions
+        }
+    };
+
+    // The one instance that we use here.
+    Level1IntermediateResults intermediateResults;
 
     XIncrementalSynthesis<T>(std::list<std::string> &filenames) : T(), exitOnError(false) {
         if (filenames.size()>0) {
@@ -71,7 +115,7 @@ protected:
     }
 
     /**
-     * @brief Starts an interactive shell that allows the user to type in synthesis commands.s
+     * @brief Starts an interactive shell that allows the user to type in synthesis commands.
      */
     void execute() {
 
@@ -83,14 +127,15 @@ protected:
         std::cout << "=========================================================================\n";
 
         // Init State
-        madeLifeHarderForTheSystem = false;
-        madeLifeEasierForTheSystem = false;
         lineNumberCurrentlyRead = 0;
-        winningPositions = mgr.constantTrue(); // So that we can start with the "making the life for the system harder" case
+        intermediateResults.winningPositions = mgr.constantTrue(); // So that we can start with the "making the life for the system harder" case
+        intermediateResults.iterationNumber = 1;
         safetySys = mgr.constantTrue();
         safetyEnv = mgr.constantTrue();
         initSys = mgr.constantTrue();
         initEnv = mgr.constantTrue();
+        std::map<unsigned int,std::string> makingLifeForSystemHarderCommands;
+        std::map<unsigned int,std::string> makingLifeForSystemEasierCommands;
 
         while (true) {
 
@@ -167,70 +212,13 @@ protected:
                         }
                     }
                 } else if (currentCommand=="ASA") {
-                    // Add safety Assumption
-                    std::set<VariableType> allowedTypes;
-                    allowedTypes.insert(PreInput);
-                    allowedTypes.insert(PreOutput);
-                    allowedTypes.insert(PostInput);
-                    if (positionOfFirstSpace==std::string::npos) {
-                        std::cerr << "Error: Expected name of property and property string (case 1).\n";
-                        if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
-                    } else {
-                        std::string restOfTheCommand = currentLine.substr(positionOfFirstSpace+1,std::string::npos);
-                        size_t positionOfSecondSpace = restOfTheCommand.find(" ");
-                        if (positionOfSecondSpace==std::string::npos) {
-                            std::cerr << "Error: Expected name of property and property string (case 2).\n";
-                            if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
-                        } else {
-                            std::string propertyString = restOfTheCommand.substr(positionOfSecondSpace+1,std::string::npos);
-                            std::string nameString = restOfTheCommand.substr(0,positionOfSecondSpace);
-                            try {
-                                BF newProperty = parseBooleanFormula(propertyString,allowedTypes);
-                                if (separateSafetyAssumptions.count(nameString)>0) {
-                                    std::cerr << "Error: Trying to re-use name of the property string. \n";
-                                    if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
-                                }
-                                separateSafetyAssumptions[nameString] = newProperty;
-                                madeLifeEasierForTheSystem = true;
-                            } catch (SlugsException e) {
-                                if (exitOnError) throw e;
-                                std::cerr << "Error: " << e.getMessage() << std::endl;
-                            }
-                        }
-                    }
+                    makingLifeForSystemEasierCommands[lineNumberCurrentlyRead] = currentLine;
                 } else if (currentCommand=="ASG") {
-                    // Add safety Assumption
-                    std::set<VariableType> allowedTypes;
-                    allowedTypes.insert(PreInput);
-                    allowedTypes.insert(PreOutput);
-                    allowedTypes.insert(PostInput);
-                    allowedTypes.insert(PostOutput);
-                    if (positionOfFirstSpace==std::string::npos) {
-                        std::cerr << "Error: Expected name of property and property string (case 1).\n";
-                        if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
-                    } else {
-                        std::string restOfTheCommand = currentLine.substr(positionOfFirstSpace+1,std::string::npos);
-                        size_t positionOfSecondSpace = restOfTheCommand.find(" ");
-                        if (positionOfSecondSpace==std::string::npos) {
-                            std::cerr << "Error: Expected name of property and property string (case 2).\n";
-                            if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
-                        } else {
-                            std::string propertyString = restOfTheCommand.substr(positionOfSecondSpace+1,std::string::npos);
-                            std::string nameString = restOfTheCommand.substr(0,positionOfSecondSpace);
-                            try {
-                                BF newProperty = parseBooleanFormula(propertyString,allowedTypes);
-                                if (separateSafetyGuarantees.count(nameString)>0) {
-                                    std::cerr << "Error: Trying to re-use name of the property string. \n";
-                                    if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
-                                }
-                                separateSafetyGuarantees[nameString] = newProperty;
-                                madeLifeHarderForTheSystem = true;
-                            } catch (SlugsException e) {
-                                if (exitOnError) throw e;
-                                std::cerr << "Error: " << e.getMessage() << std::endl;
-                            }
-                        }
-                    }
+                    makingLifeForSystemHarderCommands[lineNumberCurrentlyRead] = currentLine;
+                } else if (currentCommand=="ALG") {
+                    makingLifeForSystemHarderCommands[lineNumberCurrentlyRead] = currentLine;
+                } else if (currentCommand=="ASA") {
+                    makingLifeForSystemEasierCommands[lineNumberCurrentlyRead] = currentLine;
                 } else if (currentCommand=="AIG") {
                     // Add safety Assumption
                     std::set<VariableType> allowedTypes;
@@ -290,71 +278,6 @@ protected:
                             }
                         }
                     }
-                } else if (currentCommand=="ALG") {
-                    // Add safety Assumption
-                    std::set<VariableType> allowedTypes;
-                    allowedTypes.insert(PreInput);
-                    allowedTypes.insert(PreOutput);
-                    allowedTypes.insert(PostInput);
-                    allowedTypes.insert(PostOutput);
-                    if (positionOfFirstSpace==std::string::npos) {
-                        std::cerr << "Error: Expected name of property and property string (case 1).\n";
-                        if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
-                    } else {
-                        std::string restOfTheCommand = currentLine.substr(positionOfFirstSpace+1,std::string::npos);
-                        size_t positionOfSecondSpace = restOfTheCommand.find(" ");
-                        if (positionOfSecondSpace==std::string::npos) {
-                            std::cerr << "Error: Expected name of property and property string (case 2).\n";
-                            if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
-                        } else {
-                            std::string propertyString = restOfTheCommand.substr(positionOfSecondSpace+1,std::string::npos);
-                            std::string nameString = restOfTheCommand.substr(0,positionOfSecondSpace);
-                            try {
-                                BF newProperty = parseBooleanFormula(propertyString,allowedTypes);
-                                if (separateLivenessGuarantees.count(nameString)>0) {
-                                    std::cerr << "Error: Trying to re-use name of the property string. \n";
-                                    if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
-                                }
-                                separateLivenessGuarantees[nameString] = newProperty;
-                                madeLifeHarderForTheSystem = true;
-                            } catch (SlugsException e) {
-                                if (exitOnError) throw e;
-                                std::cerr << "Error: " << e.getMessage() << std::endl;
-                            }
-                        }
-                    }
-                } else if (currentCommand=="ALA") {
-                    // Add safety Assumption
-                    std::set<VariableType> allowedTypes;
-                    allowedTypes.insert(PreInput);
-                    allowedTypes.insert(PreOutput);
-                    allowedTypes.insert(PostInput);
-                    if (positionOfFirstSpace==std::string::npos) {
-                        std::cerr << "Error: Expected name of property and property string (case 1).\n";
-                        if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
-                    } else {
-                        std::string restOfTheCommand = currentLine.substr(positionOfFirstSpace+1,std::string::npos);
-                        size_t positionOfSecondSpace = restOfTheCommand.find(" ");
-                        if (positionOfSecondSpace==std::string::npos) {
-                            std::cerr << "Error: Expected name of property and property string (case 2).\n";
-                            if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
-                        } else {
-                            std::string propertyString = restOfTheCommand.substr(positionOfSecondSpace+1,std::string::npos);
-                            std::string nameString = restOfTheCommand.substr(0,positionOfSecondSpace);
-                            try {
-                                BF newProperty = parseBooleanFormula(propertyString,allowedTypes);
-                                if (separateLivenessAssumptions.count(nameString)>0) {
-                                    std::cerr << "Error: Trying to re-use name of the property string. \n";
-                                    if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
-                                }
-                                separateLivenessAssumptions[nameString] = newProperty;
-                                madeLifeEasierForTheSystem = true;
-                            } catch (SlugsException e) {
-                                if (exitOnError) throw e;
-                                std::cerr << "Error: " << e.getMessage() << std::endl;
-                            }
-                        }
-                    }
                 } else if (currentCommand=="EXITONERROR") {
                     if (positionOfFirstSpace==std::string::npos) {
                         std::cerr << "Error: Expected 0 or 1.\n";
@@ -370,6 +293,9 @@ protected:
                         if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                     }
                 } else if (currentCommand=="CR") {
+
+                    // Line numbers are temporarily reassigned during delayed parsing
+                    unsigned oldLineNumber = lineNumberCurrentlyRead;
 
                     // Compute Cubes and Var Vectors
                     preVars.clear();
@@ -414,50 +340,228 @@ protected:
                     }
                     if (separateLivenessGuarantees.size()==0) {
                         separateLivenessGuarantees["__AUTO_ADDED__"] = mgr.constantTrue();
+                        intermediateResults.addNewLevel2();
                     }
 
-                    // TODO Here: Remove True assumption/guarantee if no longer needed (can only be the first one in the list).
-                    // Don't forget to remove the buffer content along the way!
+                    //==================================
+                    // Making life easier for the system
+                    //==================================
+                    if (makingLifeForSystemEasierCommands.size()>0) {
+                        for (auto it = makingLifeForSystemEasierCommands.begin();it!=makingLifeForSystemEasierCommands.end();it++) {
+                            std::string currentLine = it->second;
+                            lineNumberCurrentlyRead = it->first;
+                            size_t positionOfFirstSpace = currentLine.find(" ");
+                            std::string currentCommand = (positionOfFirstSpace!=std::string::npos)?currentLine.substr(0,positionOfFirstSpace):currentLine;
+                            boost::to_upper(currentCommand);
 
+                            if (currentCommand=="ASA") {
+                                // Add safety Assumption
+                                std::set<VariableType> allowedTypes;
+                                allowedTypes.insert(PreInput);
+                                allowedTypes.insert(PreOutput);
+                                allowedTypes.insert(PostInput);
+                                if (positionOfFirstSpace==std::string::npos) {
+                                    std::cerr << "Error: Expected name of property and property string (case 1).\n";
+                                    if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
+                                } else {
+                                    std::string restOfTheCommand = currentLine.substr(positionOfFirstSpace+1,std::string::npos);
+                                    size_t positionOfSecondSpace = restOfTheCommand.find(" ");
+                                    if (positionOfSecondSpace==std::string::npos) {
+                                        std::cerr << "Error: Expected name of property and property string (case 2).\n";
+                                        if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
+                                    } else {
+                                        std::string propertyString = restOfTheCommand.substr(positionOfSecondSpace+1,std::string::npos);
+                                        std::string nameString = restOfTheCommand.substr(0,positionOfSecondSpace);
+                                        try {
+                                            BF newProperty = parseBooleanFormula(propertyString,allowedTypes);
+                                            if (separateSafetyAssumptions.count(nameString)>0) {
+                                                std::cerr << "Error: Trying to re-use name of the property string. \n";
+                                                if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
+                                            }
+                                            separateSafetyAssumptions[nameString] = newProperty;
 
-                    // Making life easier....
-                    if (madeLifeEasierForTheSystem) {
-                        // Resynthesize under making life easier for the system
+                                            // TODO: Remove the stuff that we can no longer use.
 
-                        // Remove guarantees here
+                                        } catch (SlugsException e) {
+                                            if (exitOnError) throw e;
+                                            std::cerr << "Error: " << e.getMessage() << std::endl;
+                                        }
+                                    }
+                                }
+                            } else if (currentCommand=="ALA") {
+                                // Add safety Assumption
+                                std::set<VariableType> allowedTypes;
+                                allowedTypes.insert(PreInput);
+                                allowedTypes.insert(PreOutput);
+                                allowedTypes.insert(PostInput);
+                                if (positionOfFirstSpace==std::string::npos) {
+                                    std::cerr << "Error: Expected name of property and property string (case 1).\n";
+                                    if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
+                                } else {
+                                    std::string restOfTheCommand = currentLine.substr(positionOfFirstSpace+1,std::string::npos);
+                                    size_t positionOfSecondSpace = restOfTheCommand.find(" ");
+                                    if (positionOfSecondSpace==std::string::npos) {
+                                        std::cerr << "Error: Expected name of property and property string (case 2).\n";
+                                        if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
+                                    } else {
+                                        std::string propertyString = restOfTheCommand.substr(positionOfSecondSpace+1,std::string::npos);
+                                        std::string nameString = restOfTheCommand.substr(0,positionOfSecondSpace);
+                                        try {
+                                            BF newProperty = parseBooleanFormula(propertyString,allowedTypes);
+                                            if (separateLivenessAssumptions.count(nameString)>0) {
+                                                std::cerr << "Error: Trying to re-use name of the property string. \n";
+                                                if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
+                                            }
+                                            separateLivenessAssumptions[nameString] = newProperty;
+
+                                            // TODO: Remove the stuff that we can no longer use.
+                                        } catch (SlugsException e) {
+                                            if (exitOnError) throw e;
+                                            std::cerr << "Error: " << e.getMessage() << std::endl;
+                                        }
+                                    }
+                                }
+                            } else {
+                                SlugsException e (false,"Internal error in line ");
+                                e << __LINE__ << " in file " << __FILE__ << "\n";
+                                throw e;
+                            }
+                        }
+
+                        // TODO: Compute new assumptions and guarantees
+
+                        // TODO Here: Remove True liveness assumption if no longer needed (can only be the first one in the list).
 
                         // Try to synthesize - but only if we have a history already.
-                        if (ZHistory.size()>0) {
+                        if (!(intermediateResults.isEmpty())) {
                             throw SlugsException(false,"Making life easier is unsupported.");
                         }
+                        makingLifeForSystemEasierCommands.clear();
                     }
 
                     // Making life harder
-                    if (madeLifeHarderForTheSystem || ZHistory.size()==0) {
+                    std::cout << "MakingLiveHarderSize: "<<makingLifeForSystemHarderCommands.size()<<std::endl;
+                    if (makingLifeForSystemHarderCommands.size()>0) {
+                        for (auto it = makingLifeForSystemHarderCommands.begin();it!=makingLifeForSystemHarderCommands.end();it++) {
+                            std::string currentLine = it->second;
+                            lineNumberCurrentlyRead = it->first;
+                            size_t positionOfFirstSpace = currentLine.find(" ");
+                            std::string currentCommand = (positionOfFirstSpace!=std::string::npos)?currentLine.substr(0,positionOfFirstSpace):currentLine;
+                            boost::to_upper(currentCommand);
 
-                        // Resynthesis under making life harder for the system (or synthesize for the first time)
+                            if (currentCommand=="ALG") {
+                                // Add safety Assumption
+                                std::set<VariableType> allowedTypes;
+                                allowedTypes.insert(PreInput);
+                                allowedTypes.insert(PreOutput);
+                                allowedTypes.insert(PostInput);
+                                allowedTypes.insert(PostOutput);
+                                if (positionOfFirstSpace==std::string::npos) {
+                                    std::cerr << "Error: Expected name of property and property string (case 1).\n";
+                                    if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
+                                } else {
+                                    std::string restOfTheCommand = currentLine.substr(positionOfFirstSpace+1,std::string::npos);
+                                    size_t positionOfSecondSpace = restOfTheCommand.find(" ");
+                                    if (positionOfSecondSpace==std::string::npos) {
+                                        std::cerr << "Error: Expected name of property and property string (case 2).\n";
+                                        if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
+                                    } else {
+                                        std::string propertyString = restOfTheCommand.substr(positionOfSecondSpace+1,std::string::npos);
+                                        std::string nameString = restOfTheCommand.substr(0,positionOfSecondSpace);
+                                        try {
+                                            BF newProperty = parseBooleanFormula(propertyString,allowedTypes);
+                                            if (separateLivenessGuarantees.count(nameString)>0) {
+                                                std::cerr << "Error: Trying to re-use name of the property string. \n";
+                                                if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
+                                            }
+                                            separateLivenessGuarantees[nameString] = newProperty;
+                                            intermediateResults.addNewLevel2();
+                                        } catch (SlugsException e) {
+                                            if (exitOnError) throw e;
+                                            std::cerr << "Error: " << e.getMessage() << std::endl;
+                                        }
+                                    }
+                                }
+                            } else if (currentCommand=="ASG") {
+                                // Add safety Assumption
+                                std::set<VariableType> allowedTypes;
+                                allowedTypes.insert(PreInput);
+                                allowedTypes.insert(PreOutput);
+                                allowedTypes.insert(PostInput);
+                                allowedTypes.insert(PostOutput);
+                                if (positionOfFirstSpace==std::string::npos) {
+                                    std::cerr << "Error: Expected name of property and property string (case 1).\n";
+                                    if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
+                                } else {
+                                    std::string restOfTheCommand = currentLine.substr(positionOfFirstSpace+1,std::string::npos);
+                                    size_t positionOfSecondSpace = restOfTheCommand.find(" ");
+                                    if (positionOfSecondSpace==std::string::npos) {
+                                        std::cerr << "Error: Expected name of property and property string (case 2).\n";
+                                        if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
+                                    } else {
+                                        std::string propertyString = restOfTheCommand.substr(positionOfSecondSpace+1,std::string::npos);
+                                        std::string nameString = restOfTheCommand.substr(0,positionOfSecondSpace);
+                                        try {
+                                            BF newProperty = parseBooleanFormula(propertyString,allowedTypes);
+                                            if (separateSafetyGuarantees.count(nameString)>0) {
+                                                std::cerr << "Error: Trying to re-use name of the property string. \n";
+                                                if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
+                                            }
+                                            separateSafetyGuarantees[nameString] = newProperty;
+                                            intermediateResults.iterationNumber++; // Forces going over all of the liveness guarantees at least once more
 
-                        // Add new guarantees
-                        oldLivenessAssumptionsSize = livenessGuarantees.size();
+                                        } catch (SlugsException e) {
+                                            if (exitOnError) throw e;
+                                            std::cerr << "Error: " << e.getMessage() << std::endl;
+                                        }
+                                    }
+                                }
+                            } else {
+                                SlugsException e (false,"Internal error in line ");
+                                e << __LINE__ << " in file " << __FILE__ << "\n";
+                                throw e;
+                            }
+                        }
+
+                        // Recompute variables used in the synthesis algorithm
+                        safetyEnv = mgr.constantTrue();
+                        for (auto it = separateSafetyAssumptions.begin();it!=separateSafetyAssumptions.end();it++) {
+                            safetyEnv &= it->second;
+                        }
+                        livenessAssumptions.clear();
+                        for (auto it = separateLivenessAssumptions.begin();it!=separateLivenessAssumptions.end();it++) {
+                            livenessAssumptions.push_back(it->second);
+                        }
+                        safetySys = mgr.constantTrue();
                         for (auto it = separateSafetyGuarantees.begin();it!=separateSafetyGuarantees.end();it++) {
                             safetySys &= it->second;
                         }
-                        oldLivenessGuaranteesSize = livenessGuarantees.size();
                         livenessGuarantees.clear();
                         for (auto it = separateLivenessGuarantees.begin();it!=separateLivenessGuarantees.end();it++) {
                             livenessGuarantees.push_back(it->second);
                         }
 
-                        // Remove assumptions here.
-
                         // Perform re-synthesis!
                         resynthesisUnderMakingSystemLifeHarder();
+
+                        // Clean up
+                        makingLifeForSystemHarderCommands.clear();
                     }
 
                     // Now check realizability
+                    initEnv = mgr.constantTrue();
+                    for (auto it = separateInitAssumptions.begin();it!=separateInitAssumptions.end();it++) {
+                        initEnv &= it->second;
+                    }
+                    initSys = mgr.constantTrue();
+                    for (auto it = separateInitGuarantees.begin();it!=separateInitGuarantees.end();it++) {
+                        initSys &= it->second;
+                    }
+
+
                     // Check if for every possible environment initial position the system has a good system initial position
                     BF result;
-                    result = initEnv.Implies((winningPositions & initSys).ExistAbstract(varCubePreOutput)).UnivAbstract(varCubePreInput);
+                    result = initEnv.Implies((intermediateResults.winningPositions & initSys).ExistAbstract(varCubePreOutput)).UnivAbstract(varCubePreInput);
 
                     // Check if the result is well-defind. Might fail after an incorrect modification of the above algorithm
                     if (!result.isConstant()) throw "Internal error: Could not establish realizability/unrealizability of the specification.";
@@ -472,8 +576,7 @@ protected:
                     }
 
                     // Done!
-                    madeLifeEasierForTheSystem = false;
-                    madeLifeHarderForTheSystem = false;
+                    lineNumberCurrentlyRead = oldLineNumber;
 
                 } else {
                     if (exitOnError) {
@@ -493,71 +596,81 @@ protected:
     void resynthesisUnderMakingSystemLifeHarder() {
 
         // The greatest fixed point - called "Z" in the GR(1) synthesis paper
-        BFFixedPoint nu2(winningPositions);
-        bool firstZIteration = true;
+        BFFixedPoint nu2(intermediateResults.winningPositions);
+
+        // Only increase iteration number in the second round.
+        intermediateResults.iterationNumber--;
 
         // Iterate until we have found a fixed point
         for (;!nu2.isFixedPointReached();) {
 
+            intermediateResults.iterationNumber++;
+            BF nextContraintsForGoals = mgr.constantTrue();
+
             // Iterate over all of the liveness guarantees. Put the results into the variable 'nextContraintsForGoals' for every
             // goal. Then, after we have iterated over the goals, we can update nu2.
-            BF nextContraintsForGoals = winningPositions;
-            for (unsigned int j=(firstZIteration?oldLivenessGuaranteesSize:0);j<livenessGuarantees.size();j++) {
+            for (unsigned int j=0;j<livenessGuarantees.size();j++) {
 
-                // Start computing the transitions that lead closer to the goal and lead to a position that is not yet known to be losing.
-                // Start with the ones that actually represent reaching the goal (which is a transition in this implementation as we can have
-                // nexts in the goal descriptions).
-                BF livetransitions = livenessGuarantees[j] & (nu2.getValue().SwapVariables(varVectorPre,varVectorPost));
+                std::cout << "Working on liveness Guarantee " << j << " with the actual iteration number " << intermediateResults.iterationNumber << std::endl;
 
-                // Compute the middle least-fixed point (called 'Y' in the GR(1) paper)
-                BFFixedPoint mu1(mgr.constantFalse());
-                for (;!mu1.isFixedPointReached();) {
+                if (intermediateResults.iterationNumber != intermediateResults.sub[j]->level1IterationNumber) {
 
-                    // Update the set of transitions that lead closer to the goal.
-                    livetransitions |= mu1.getValue().SwapVariables(varVectorPre,varVectorPost);
+                    std::cout << "....actually working on it. " << std::endl;
 
-                    // Iterate over the liveness assumptions. Store the positions that are found to be winning for *any*
-                    // of them into the variable 'goodForAnyLivenessAssumption'.
-                    BF goodForAnyLivenessAssumption = mu1.getValue();
-                    for (unsigned int i=0;i<livenessAssumptions.size();i++) {
+                    // Start computing the transitions that lead closer to the goal and lead to a position that is not yet known to be losing.
+                    // Start with the ones that actually represent reaching the goal (which is a transition in this implementation as we can have
+                    // nexts in the goal descriptions).
+                    BF livetransitions = livenessGuarantees[j] & (nu2.getValue().SwapVariables(varVectorPre,varVectorPost));
 
-                        // Prepare the variable 'foundPaths' that contains the transitions that stay within the inner-most
-                        // greatest fixed point or get closer to the goal. Only used for strategy extraction
-                        BF foundPaths = mgr.constantTrue();
+                    // Compute the middle least-fixed point (called 'Y' in the GR(1) paper)
+                    BFFixedPoint mu1(mgr.constantFalse());
+                    for (;!mu1.isFixedPointReached();) {
 
-                        // Inner-most greatest fixed point. The corresponding variable in the paper would be 'X'.
-                        BFFixedPoint nu0(mgr.constantTrue());
-                        for (;!nu0.isFixedPointReached();) {
+                        // Update the set of transitions that lead closer to the goal.
+                        livetransitions |= mu1.getValue().SwapVariables(varVectorPre,varVectorPost);
 
-                            // Compute a set of paths that are safe to take - used for the enforceable predecessor operator ('cox')
-                            foundPaths = livetransitions | (nu0.getValue().SwapVariables(varVectorPre,varVectorPost) & !(livenessAssumptions[i]));
-                            foundPaths &= safetySys;
+                        // Iterate over the liveness assumptions. Store the positions that are found to be winning for *any*
+                        // of them into the variable 'goodForAnyLivenessAssumption'.
+                        BF goodForAnyLivenessAssumption = mu1.getValue();
+                        for (unsigned int i=0;i<livenessAssumptions.size();i++) {
 
-                            // Update the inner-most fixed point with the result of applying the enforcable predecessor operator
-                            nu0.update(safetyEnv.Implies(foundPaths).ExistAbstract(varCubePostOutput).UnivAbstract(varCubePostInput));
+                            // Prepare the variable 'foundPaths' that contains the transitions that stay within the inner-most
+                            // greatest fixed point or get closer to the goal. Only used for strategy extraction
+                            BF foundPaths = mgr.constantTrue();
+
+                            // Inner-most greatest fixed point. The corresponding variable in the paper would be 'X'.
+                            BFFixedPoint nu0(mgr.constantTrue());
+                            for (;!nu0.isFixedPointReached();) {
+
+                                // Compute a set of paths that are safe to take - used for the enforceable predecessor operator ('cox')
+                                foundPaths = livetransitions | (nu0.getValue().SwapVariables(varVectorPre,varVectorPost) & !(livenessAssumptions[i]));
+                                foundPaths &= safetySys;
+
+                                // Update the inner-most fixed point with the result of applying the enforcable predecessor operator
+                                nu0.update(safetyEnv.Implies(foundPaths).ExistAbstract(varCubePostOutput).UnivAbstract(varCubePostInput));
+                            }
+
+                            // Update the set of positions that are winning for some liveness assumption
+                            goodForAnyLivenessAssumption |= nu0.getValue();
                         }
 
-                        // Update the set of positions that are winning for some liveness assumption
-                        goodForAnyLivenessAssumption |= nu0.getValue();
-
+                        // Update the moddle fixed point
+                        mu1.update(goodForAnyLivenessAssumption);
                     }
 
-                    // Update the moddle fixed point
-                    mu1.update(goodForAnyLivenessAssumption);
+                    // Update the set of positions that are winning for any goal for the outermost fixed point
+                    nextContraintsForGoals &= mu1.getValue();
+                    //BF_newDumpDot(*this,nextContraintsForGoals,NULL,"/tmp/inter.dot");
+                    //throw 23;
+                    intermediateResults.sub[j]->level1IterationNumber = intermediateResults.iterationNumber;
                 }
-
-                // Update the set of positions that are winning for any goal for the outermost fixed point
-                nextContraintsForGoals &= mu1.getValue();
             }
+            nu2.update(nu2.getValue() & nextContraintsForGoals);
 
-            // Update the outer-most fixed point
-            nu2.update(nextContraintsForGoals);
-            ZHistory.push_back(nu2.getValue());
-            firstZIteration = false;
         }
 
         // We found the set of winning positions
-        winningPositions = nu2.getValue();
+        intermediateResults.winningPositions = nu2.getValue();
     }
 
 public:
