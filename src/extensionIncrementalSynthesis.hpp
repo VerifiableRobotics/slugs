@@ -40,12 +40,29 @@ protected:
     // Variables to store the initialization and safety assumptions and guarantees separately.
     // TODO: Replace these by ordered maps so that last inserted elements always occur last. This
     // is important for recycling!
-    std::map<std::string,BF> separateSafetyAssumptions;
-    std::map<std::string,BF> separateSafetyGuarantees;
-    std::map<std::string,BF> separateInitAssumptions;
-    std::map<std::string,BF> separateInitGuarantees;
-    std::map<std::string,BF> separateLivenessAssumptions;
-    std::map<std::string,BF> separateLivenessGuarantees;
+
+    class OrderedRequirementPropertyStorage {
+    private:
+        std::vector<BF> data;
+        std::map<std::string,unsigned int> lookup;
+    public:
+        OrderedRequirementPropertyStorage() {}
+        void add(std::string name, BF bf) {
+            lookup[name] = data.size();
+            data.push_back(bf);
+        }
+        std::vector<BF>::const_iterator begin() { return data.begin(); }
+        std::vector<BF>::const_iterator end() { return data.end(); }
+        bool hasKey(std::string keyName) { return lookup.count(keyName)>0; }
+        unsigned int size() { assert(data.size()==lookup.size()); return data.size(); }
+    };
+
+    OrderedRequirementPropertyStorage separateSafetyAssumptions;
+    OrderedRequirementPropertyStorage separateSafetyGuarantees;
+    OrderedRequirementPropertyStorage separateInitAssumptions;
+    OrderedRequirementPropertyStorage separateInitGuarantees;
+    OrderedRequirementPropertyStorage separateLivenessAssumptions;
+    OrderedRequirementPropertyStorage separateLivenessGuarantees;
 
     // Special options for execution
     bool exitOnError;
@@ -125,6 +142,9 @@ protected:
         std::cout << " - Quit: QUIT\n";
         std::cout << " - Switch ExitOnError on/off: EXITONERROR [0/1]\n";
         std::cout << "=========================================================================\n";
+
+        // Make the results reproducible/repeatable/robust against BDD stuff
+        // mgr.setAutomaticOptimisation(false);
 
         // Init State
         lineNumberCurrentlyRead = 0;
@@ -215,10 +235,10 @@ protected:
                     makingLifeForSystemEasierCommands[lineNumberCurrentlyRead] = currentLine;
                 } else if (currentCommand=="ASG") {
                     makingLifeForSystemHarderCommands[lineNumberCurrentlyRead] = currentLine;
+                } else if (currentCommand=="ALA") {
+                    makingLifeForSystemEasierCommands[lineNumberCurrentlyRead] = currentLine;
                 } else if (currentCommand=="ALG") {
                     makingLifeForSystemHarderCommands[lineNumberCurrentlyRead] = currentLine;
-                } else if (currentCommand=="ASA") {
-                    makingLifeForSystemEasierCommands[lineNumberCurrentlyRead] = currentLine;
                 } else if (currentCommand=="AIG") {
                     // Add safety Assumption
                     std::set<VariableType> allowedTypes;
@@ -238,19 +258,19 @@ protected:
                             std::string nameString = restOfTheCommand.substr(0,positionOfSecondSpace);
                             try {
                                 BF newProperty = parseBooleanFormula(propertyString,allowedTypes);
-                                if (separateInitGuarantees.count(nameString)>0) {
+                                if (separateInitGuarantees.hasKey(nameString)) {
                                     std::cerr << "Error: Trying to re-use name of the property string. \n";
                                     if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                                 }
-                                separateInitGuarantees[nameString] = newProperty;
+                                separateInitGuarantees.add(nameString,newProperty);
                             } catch (SlugsException e) {
                                 if (exitOnError) throw e;
                                 std::cerr << "Error: " << e.getMessage() << std::endl;
                             }
                         }
                     }
-                } else if (currentCommand=="AIS") {
-                    // Add safety Assumption
+                } else if (currentCommand=="AIA") {
+                    // Add Init Assumption
                     std::set<VariableType> allowedTypes;
                     allowedTypes.insert(PreInput);
                     if (positionOfFirstSpace==std::string::npos) {
@@ -267,11 +287,11 @@ protected:
                             std::string nameString = restOfTheCommand.substr(0,positionOfSecondSpace);
                             try {
                                 BF newProperty = parseBooleanFormula(propertyString,allowedTypes);
-                                if (separateInitAssumptions.count(nameString)>0) {
+                                if (separateInitAssumptions.hasKey(nameString)) {
                                     std::cerr << "Error: Trying to re-use name of the property string. \n";
                                     if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                                 }
-                                separateInitAssumptions[nameString] = newProperty;
+                                separateInitAssumptions.add(nameString,newProperty);
                             } catch (SlugsException e) {
                                 if (exitOnError) throw e;
                                 std::cerr << "Error: " << e.getMessage() << std::endl;
@@ -336,10 +356,10 @@ protected:
 
                     // Add Trueliveness assumptions/guarantee if needed
                     if (separateLivenessAssumptions.size()==0) {
-                        separateLivenessAssumptions["__AUTO_ADDED__"] = mgr.constantTrue();
+                        separateLivenessAssumptions.add("__AUTO_ADDED__",mgr.constantTrue());
                     }
                     if (separateLivenessGuarantees.size()==0) {
-                        separateLivenessGuarantees["__AUTO_ADDED__"] = mgr.constantTrue();
+                        separateLivenessGuarantees.add("__AUTO_ADDED__",mgr.constantTrue());
                         intermediateResults.addNewLevel2();
                     }
 
@@ -374,11 +394,11 @@ protected:
                                         std::string nameString = restOfTheCommand.substr(0,positionOfSecondSpace);
                                         try {
                                             BF newProperty = parseBooleanFormula(propertyString,allowedTypes);
-                                            if (separateSafetyAssumptions.count(nameString)>0) {
+                                            if (separateSafetyAssumptions.hasKey(nameString)) {
                                                 std::cerr << "Error: Trying to re-use name of the property string. \n";
                                                 if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                                             }
-                                            separateSafetyAssumptions[nameString] = newProperty;
+                                            separateSafetyAssumptions.add(nameString,newProperty);
 
                                             // TODO: Remove the stuff that we can no longer use.
 
@@ -408,11 +428,11 @@ protected:
                                         std::string nameString = restOfTheCommand.substr(0,positionOfSecondSpace);
                                         try {
                                             BF newProperty = parseBooleanFormula(propertyString,allowedTypes);
-                                            if (separateLivenessAssumptions.count(nameString)>0) {
+                                            if (separateLivenessAssumptions.hasKey(nameString)) {
                                                 std::cerr << "Error: Trying to re-use name of the property string. \n";
                                                 if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                                             }
-                                            separateLivenessAssumptions[nameString] = newProperty;
+                                            separateLivenessAssumptions.add(nameString,newProperty);
 
                                             // TODO: Remove the stuff that we can no longer use.
                                         } catch (SlugsException e) {
@@ -433,14 +453,15 @@ protected:
                         // TODO Here: Remove True liveness assumption if no longer needed (can only be the first one in the list).
 
                         // Try to synthesize - but only if we have a history already.
-                        if (!(intermediateResults.isEmpty())) {
+                        if (intermediateResults.iterationNumber!=1) {
+
                             throw SlugsException(false,"Making life easier is unsupported.");
                         }
                         makingLifeForSystemEasierCommands.clear();
                     }
 
                     // Making life harder
-                    std::cout << "MakingLiveHarderSize: "<<makingLifeForSystemHarderCommands.size()<<std::endl;
+                    std::cout << "MakingLifeHarderSize: "<<makingLifeForSystemHarderCommands.size()<<std::endl;
                     if (makingLifeForSystemHarderCommands.size()>0) {
                         for (auto it = makingLifeForSystemHarderCommands.begin();it!=makingLifeForSystemHarderCommands.end();it++) {
                             std::string currentLine = it->second;
@@ -470,11 +491,11 @@ protected:
                                         std::string nameString = restOfTheCommand.substr(0,positionOfSecondSpace);
                                         try {
                                             BF newProperty = parseBooleanFormula(propertyString,allowedTypes);
-                                            if (separateLivenessGuarantees.count(nameString)>0) {
+                                            if (separateLivenessGuarantees.hasKey(nameString)) {
                                                 std::cerr << "Error: Trying to re-use name of the property string. \n";
                                                 if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                                             }
-                                            separateLivenessGuarantees[nameString] = newProperty;
+                                            separateLivenessGuarantees.add(nameString,newProperty);
                                             intermediateResults.addNewLevel2();
                                         } catch (SlugsException e) {
                                             if (exitOnError) throw e;
@@ -503,11 +524,11 @@ protected:
                                         std::string nameString = restOfTheCommand.substr(0,positionOfSecondSpace);
                                         try {
                                             BF newProperty = parseBooleanFormula(propertyString,allowedTypes);
-                                            if (separateSafetyGuarantees.count(nameString)>0) {
+                                            if (separateSafetyGuarantees.hasKey(nameString)) {
                                                 std::cerr << "Error: Trying to re-use name of the property string. \n";
                                                 if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                                             }
-                                            separateSafetyGuarantees[nameString] = newProperty;
+                                            separateSafetyGuarantees.add(nameString,newProperty);
                                             intermediateResults.iterationNumber++; // Forces going over all of the liveness guarantees at least once more
 
                                         } catch (SlugsException e) {
@@ -526,19 +547,19 @@ protected:
                         // Recompute variables used in the synthesis algorithm
                         safetyEnv = mgr.constantTrue();
                         for (auto it = separateSafetyAssumptions.begin();it!=separateSafetyAssumptions.end();it++) {
-                            safetyEnv &= it->second;
+                            safetyEnv &= *it;
                         }
                         livenessAssumptions.clear();
                         for (auto it = separateLivenessAssumptions.begin();it!=separateLivenessAssumptions.end();it++) {
-                            livenessAssumptions.push_back(it->second);
+                            livenessAssumptions.push_back(*it);
                         }
                         safetySys = mgr.constantTrue();
                         for (auto it = separateSafetyGuarantees.begin();it!=separateSafetyGuarantees.end();it++) {
-                            safetySys &= it->second;
+                            safetySys &= *it;
                         }
                         livenessGuarantees.clear();
                         for (auto it = separateLivenessGuarantees.begin();it!=separateLivenessGuarantees.end();it++) {
-                            livenessGuarantees.push_back(it->second);
+                            livenessGuarantees.push_back(*it);
                         }
 
                         // Perform re-synthesis!
@@ -551,11 +572,11 @@ protected:
                     // Now check realizability
                     initEnv = mgr.constantTrue();
                     for (auto it = separateInitAssumptions.begin();it!=separateInitAssumptions.end();it++) {
-                        initEnv &= it->second;
+                        initEnv &= *it;
                     }
                     initSys = mgr.constantTrue();
                     for (auto it = separateInitGuarantees.begin();it!=separateInitGuarantees.end();it++) {
-                        initSys &= it->second;
+                        initSys &= *it;
                     }
 
 
@@ -570,9 +591,9 @@ protected:
                     realizable = result.isTrue();
 
                     if (realizable) {
-                        std::cerr << "RESULT: Specification is realizable.\n";
+                        std::cout << "RESULT: Specification is realizable.\n";
                     } else {
-                        std::cerr << "RESULT: Specification is unrealizable.\n";
+                        std::cout << "RESULT: Specification is unrealizable.\n";
                     }
 
                     // Done!
@@ -603,6 +624,7 @@ protected:
 
         // Iterate until we have found a fixed point
         for (;!nu2.isFixedPointReached();) {
+            std::cout << "Nu2 is running....\n";
 
             intermediateResults.iterationNumber++;
             BF nextContraintsForGoals = mgr.constantTrue();
@@ -615,7 +637,7 @@ protected:
 
                 if (intermediateResults.iterationNumber != intermediateResults.sub[j]->level1IterationNumber) {
 
-                    std::cout << "....actually working on it. " << std::endl;
+                    std::cout << "....actually working on it." << std::endl;
 
                     // Start computing the transitions that lead closer to the goal and lead to a position that is not yet known to be losing.
                     // Start with the ones that actually represent reaching the goal (which is a transition in this implementation as we can have
@@ -664,6 +686,9 @@ protected:
                     //throw 23;
                     intermediateResults.sub[j]->level1IterationNumber = intermediateResults.iterationNumber;
                 }
+            }
+            if (nu2.getValue() == nextContraintsForGoals) {
+                std::cout << "No change!\n";
             }
             nu2.update(nu2.getValue() & nextContraintsForGoals);
 
