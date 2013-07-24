@@ -197,7 +197,7 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
             
 
             //Mark which input has been captured by this case. Use the same input for other successors
-            inputCaptured = newCombination.ExistAbstract(varCubePostInput);
+            inputCaptured = newCombination.ExistAbstract(varCubePostOutput);
             remainingTransitions &= inputCaptured;
             remainingTransitions &= !newCombination;
            
@@ -255,30 +255,39 @@ void addDeadlocked(BF remainingTransitions, std::pair<size_t, std::pair<unsigned
     } else {
         newCombination = determinize((remainingTransitions & livenessAssumptions[current.second.first]),postVars) ;           
     }
+    newCombination = newCombination.SwapVariables(varVectorPre,varVectorPost);
+    newCombination  = newCombination.UnivAbstract(varCubePreInput);         
     
-                
     std::pair<size_t, std::pair<unsigned int, unsigned int> > target = std::pair<size_t, std::pair<unsigned int, unsigned int> >(newCombination.getHashCode(),std::pair<unsigned int, unsigned int>(current.second.first, current.second.second));
-    unsigned int tn = lookupTableForPastStates[target] = bfsUsedInTheLookupTable.size();
-    bfsUsedInTheLookupTable.push_back(newCombination);
-                
-    outputStream << tn << "\n";
+    unsigned int tn;
     
-    //Note that since we are printing here, we usually end up with the states being printed out of order.
-    //TOTO: print in order
-    outputStream << "State " << tn << " with rank (" << current.second.first << "," << current.second.second << ") -> <";
-    bool first = true;
-    for (unsigned int i=0;i<variables.size();i++) {
-        if (variableTypes[i] < PreOutput) {
-            if (first) {
-                first = false;
-            } else {
-                outputStream << ", ";
+    if (lookupTableForPastStates.count(target)==0) {
+        tn = lookupTableForPastStates[target] = bfsUsedInTheLookupTable.size();
+        bfsUsedInTheLookupTable.push_back(newCombination);   
+        outputStream << tn << "\n";
+        
+        //Note that since we are printing here, we usually end up with the states being printed out of order.
+        //TOTO: print in order
+        outputStream << "State " << tn << " with rank (" << current.second.first << "," << current.second.second << ") -> <";
+        bool first = true;
+        for (unsigned int i=0;i<variables.size();i++) {
+            if (variableTypes[i] < PreOutput) {
+                if (first) {
+                    first = false;
+                } else {
+                    outputStream << ", ";
+                }
+                outputStream << variableNames[i] << ":";
+                outputStream << (((newCombination & variables[i]).isFalse())?"0":"1");
             }
-            outputStream << variableNames[i] << ":";
-            outputStream << (((newCombination & variables[i]).isFalse())?"0":"1");
         }
+        outputStream << ">\n\tWith no successors.";
+    
+    } else {
+        tn = lookupTableForPastStates[target];
+        outputStream << tn;
     }
-    outputStream << ">\n\tWith no successors.";
+    
 }
 
 
