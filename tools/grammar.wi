@@ -21,7 +21,7 @@ Conjunction: BinaryTemporalFormula | Conjunction ConjunctionOperator BinaryTempo
 BinaryTemporalFormula: UnaryFormula | BinaryTemporalFormula BinaryTemporalOperator UnaryFormula;
 UnaryFormula: AtomicFormula | UnaryTemporalOperator UnaryFormula;
 AtomicFormula: "FALSE" | "TRUE" | Brackets | Assignment;
-Brackets: '(' Biimplication ')' ;
+Brackets: '(' Biimplication ')' | '[' Biimplication ']';
 
 BinaryTemporalOperator: UntilOperator | WeakUntilOperator;
 UntilOperator: 'U';
@@ -32,8 +32,8 @@ DisjunctionOperator: '+' | '\\' '/' | '|' | '|' '|' ;
 ConjunctionOperator: '*' | '/' '\\' | '&' | '&' '&' ;
 XorOperator: '^';
 UnaryTemporalOperator: FinallyOperator | NextOperator | GloballyOperator | NotOperator;
-FinallyOperator: '<' '>';
-NextOperator: '(' ')' | 'next';
+FinallyOperator: '<' '>' | 'F';
+NextOperator: '(' ')' | 'next' | 'X';
 GloballyOperator: '[' ']' | 'G';
 NotOperator: '!' | '~';
 Assignment: id | id '=' 0 | id '=' 1 ;
