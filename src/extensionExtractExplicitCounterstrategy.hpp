@@ -255,12 +255,7 @@ void addDeadlocked(BF remainingTransitions, std::pair<size_t, std::pair<unsigned
     
     BF newCombination = determinize(remainingTransitions & (!safetySys).UnivAbstract(varCubePostOutput), postVars) ;
     
-    outputStream << newCombination.isFalse();
-    
-    
     newCombination = newCombination.SwapVariables(varVectorPre,varVectorPost) & safetyEnv;
-    outputStream << newCombination.isFalse();
-    
     
     newCombination  = newCombination.ExistAbstract(varCubePreOutput);         
     
