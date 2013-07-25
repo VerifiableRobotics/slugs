@@ -1,6 +1,8 @@
 [INPUT]
 before_I_0
 before_F2_0
+pkt_in
+
 
 [OUTPUT]
 src_Auth
@@ -18,12 +20,15 @@ update_I_0
 update_F2_0
 mem_DROP
 mem_WORLD
+pkt_out
+
 
 [ENV_TRANS]
 | update_I_0 before_I_0'
 | update_F2_0 before_F2_0'
 | before_I_0 ! before_I_0'
 | before_F2_0 ! before_F2_0'
+| ! pkt_in pkt_in'
 
 [ENV_LIVENESS]
 | ! update_I_0 ! before_I_0'
@@ -32,6 +37,7 @@ mem_WORLD
 [ENV_INIT]
 before_I_0
 before_F2_0
+! pkt_in
 
 [SYS_TRANS]
 | ! src_Auth ! src_Guest
@@ -50,7 +56,9 @@ before_F2_0
 | ! port_WORLD & & & & & ! port_I_0 ! port_F1_0 ! port_F2_0 ! port_F3_0 ! port_START ! port_DROP
 | ! port_DROP & & & & & ! port_I_0 ! port_F1_0 ! port_F2_0 ! port_F3_0 ! port_START ! port_WORLD
 
-| ! port_START port_I_0'
+
+| ! & pkt_in' port_START port_I_0'
+| & pkt_in' port_START ! port_I_0'
 | ! before_I_0 | ! & port_I_0 src_Auth | port_F1_0' port_F2_0'
 | before_I_0 | ! & port_I_0 src_Auth port_F1_0'
 | ! before_I_0 | ! & port_I_0 src_Guest port_F3_0'
@@ -58,7 +66,7 @@ before_F2_0
 | ! port_F1_0 port_WORLD'
 | ! before_F2_0 | ! port_F2_0 port_WORLD'
 | before_F2_0 | ! & port_F2_0 purpose_Web port_WORLD'
-| before_F2_0 | ! & port_F2_0 purpose_Web port_WORLD'
+| before_F2_0 | ! & port_F2_0 purpose_Other port_DROP'
 | ! & port_F3_0 purpose_Web port_WORLD'
 | ! & port_F3_0 purpose_Other port_DROP'
 | ! port_WORLD port_WORLD'
@@ -74,15 +82,20 @@ before_F2_0
 | | & purpose_Other src_Guest & mem_DROP ! port_DROP' ! mem_DROP'
 
 | ! | | src_Auth & src_Guest purpose_Web & mem_WORLD ! port_WORLD' mem_WORLD'
-| | | src_Auth & src_Guest purpose_Web & mem_WORLD ! port_WORLD' ! mem_WORLD'
+| ! | ! | src_Auth & src_Guest purpose_Web port_WORLD' ! mem_WORLD'
 
 | ! update_I_0 update_I_0'
 | ! update_F2_0 update_F2_0'
+
+| ! | port_DROP port_WORLD pkt_out'
+| ! pkt_out pkt_out'
+
 
 [SYS_LIVENESS]
 & update_I_0 update_F2_0
 | ! mem_DROP port_DROP'
 | ! mem_WORLD port_WORLD'
+| ! pkt_in pkt_out'
 
 
 [SYS_INIT]
@@ -90,7 +103,18 @@ before_F2_0
 ! mem_WORLD
 ! update_I_0
 ! update_F2_0
-
+port_START
+! port_I_0
+! port_F1_0
+! port_F2_0
+! port_F3_0
+! port_WORLD
+! port_DROP
+! pkt_out
+src_Guest
+purpose_Other
+! src_Auth
+! purpose_Web
 
 
 
