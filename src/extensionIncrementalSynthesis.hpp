@@ -90,7 +90,9 @@ protected:
     class Level2IntermediateResults {
     public:
         unsigned int level1IterationNumber;
-        Level2IntermediateResults() : level1IterationNumber(0) {}
+        BF prefixPointY_0_infty_infty;
+        bool prefixPointY_0_infty_infty_valid;
+        Level2IntermediateResults() : level1IterationNumber(0), prefixPointY_0_infty_infty_valid(false) {}
     };
 
     class Level1IntermediateResults {
@@ -112,6 +114,11 @@ protected:
         }
         void addNewLevel2() {
             sub.push_back(new Level2IntermediateResults());
+        }
+        void invalidateAllPrefixPointY_0_infty_infty() {
+            for (auto it=sub.begin();it!=sub.end();it++) {
+                (*it)->prefixPointY_0_infty_infty_valid = false;
+            }
         }
 
         ~Level1IntermediateResults() {
@@ -448,14 +455,31 @@ protected:
                             }
                         }
 
-                        // TODO: Compute new assumptions and guarantees
-
                         // TODO Here: Remove True liveness assumption if no longer needed (can only be the first one in the list).
 
                         // Try to synthesize - but only if we have a history already.
                         if (intermediateResults.iterationNumber!=1) {
 
-                            throw SlugsException(false,"Making life easier is unsupported.");
+                            // Recompute variables used in the synthesis algorithm
+                            safetyEnv = mgr.constantTrue();
+                            for (auto it = separateSafetyAssumptions.begin();it!=separateSafetyAssumptions.end();it++) {
+                                safetyEnv &= *it;
+                            }
+                            livenessAssumptions.clear();
+                            for (auto it = separateLivenessAssumptions.begin();it!=separateLivenessAssumptions.end();it++) {
+                                livenessAssumptions.push_back(*it);
+                            }
+                            safetySys = mgr.constantTrue();
+                            for (auto it = separateSafetyGuarantees.begin();it!=separateSafetyGuarantees.end();it++) {
+                                safetySys &= *it;
+                            }
+                            livenessGuarantees.clear();
+                            for (auto it = separateLivenessGuarantees.begin();it!=separateLivenessGuarantees.end();it++) {
+                                livenessGuarantees.push_back(*it);
+                            }
+
+                            // Perform re-synthesis!
+                            resynthesisUnderMakingSystemLifeEasier();
                         }
                         makingLifeForSystemEasierCommands.clear();
                     }
@@ -530,7 +554,7 @@ protected:
                                             }
                                             separateSafetyGuarantees.add(nameString,newProperty);
                                             intermediateResults.iterationNumber++; // Forces going over all of the liveness guarantees at least once more
-
+                                            intermediateResults.invalidateAllPrefixPointY_0_infty_infty();
                                         } catch (SlugsException e) {
                                             if (exitOnError) throw e;
                                             std::cerr << "Error: " << e.getMessage() << std::endl;
@@ -613,7 +637,97 @@ protected:
         }
     }
 
-    // Resynthesis for the case the system Life became harder.
+    // ============================================================
+    // Resynthesis for the case that the system life became easier
+    // ============================================================
+    void resynthesisUnderMakingSystemLifeEasier() {
+
+       // The greatest fixed point - called "Z" in the GR(1) synthesis paper
+       BFFixedPoint nu2(mgr.constantTrue());
+
+       // Only increase iteration number in the second round.
+       intermediateResults.iterationNumber=0;
+
+       // Iterate until we have found a fixed point
+       for (;!nu2.isFixedPointReached();) {
+
+           intermediateResults.iterationNumber++;
+
+           // Iterate over all of the liveness guarantees. Put the results into the variable 'nextContraintsForGoals' for every
+           // goal. Then, after we have iterated over the goals, we can update nu2.
+           BF nextContraintsForGoals = mgr.constantTrue();
+           for (unsigned int j=0;j<livenessGuarantees.size();j++) {
+
+               std::cout << "Working on guarantee: " << j << std::endl;
+
+               // Start computing the transitions that lead closer to the goal and lead to a position that is not yet known to be losing.
+               // Start with the ones that actually represent reaching the goal (which is a transition in this implementation as we can have
+               // nexts in the goal descriptions).
+               BF livetransitions = livenessGuarantees[j] & (nu2.getValue().SwapVariables(varVectorPre,varVectorPost));
+
+               // Compute the middle least-fixed point (called 'Y' in the GR(1) paper)
+               BFFixedPoint mu1(((intermediateResults.iterationNumber==1) && intermediateResults.sub[j]->prefixPointY_0_infty_infty_valid)?intermediateResults.sub[j]->prefixPointY_0_infty_infty:mgr.constantFalse());
+               // BFFixedPoint mu1(mgr.constantFalse());
+               for (;!mu1.isFixedPointReached();) {
+
+                   std::cout << "Mu1 working." << std::endl;
+
+                   // Update the set of transitions that lead closer to the goal.
+                   livetransitions |= mu1.getValue().SwapVariables(varVectorPre,varVectorPost);
+
+                   // Iterate over the liveness assumptions. Store the positions that are found to be winning for *any*
+                   // of them into the variable 'goodForAnyLivenessAssumption'.
+                   BF goodForAnyLivenessAssumption = mu1.getValue();
+                   for (unsigned int i=0;i<livenessAssumptions.size();i++) {
+
+                       // Prepare the variable 'foundPaths' that contains the transitions that stay within the inner-most
+                       // greatest fixed point or get closer to the goal. Only used for strategy extraction
+                       BF foundPaths = mgr.constantTrue();
+
+                       // Inner-most greatest fixed point. The corresponding variable in the paper would be 'X'.
+                       BFFixedPoint nu0(mgr.constantTrue());
+                       for (;!nu0.isFixedPointReached();) {
+
+                           // Compute a set of paths that are safe to take - used for the enforceable predecessor operator ('cox')
+                           foundPaths = livetransitions | (nu0.getValue().SwapVariables(varVectorPre,varVectorPost) & !(livenessAssumptions[i]));
+                           foundPaths &= safetySys;
+
+                           // Update the inner-most fixed point with the result of applying the enforcable predecessor operator
+                           nu0.update(safetyEnv.Implies(foundPaths).ExistAbstract(varCubePostOutput).UnivAbstract(varCubePostInput));
+                       }
+
+                       // Update the set of positions that are winning for some liveness assumption
+                       goodForAnyLivenessAssumption |= nu0.getValue();
+                   }
+
+                   // Update the moddle fixed point
+                   mu1.update(goodForAnyLivenessAssumption);
+               }
+
+               // assert((!intermediateResults.sub[j]->prefixPointY_0_infty_infty_valid) || ((intermediateResults.sub[j]->prefixPointY_0_infty_infty & !mu1.getValue())==mgr.constantFalse()));
+
+               // Update the set of positions that are winning for any goal for the outermost fixed point
+               nextContraintsForGoals &= mu1.getValue();
+
+               // Update intermediate stuff
+               intermediateResults.sub[j]->level1IterationNumber = intermediateResults.iterationNumber;
+               if (nu2.getValue()==mgr.constantTrue()) {
+                   intermediateResults.sub[j]->prefixPointY_0_infty_infty = mu1.getValue();
+                   intermediateResults.sub[j]->prefixPointY_0_infty_infty_valid = true;
+               }
+           }
+
+           // Update the outer-most fixed point
+           nu2.update(nextContraintsForGoals);
+       }
+
+       // We found the set of winning positions
+       intermediateResults.winningPositions = nu2.getValue();
+    }
+
+    // ============================================================
+    // Resynthesis for the case that the system life became harder.
+    // ============================================================
     void resynthesisUnderMakingSystemLifeHarder() {
 
         // The greatest fixed point - called "Z" in the GR(1) synthesis paper
@@ -685,6 +799,10 @@ protected:
                     //BF_newDumpDot(*this,nextContraintsForGoals,NULL,"/tmp/inter.dot");
                     //throw 23;
                     intermediateResults.sub[j]->level1IterationNumber = intermediateResults.iterationNumber;
+                    if (nu2.getValue()==mgr.constantTrue()) {
+                        intermediateResults.sub[j]->prefixPointY_0_infty_infty = mu1.getValue();
+                        intermediateResults.sub[j]->prefixPointY_0_infty_infty_valid = true;
+                    }
                 }
             }
             if (nu2.getValue() == nextContraintsForGoals) {
