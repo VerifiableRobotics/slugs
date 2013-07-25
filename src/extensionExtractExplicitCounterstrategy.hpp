@@ -166,11 +166,14 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
         
         currentPossibilities &= positionalStrategiesForTheIndividualGoals[current.second.first][current.second.second];
         
-        BF remainingTransitions = ((currentPossibilities & safetySys).ExistAbstract(varCubePre));
+        BF remainingTransitions = ((currentPossibilities & safetyEnv).ExistAbstract(varCubePre));
         
+        BF safetyEnvPost =  safetyEnv.SwapVariables(varVectorPre,varVectorPost);
         //check if there exists inputs that force a safety violation in the next time step
-        if ((remainingTransitions & safetySys).isFalse() | !(remainingTransitions & ((mgr.constantFalse())).UnivAbstract(varCubePostOutput).ExistAbstract(varCubePostInput)).isFalse()) {
-                addDeadlocked(remainingTransitions & ((mgr.constantFalse())).UnivAbstract(varCubePostOutput).ExistAbstract(varCubePostInput), current, bfsUsedInTheLookupTable,  lookupTableForPastStates, outputStream);
+        if ((remainingTransitions & safetySys).isFalse()) {
+                addDeadlocked(remainingTransitions, current, bfsUsedInTheLookupTable,  lookupTableForPastStates, outputStream);
+        } else if (!(remainingTransitions & safetyEnvPost & (safetyEnv&!safetySys).UnivAbstract(varCubePostOutput).ExistAbstract(varCubePostInput)).isFalse()) {
+                addDeadlocked(remainingTransitions & safetyEnvPost & (safetyEnv&!safetySys).UnivAbstract(varCubePostOutput).ExistAbstract(varCubePostInput), current, bfsUsedInTheLookupTable,  lookupTableForPastStates, outputStream);
         } else {
         
         BF inputCaptured = mgr.constantTrue();
@@ -194,13 +197,10 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
                 firstTry = false;
             }
             
-            
-
+          
             //Mark which input has been captured by this case. Use the same input for other successors
-            inputCaptured = newCombination.ExistAbstract(varCubePostOutput);
-            remainingTransitions &= inputCaptured;
-            remainingTransitions &= !newCombination;
-           
+            remainingTransitions &= newCombination.ExistAbstract(varCubePreOutput) & !newCombination;
+            
             newCombination = newCombination.SwapVariables(varVectorPre,varVectorPost);
             
             if (nextLivenessAssumption != current.second.second) {
@@ -248,15 +248,18 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
     //Format compatible with JTLV counterstrategy
 
 void addDeadlocked(BF remainingTransitions, std::pair<size_t, std::pair<unsigned int, unsigned int> > current, std::vector<BF> &bfsUsedInTheLookupTable, std::map<std::pair<size_t, std::pair<unsigned int, unsigned int> >, unsigned int > &lookupTableForPastStates, std::ostream &outputStream) {
-    BF newCombination;
-                
-    if ((remainingTransitions & livenessAssumptions[current.second.first]).isFalse()) {
-        newCombination = determinize(remainingTransitions,postVars) ;
-    } else {
-        newCombination = determinize((remainingTransitions & livenessAssumptions[current.second.first]),postVars) ;           
+    if (!(remainingTransitions & livenessAssumptions[current.second.first]).isFalse()) {
+        remainingTransitions &= livenessAssumptions[current.second.first];
     }
-    newCombination = newCombination.SwapVariables(varVectorPre,varVectorPost);
-    newCombination  = newCombination.UnivAbstract(varCubePreInput);         
+    
+    
+    BF newCombination = determinize(remainingTransitions & (!safetySys).UnivAbstract(varCubePostOutput), postVars) ;
+    
+    newCombination = newCombination.SwapVariables(varVectorPre,varVectorPost) & safetyEnv;
+    
+    newCombination  = newCombination.ExistAbstract(varCubePreOutput);         
+    
+    
     
     std::pair<size_t, std::pair<unsigned int, unsigned int> > target = std::pair<size_t, std::pair<unsigned int, unsigned int> >(newCombination.getHashCode(),std::pair<unsigned int, unsigned int>(current.second.first, current.second.second));
     unsigned int tn;
