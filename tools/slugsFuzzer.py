@@ -119,7 +119,6 @@ def fuzzOnce():
     # Slugs
     # =====================================================
     command = slugsExecutableAndBasicOptions + " --sysInitRoboticsSemantics "+slugsinFile+" "+autFile+" 2> "+slugsReturnFile
-    print command
     retValue = os.system(command)
     if (retValue!=0):
         print >>sys.stderr, "Slugs failed!"

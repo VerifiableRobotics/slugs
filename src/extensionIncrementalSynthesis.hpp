@@ -91,17 +91,23 @@ protected:
 
     class Level2IntermediateResults {
     public:
-        unsigned int level1IterationNumber;
+
         BF prefixPointY_0_infty_infty;
         bool prefixPointY_0_infty_infty_valid;
-        Level2IntermediateResults() : level1IterationNumber(0), prefixPointY_0_infty_infty_valid(false) {}
+
+        std::vector<BF> prefixPointY_infty_0_infty;
+        std::vector<BF> prefixPointY_0_0_infty;
+
+        bool globalWinningPositionsStillUnderapproximateTheOnesForThisGuarantee; // Not true after adding assumptions
+
+        Level2IntermediateResults() : prefixPointY_0_infty_infty_valid(false), globalWinningPositionsStillUnderapproximateTheOnesForThisGuarantee(false) {}
     };
 
     class Level1IntermediateResults {
     public:
         // Important Variables
         BF winningPositions;
-        unsigned int iterationNumber;
+
         std::vector<Level2IntermediateResults*> sub;
 
         // Functions
@@ -117,11 +123,28 @@ protected:
         void addNewLevel2() {
             sub.push_back(new Level2IntermediateResults());
         }
+
         void invalidateAllPrefixPointY_0_infty_infty() {
             for (auto it=sub.begin();it!=sub.end();it++) {
                 (*it)->prefixPointY_0_infty_infty_valid = false;
             }
         }
+        void invalidateAllPrefixPointY_infty_0_infty() {
+            for (auto it=sub.begin();it!=sub.end();it++) {
+                (*it)->prefixPointY_infty_0_infty.clear();
+            }
+        }
+        void invalidateAllPrefixPointY_0_0_infty() {
+            for (auto it=sub.begin();it!=sub.end();it++) {
+                (*it)->prefixPointY_0_0_infty.clear();
+            }
+        }
+        void clearAllGlobalWinningPositionsStillUnderapproximateTheOnesForThisGuaranteeBits() {
+            for (auto it=sub.begin();it!=sub.end();it++) {
+                (*it)->globalWinningPositionsStillUnderapproximateTheOnesForThisGuarantee = false;
+            }
+        }
+
 
         ~Level1IntermediateResults() {
             clearEverythingExceptForTheWinningPositions(); // No need to delete the winning positions
@@ -158,7 +181,6 @@ protected:
         // Init State
         lineNumberCurrentlyRead = 0;
         intermediateResults.winningPositions = mgr.constantTrue(); // So that we can start with the "making the life for the system harder" case
-        intermediateResults.iterationNumber = 1;
         safetySys = mgr.constantTrue();
         safetyEnv = mgr.constantTrue();
         initSys = mgr.constantTrue();
@@ -408,9 +430,10 @@ protected:
                                                 if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                                             }
                                             separateSafetyAssumptions.add(nameString,newProperty);
-
-                                            // TODO: Remove the stuff that we can no longer use.
-
+                                            intermediateResults.invalidateAllPrefixPointY_infty_0_infty();
+                                            intermediateResults.invalidateAllPrefixPointY_0_0_infty();
+                                            intermediateResults.clearAllGlobalWinningPositionsStillUnderapproximateTheOnesForThisGuaranteeBits(); // Forces going over all of the liveness guarantees at least once more
+                                            intermediateResults.winningPositions = mgr.constantTrue();
                                         } catch (SlugsException e) {
                                             if (exitOnError) throw e;
                                             std::cerr << "Error: " << e.getMessage() << std::endl;
@@ -442,8 +465,9 @@ protected:
                                                 if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                                             }
                                             separateLivenessAssumptions.add(nameString,newProperty);
-
-                                            // TODO: Remove the stuff that we can no longer use.
+                                            intermediateResults.invalidateAllPrefixPointY_infty_0_infty();
+                                            intermediateResults.winningPositions = mgr.constantTrue();
+                                            intermediateResults.clearAllGlobalWinningPositionsStillUnderapproximateTheOnesForThisGuaranteeBits(); // Forces going over all of the liveness guarantees at least once more
                                         } catch (SlugsException e) {
                                             if (exitOnError) throw e;
                                             std::cerr << "Error: " << e.getMessage() << std::endl;
@@ -458,31 +482,6 @@ protected:
                         }
 
                         // TODO Here: Remove True liveness assumption if no longer needed (can only be the first one in the list).
-
-                        // Try to synthesize - but only if we have a history already.
-                        if (intermediateResults.iterationNumber!=1) {
-
-                            // Recompute variables used in the synthesis algorithm
-                            safetyEnv = mgr.constantTrue();
-                            for (auto it = separateSafetyAssumptions.begin();it!=separateSafetyAssumptions.end();it++) {
-                                safetyEnv &= *it;
-                            }
-                            livenessAssumptions.clear();
-                            for (auto it = separateLivenessAssumptions.begin();it!=separateLivenessAssumptions.end();it++) {
-                                livenessAssumptions.push_back(*it);
-                            }
-                            safetySys = mgr.constantTrue();
-                            for (auto it = separateSafetyGuarantees.begin();it!=separateSafetyGuarantees.end();it++) {
-                                safetySys &= *it;
-                            }
-                            livenessGuarantees.clear();
-                            for (auto it = separateLivenessGuarantees.begin();it!=separateLivenessGuarantees.end();it++) {
-                                livenessGuarantees.push_back(*it);
-                            }
-
-                            // Perform re-synthesis!
-                            resynthesisUnderMakingSystemLifeEasier();
-                        }
                         makingLifeForSystemEasierCommands.clear();
                     }
 
@@ -555,7 +554,7 @@ protected:
                                                 if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                                             }
                                             separateSafetyGuarantees.add(nameString,newProperty);
-                                            intermediateResults.iterationNumber++; // Forces going over all of the liveness guarantees at least once more
+                                            intermediateResults.clearAllGlobalWinningPositionsStillUnderapproximateTheOnesForThisGuaranteeBits(); // Forces going over all of the liveness guarantees at least once more
                                             intermediateResults.invalidateAllPrefixPointY_0_infty_infty();
                                         } catch (SlugsException e) {
                                             if (exitOnError) throw e;
@@ -570,30 +569,32 @@ protected:
                             }
                         }
 
-                        // Recompute variables used in the synthesis algorithm
-                        safetyEnv = mgr.constantTrue();
-                        for (auto it = separateSafetyAssumptions.begin();it!=separateSafetyAssumptions.end();it++) {
-                            safetyEnv &= *it;
-                        }
-                        livenessAssumptions.clear();
-                        for (auto it = separateLivenessAssumptions.begin();it!=separateLivenessAssumptions.end();it++) {
-                            livenessAssumptions.push_back(*it);
-                        }
-                        safetySys = mgr.constantTrue();
-                        for (auto it = separateSafetyGuarantees.begin();it!=separateSafetyGuarantees.end();it++) {
-                            safetySys &= *it;
-                        }
-                        livenessGuarantees.clear();
-                        for (auto it = separateLivenessGuarantees.begin();it!=separateLivenessGuarantees.end();it++) {
-                            livenessGuarantees.push_back(*it);
-                        }
-
-                        // Perform re-synthesis!
-                        resynthesisUnderMakingSystemLifeHarder();
-
                         // Clean up
                         makingLifeForSystemHarderCommands.clear();
                     }
+
+                    // Resynthesis!
+
+                    // Recompute variables used in the synthesis algorithm
+                    safetyEnv = mgr.constantTrue();
+                    for (auto it = separateSafetyAssumptions.begin();it!=separateSafetyAssumptions.end();it++) {
+                        safetyEnv &= *it;
+                    }
+                    livenessAssumptions.clear();
+                    for (auto it = separateLivenessAssumptions.begin();it!=separateLivenessAssumptions.end();it++) {
+                        livenessAssumptions.push_back(*it);
+                    }
+                    safetySys = mgr.constantTrue();
+                    for (auto it = separateSafetyGuarantees.begin();it!=separateSafetyGuarantees.end();it++) {
+                        safetySys &= *it;
+                    }
+                    livenessGuarantees.clear();
+                    for (auto it = separateLivenessGuarantees.begin();it!=separateLivenessGuarantees.end();it++) {
+                        livenessGuarantees.push_back(*it);
+                    }
+
+                    // Perform re-synthesis!
+                    resynthesis();
 
                     // Now check realizability
                     initEnv = mgr.constantTrue();
@@ -647,118 +648,30 @@ protected:
     }
 
     // ============================================================
-    // Resynthesis for the case that the system life became easier
-    // ============================================================
-    void resynthesisUnderMakingSystemLifeEasier() {
-
-       // The greatest fixed point - called "Z" in the GR(1) synthesis paper
-       BFFixedPoint nu2(mgr.constantTrue());
-
-       // Only increase iteration number in the second round.
-       intermediateResults.iterationNumber=0;
-
-       // Iterate until we have found a fixed point
-       for (;!nu2.isFixedPointReached();) {
-
-           intermediateResults.iterationNumber++;
-
-           // Iterate over all of the liveness guarantees. Put the results into the variable 'nextContraintsForGoals' for every
-           // goal. Then, after we have iterated over the goals, we can update nu2.
-           BF nextContraintsForGoals = mgr.constantTrue();
-           for (unsigned int j=0;j<livenessGuarantees.size();j++) {
-
-               std::cout << "Working on guarantee: " << j << std::endl;
-
-               // Start computing the transitions that lead closer to the goal and lead to a position that is not yet known to be losing.
-               // Start with the ones that actually represent reaching the goal (which is a transition in this implementation as we can have
-               // nexts in the goal descriptions).
-               BF livetransitions = livenessGuarantees[j] & (nu2.getValue().SwapVariables(varVectorPre,varVectorPost));
-
-               // Compute the middle least-fixed point (called 'Y' in the GR(1) paper)
-               BFFixedPoint mu1(((intermediateResults.iterationNumber==1) && intermediateResults.sub[j]->prefixPointY_0_infty_infty_valid)?intermediateResults.sub[j]->prefixPointY_0_infty_infty:mgr.constantFalse());
-               // BFFixedPoint mu1(mgr.constantFalse());
-               for (;!mu1.isFixedPointReached();) {
-
-                   std::cout << "Mu1 working." << std::endl;
-
-                   // Update the set of transitions that lead closer to the goal.
-                   livetransitions |= mu1.getValue().SwapVariables(varVectorPre,varVectorPost);
-
-                   // Iterate over the liveness assumptions. Store the positions that are found to be winning for *any*
-                   // of them into the variable 'goodForAnyLivenessAssumption'.
-                   BF goodForAnyLivenessAssumption = mu1.getValue();
-                   for (unsigned int i=0;i<livenessAssumptions.size();i++) {
-
-                       // Prepare the variable 'foundPaths' that contains the transitions that stay within the inner-most
-                       // greatest fixed point or get closer to the goal. Only used for strategy extraction
-                       BF foundPaths = mgr.constantTrue();
-
-                       // Inner-most greatest fixed point. The corresponding variable in the paper would be 'X'.
-                       BFFixedPoint nu0(mgr.constantTrue());
-                       for (;!nu0.isFixedPointReached();) {
-
-                           // Compute a set of paths that are safe to take - used for the enforceable predecessor operator ('cox')
-                           foundPaths = livetransitions | (nu0.getValue().SwapVariables(varVectorPre,varVectorPost) & !(livenessAssumptions[i]));
-                           foundPaths &= safetySys;
-
-                           // Update the inner-most fixed point with the result of applying the enforcable predecessor operator
-                           nu0.update(safetyEnv.Implies(foundPaths).ExistAbstract(varCubePostOutput).UnivAbstract(varCubePostInput));
-                       }
-
-                       // Update the set of positions that are winning for some liveness assumption
-                       goodForAnyLivenessAssumption |= nu0.getValue();
-                   }
-
-                   // Update the moddle fixed point
-                   mu1.update(goodForAnyLivenessAssumption);
-               }
-
-               // assert((!intermediateResults.sub[j]->prefixPointY_0_infty_infty_valid) || ((intermediateResults.sub[j]->prefixPointY_0_infty_infty & !mu1.getValue())==mgr.constantFalse()));
-
-               // Update the set of positions that are winning for any goal for the outermost fixed point
-               nextContraintsForGoals &= mu1.getValue();
-
-               // Update intermediate stuff
-               intermediateResults.sub[j]->level1IterationNumber = intermediateResults.iterationNumber;
-               if (nu2.getValue()==mgr.constantTrue()) {
-                   intermediateResults.sub[j]->prefixPointY_0_infty_infty = mu1.getValue();
-                   intermediateResults.sub[j]->prefixPointY_0_infty_infty_valid = true;
-               }
-           }
-
-           // Update the outer-most fixed point
-           nu2.update(nextContraintsForGoals);
-       }
-
-       // We found the set of winning positions
-       intermediateResults.winningPositions = nu2.getValue();
-    }
-
-    // ============================================================
     // Resynthesis for the case that the system life became harder.
     // ============================================================
-    void resynthesisUnderMakingSystemLifeHarder() {
+    void resynthesis() {
 
         // The greatest fixed point - called "Z" in the GR(1) synthesis paper
         BFFixedPoint nu2(intermediateResults.winningPositions);
 
-        // Only increase iteration number in the second round.
-        intermediateResults.iterationNumber--;
-
         // Iterate until we have found a fixed point
+
+        // In the first round, only consider the new liveness guarantees
+        bool firstNu2Round = true;
+
         for (;!nu2.isFixedPointReached();) {
             std::cout << "Nu2 is running....\n";
 
-            intermediateResults.iterationNumber++;
             BF nextContraintsForGoals = mgr.constantTrue();
 
             // Iterate over all of the liveness guarantees. Put the results into the variable 'nextContraintsForGoals' for every
             // goal. Then, after we have iterated over the goals, we can update nu2.
             for (unsigned int j=0;j<livenessGuarantees.size();j++) {
 
-                std::cout << "Working on liveness Guarantee " << j << " with the actual iteration number " << intermediateResults.iterationNumber << std::endl;
+                std::cout << "Working on liveness Guarantee " << j << std::endl;
 
-                if (intermediateResults.iterationNumber != intermediateResults.sub[j]->level1IterationNumber) {
+                if (!firstNu2Round || (!(intermediateResults.sub[j]->globalWinningPositionsStillUnderapproximateTheOnesForThisGuarantee))) {
 
                     std::cout << "....actually working on it." << std::endl;
 
@@ -768,7 +681,8 @@ protected:
                     BF livetransitions = livenessGuarantees[j] & (nu2.getValue().SwapVariables(varVectorPre,varVectorPost));
 
                     // Compute the middle least-fixed point (called 'Y' in the GR(1) paper)
-                    BFFixedPoint mu1(mgr.constantFalse());
+                    if (((nu2.getValue()==mgr.constantTrue())) && intermediateResults.sub[j]->prefixPointY_0_infty_infty_valid) std::cout << "Can recycle mu1!\n";
+                    BFFixedPoint mu1(((nu2.getValue()==mgr.constantTrue()) && intermediateResults.sub[j]->prefixPointY_0_infty_infty_valid)?intermediateResults.sub[j]->prefixPointY_0_infty_infty:mgr.constantFalse());
                     for (;!mu1.isFixedPointReached();) {
 
                         // Update the set of transitions that lead closer to the goal.
@@ -784,30 +698,66 @@ protected:
                             BF foundPaths = mgr.constantTrue();
 
                             // Inner-most greatest fixed point. The corresponding variable in the paper would be 'X'.
-                            BFFixedPoint nu0(mgr.constantTrue());
+                            BF nu0init;
+                            if (mu1.getValue()==mgr.constantFalse()) {
+                                if (intermediateResults.sub[j]->prefixPointY_infty_0_infty.size()>i) {
+                                    std::cout << "Recycling prefixPointY_infty_0_infty!\n";
+                                    nu0init = intermediateResults.sub[j]->prefixPointY_infty_0_infty[i];
+                                } else if ((nu2.getValue()==mgr.constantTrue()) && intermediateResults.sub[j]->prefixPointY_0_0_infty.size()>i) {
+                                    nu0init = intermediateResults.sub[j]->prefixPointY_0_0_infty[i];
+                                    std::cout << "Recycling prefixPointY_0_0_infty!\n";
+                                } else {
+                                    nu0init = mgr.constantTrue();
+                                }
+                            } else {
+                                nu0init = mgr.constantTrue();
+                            }
+                            BFFixedPoint nu0(nu0init);
                             for (;!nu0.isFixedPointReached();) {
 
                                 // Compute a set of paths that are safe to take - used for the enforceable predecessor operator ('cox')
                                 foundPaths = livetransitions | (nu0.getValue().SwapVariables(varVectorPre,varVectorPost) & !(livenessAssumptions[i]));
                                 foundPaths &= safetySys;
+                                //BF_newDumpDot(*this,foundPaths,NULL,"/tmp/foundPaths.dot");
+
 
                                 // Update the inner-most fixed point with the result of applying the enforcable predecessor operator
                                 nu0.update(safetyEnv.Implies(foundPaths).ExistAbstract(varCubePostOutput).UnivAbstract(varCubePostInput));
+                                std::cout << "Running in nu0.\n";
                             }
+
 
                             // Update the set of positions that are winning for some liveness assumption
                             goodForAnyLivenessAssumption |= nu0.getValue();
+
+                            // Update data
+                            if (mu1.getValue()==mgr.constantFalse()) {
+                                if (intermediateResults.sub[j]->prefixPointY_infty_0_infty.size()<=i)
+                                    intermediateResults.sub[j]->prefixPointY_infty_0_infty.push_back(nu0.getValue());
+                                else
+                                    intermediateResults.sub[j]->prefixPointY_infty_0_infty[i] = nu0.getValue();
+                                if (nu2.getValue()==mgr.constantTrue()) {
+                                    if (intermediateResults.sub[j]->prefixPointY_0_0_infty.size()<=i)
+                                        intermediateResults.sub[j]->prefixPointY_0_0_infty.push_back(nu0.getValue());
+                                    else
+                                        intermediateResults.sub[j]->prefixPointY_0_0_infty[i] = nu0.getValue();
+                                }
+                            }
+
                         }
 
                         // Update the moddle fixed point
                         mu1.update(goodForAnyLivenessAssumption);
+                        if (nu2.getValue()==mgr.constantTrue()) {
+                            intermediateResults.sub[j]->prefixPointY_0_infty_infty_valid = true;
+                            intermediateResults.sub[j]->prefixPointY_0_infty_infty = mu1.getValue();
+                        }
                     }
 
                     // Update the set of positions that are winning for any goal for the outermost fixed point
                     nextContraintsForGoals &= mu1.getValue();
                     //BF_newDumpDot(*this,nextContraintsForGoals,NULL,"/tmp/inter.dot");
                     //throw 23;
-                    intermediateResults.sub[j]->level1IterationNumber = intermediateResults.iterationNumber;
                     if (nu2.getValue()==mgr.constantTrue()) {
                         intermediateResults.sub[j]->prefixPointY_0_infty_infty = mu1.getValue();
                         intermediateResults.sub[j]->prefixPointY_0_infty_infty_valid = true;
@@ -818,11 +768,16 @@ protected:
                 std::cout << "No change!\n";
             }
             nu2.update(nu2.getValue() & nextContraintsForGoals);
+            firstNu2Round = false;
 
         }
 
         // We found the set of winning positions
         intermediateResults.winningPositions = nu2.getValue();
+
+        for (uint j=0;j<livenessGuarantees.size();j++) {
+            intermediateResults.sub[j]->globalWinningPositionsStillUnderapproximateTheOnesForThisGuarantee = true;
+        }
     }
 
 public:
