@@ -30,7 +30,7 @@ nuSMVErrorStreamFile = "/tmp/fuzz_"+str(os.getpid())+".nusmverrorstream"
 slugsTranslatorScript = "./translateFromLTLMopLTLFormatToSlugsFormat.py"
 nuSMVTranslatorScript = "./makeNuSMVInstanceToTestAutomatonFileAgainstSlugsSpecification.py"
 NuSMVExecutable = "./NuSMV"
-slugsExecutableAndBasicOptions = "../src/slugs " + " ".join(sys.argv[1:])
+slugsExecutableAndBasicOptions = "../src/slugs " + " ".join(sys.argv[2:])
 
 # =====================================================
 # =====================================================
@@ -118,7 +118,9 @@ def fuzzOnce():
     # =====================================================
     # Slugs
     # =====================================================
-    retValue = os.system(slugsExecutableAndBasicOptions + " --sysInitRoboticsSemantics "+slugsinFile+" "+autFile+" 2> "+slugsReturnFile)
+    command = slugsExecutableAndBasicOptions + " --sysInitRoboticsSemantics "+slugsinFile+" "+autFile+" 2> "+slugsReturnFile
+    print command
+    retValue = os.system(command)
     if (retValue!=0):
         print >>sys.stderr, "Slugs failed!"
         raise Exception("Fuzzing Aborted")

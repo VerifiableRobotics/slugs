@@ -4,6 +4,8 @@
 #include "gr1context.hpp"
 #include <time.h>
 #include <boost/algorithm/string.hpp>
+#include <sys/time.h>
+#include <sys/resource.h>
 
 /**
  * This extension lets the robot perform incremental synthesis/resynthesis in case of changing specifications.
@@ -602,7 +604,9 @@ protected:
                     for (auto it = separateInitGuarantees.begin();it!=separateInitGuarantees.end();it++) {
                         initSys &= *it;
                     }
-
+                    BF_newDumpDot(*this,initSys,NULL,"/tmp/initSys.dot");
+                    BF_newDumpDot(*this,intermediateResults.winningPositions,NULL,"/tmp/winning.dot");
+                    BF_newDumpDot(*this,initEnv.Implies((intermediateResults.winningPositions & initSys).ExistAbstract(varCubePreOutput)),NULL,"/tmp/itscomplicated.dot");
 
                     // Check if for every possible environment initial position the system has a good system initial position
                     BF result;
@@ -633,7 +637,12 @@ protected:
                     }
                 }
             }
-            std::cout << "Time (in s): " << (double)clock()/CLOCKS_PER_SEC << std::endl;
+
+            // Print CPU time.
+            struct rusage cputime;
+            if (getrusage(RUSAGE_SELF,&cputime)==0) {
+                std::cout << "Time (in s): " << (cputime.ru_utime.tv_sec + cputime.ru_utime.tv_usec/1000000.0)  << std::endl;
+            }
         }
     }
 
