@@ -3,6 +3,8 @@
 #include <iostream>
 #include <sstream>
 #include <boost/algorithm/string.hpp>
+#include <sys/time.h>
+#include <sys/resource.h>
 
 
 /**
@@ -224,5 +226,10 @@ void GR1Context::execute() {
         std::cerr << "RESULT: Specification is realizable.\n";
     } else {
         std::cerr << "RESULT: Specification is unrealizable.\n";
+    }
+    // Print CPU time.
+    struct rusage cputime;
+    if (getrusage(RUSAGE_SELF,&cputime)==0) {
+        std::cerr << "Time (in s): " << (cputime.ru_utime.tv_sec + cputime.ru_utime.tv_usec/1000000.0)  << std::endl;
     }
 }

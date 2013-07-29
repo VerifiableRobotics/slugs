@@ -88,6 +88,7 @@
 
     // We found the set of winning positions
     winningPositions = nu2.getValue();
+
 }
 
 

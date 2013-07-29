@@ -89,7 +89,7 @@ protected:
 
     };
 
-    class Level2IntermediateResults {
+    class IntermediateResultsForALivenessGuarantee {
     public:
 
         BF prefixPointY_0_infty_infty;
@@ -100,7 +100,7 @@ protected:
 
         bool globalWinningPositionsStillUnderapproximateTheOnesForThisGuarantee; // Not true after adding assumptions
 
-        Level2IntermediateResults() : prefixPointY_0_infty_infty_valid(false), globalWinningPositionsStillUnderapproximateTheOnesForThisGuarantee(false) {}
+        IntermediateResultsForALivenessGuarantee() : prefixPointY_0_infty_infty_valid(false), globalWinningPositionsStillUnderapproximateTheOnesForThisGuarantee(false) {}
     };
 
     class Level1IntermediateResults {
@@ -108,7 +108,7 @@ protected:
         // Important Variables
         BF winningPositions;
 
-        std::vector<Level2IntermediateResults*> sub;
+        std::vector<IntermediateResultsForALivenessGuarantee*> sub;
 
         // Functions
         void clearEverythingExceptForTheWinningPositions() {
@@ -121,7 +121,7 @@ protected:
             return sub.size()==0;
         }
         void addNewLevel2() {
-            sub.push_back(new Level2IntermediateResults());
+            sub.push_back(new IntermediateResultsForALivenessGuarantee());
         }
 
         void invalidateAllPrefixPointY_0_infty_infty() {
