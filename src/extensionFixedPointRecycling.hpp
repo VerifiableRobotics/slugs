@@ -79,7 +79,7 @@ protected:
                         BF foundPaths = mgr.constantTrue();
 
                         // Inner-most greatest fixed point. The corresponding variable in the paper would be 'X'.
-                        BFFixedPoint nu0((firstMiddle && (!firstOutermost))?recyclingInnermostFixedPoints[j][i]:mgr.constantTrue());
+                        BFFixedPoint nu0((firstMiddle && (!firstOutermost))?recyclingInnermostFixedPoints[j][i]:nu2.getValue());
                         for (;!nu0.isFixedPointReached();) {
 
                             // Compute a set of paths that are safe to take - used for the enforceable predecessor operator ('cox')
@@ -97,7 +97,7 @@ protected:
 
                         // Dump the paths that we just wound into 'strategyDumpingData' - store the current goal long
                         // with the BDD
-                        strategyDumpingData.push_back(std::pair<unsigned int,BF>(j,foundPaths));
+                        // strategyDumpingData.push_back(std::pair<unsigned int,BF>(j,foundPaths));
                     }
 
                     // Update the moddle fixed point

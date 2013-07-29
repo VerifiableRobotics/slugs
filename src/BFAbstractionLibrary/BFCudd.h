@@ -9,6 +9,7 @@
 #define BFCUDD_H_
 
 #include "BFCuddManager.h"
+#include "cuddInt.h"
 
 class BFBddManager;
 class BFBddVarCube;
@@ -179,6 +180,24 @@ public:
 	inline BFBdd Implies(const BFBdd& other) const {
 		return !(*this) | other;
 	}
+
+    inline BFBdd trueSucc() const {
+        DdNode *regular = Cudd_Regular(node);
+        if (regular!=node) {
+            return BFBdd(bfmanager,Cudd_Not(cuddT(regular)));
+        } else {
+            return BFBdd(bfmanager,cuddT(node));
+        }
+    }
+
+    inline BFBdd falseSucc() const {
+        DdNode *regular = Cudd_Regular(node);
+        if (regular!=node) {
+            return BFBdd(bfmanager,Cudd_Not(cuddE(regular)));
+        } else {
+            return BFBdd(bfmanager,cuddE(node));
+        }
+    }
 
 	// Not yet supported
 	// BFBdd findSatisfyingAssignment(const BFBddVarCube& cube) const;

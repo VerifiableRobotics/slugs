@@ -8,6 +8,8 @@
 #include <set>
 #include <list>
 #include <vector>
+#include <cstdint>
+#include <map>
 #include "bddDump.h"
 
 typedef enum { PreInput, PreOutput, PostInput,PostOutput } VariableType;
@@ -70,6 +72,9 @@ protected:
     BF parseBooleanFormula(std::string currentLine,std::set<VariableType> &allowedTypes);
     //@}
 
+    // Internal function for semantic hash computation of a BDD
+    void bddSemanticHashRecurse(BF bdd,unsigned int nof64BitHashElements,std::map<unsigned int,std::pair<uint64_t*,uint64_t*> > &variableLookup, std::map<unsigned int,uint64_t*> &cache);
+
     //! A protected default constructor - to be used if input parsing is to be performed by
     //! the plugin, which must know what it is doing then!
     GR1Context() {}
@@ -118,6 +123,9 @@ public:
     static GR1Context* makeInstance(std::list<std::string> &filenames) {
         return new GR1Context(filenames);
     }
+
+    std::string bddSemanticHash(BF bdd);
+
 
 };
 

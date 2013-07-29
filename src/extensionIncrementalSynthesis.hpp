@@ -38,6 +38,7 @@ protected:
     using T::realizable;
     using T::preVars;
     using T::postVars;
+    using T::bddSemanticHash;
 
     // Variables to store the initialization and safety assumptions and guarantees separately.
     // TODO: Replace these by ordered maps so that last inserted elements always occur last. This
@@ -605,9 +606,9 @@ protected:
                     for (auto it = separateInitGuarantees.begin();it!=separateInitGuarantees.end();it++) {
                         initSys &= *it;
                     }
-                    BF_newDumpDot(*this,initSys,NULL,"/tmp/initSys.dot");
-                    BF_newDumpDot(*this,intermediateResults.winningPositions,NULL,"/tmp/winning.dot");
-                    BF_newDumpDot(*this,initEnv.Implies((intermediateResults.winningPositions & initSys).ExistAbstract(varCubePreOutput)),NULL,"/tmp/itscomplicated.dot");
+                    //BF_newDumpDot(*this,initSys,NULL,"/tmp/initSys.dot");
+                    //BF_newDumpDot(*this,intermediateResults.winningPositions,NULL,"/tmp/winning.dot");
+                    //BF_newDumpDot(*this,initEnv.Implies((intermediateResults.winningPositions & initSys).ExistAbstract(varCubePreOutput)),NULL,"/tmp/itscomplicated.dot");
 
                     // Check if for every possible environment initial position the system has a good system initial position
                     BF result;
@@ -624,6 +625,8 @@ protected:
                     } else {
                         std::cout << "RESULT: Specification is unrealizable.\n";
                     }
+
+                    std::cout << "Hash of winning positions: " << bddSemanticHash(intermediateResults.winningPositions) << std::endl;
 
                     // Done!
                     lineNumberCurrentlyRead = oldLineNumber;
@@ -723,7 +726,6 @@ protected:
 
                                 // Update the inner-most fixed point with the result of applying the enforcable predecessor operator
                                 nu0.update(safetyEnv.Implies(foundPaths).ExistAbstract(varCubePostOutput).UnivAbstract(varCubePostInput));
-                                std::cout << "Running in nu0.\n";
                             }
 
 

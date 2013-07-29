@@ -227,6 +227,7 @@ void GR1Context::execute() {
     } else {
         std::cerr << "RESULT: Specification is unrealizable.\n";
     }
+    std::cout << "Hash of winning positions: " << bddSemanticHash(winningPositions) << std::endl;
     // Print CPU time.
     struct rusage cputime;
     if (getrusage(RUSAGE_SELF,&cputime)==0) {
