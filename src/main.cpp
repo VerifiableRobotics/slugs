@@ -7,7 +7,6 @@
 #include "extensionExtractExplicitCounterstrategy.hpp"
 #include "extensionRoboticsSemantics.hpp"
 #include "extensionWeakenSafetyAssumptions.hpp"
-#include "extensionIncrementalSynthesis.hpp"
 #include "extensionFixedPointRecycling.hpp"
 
 //===================================================================================
@@ -57,7 +56,6 @@ OptionCombination optionCombinations[] = {
     OptionCombination("--computeCNFFormOfTheSpecification --sysInitRoboticsSemantics",XComputeCNFFormOfTheSpecification<GR1Context>::makeInstance),
     OptionCombination("--counterStrategy",XExtractExplicitCounterStrategy<XCounterStrategy<GR1Context,false> >::makeInstance),
     OptionCombination("--counterStrategy --sysInitRoboticsSemantics",XExtractExplicitCounterStrategy<XCounterStrategy<GR1Context,true> >::makeInstance),
-    OptionCombination("--experimentalIncrementalSynthesis",XIncrementalSynthesis<GR1Context>::makeInstance),
     OptionCombination("--fixedPointRecycling",XExtractExplicitStrategy<XFixedPointRecycling<GR1Context>,false>::makeInstance),
     OptionCombination("--fixedPointRecycling --simpleRecovery",XExtractExplicitStrategy<XFixedPointRecycling<GR1Context>,true>::makeInstance),
     OptionCombination("--fixedPointRecycling --onlyRealizability",XFixedPointRecycling<GR1Context>::makeInstance),
