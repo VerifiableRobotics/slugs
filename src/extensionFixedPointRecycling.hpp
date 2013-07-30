@@ -79,7 +79,7 @@ protected:
                         BF foundPaths = mgr.constantTrue();
 
                         // Inner-most greatest fixed point. The corresponding variable in the paper would be 'X'.
-                        BFFixedPoint nu0((firstMiddle && (!firstOutermost))?recyclingInnermostFixedPoints[j][i]:nu2.getValue());
+                        BFFixedPoint nu0((firstMiddle && (!firstOutermost))?recyclingInnermostFixedPoints[j][i] & nu2.getValue():nu2.getValue());
                         for (;!nu0.isFixedPointReached();) {
 
                             // Compute a set of paths that are safe to take - used for the enforceable predecessor operator ('cox')
