@@ -1,0 +1,54 @@
+#####################################################
+# The following order has been set by R.Ehlers
+# as a "reasonable" order in which an engineer could
+# have written down the specification. The guarantees
+# were arranged by a typical order of concern, and
+# the assumptions have been filled in at the points
+# where the specification becomes unrealizable
+#####################################################
+
+# ================ General Granting =================
+
+# Always eventually grant everyone
+Guarantee 9
+
+# Waiting on HREADY
+Guarantee 1
+
+# No Grant without Request except to Master 0
+Guarantee 10.1
+Guarantee 10.2 
+
+# HMASTER signal follows the grants
+Guarantee 4
+
+# No Bus reassignment if no new access comes
+Guarantee 6.1
+Assumption 2
+Guarantee 6.2
+
+# Special behavior whenever granting to Master 0
+Guarantee 11
+
+# ================ Locked Accesses ==============
+
+# Grant or locked signals are not changed until new decision is done
+Guarantee 8
+
+# Use the locked bit to remember if something was locked
+Guarantee 7
+
+# HMASTLOCK Copies LOCKED
+Guarantee 5
+
+# Locked burst of length 4
+Guarantee 3
+
+# Locked bursts of unspecified length starting...
+Guarantee 2
+Assumption 1
+Assumption 4
+
+# ================ Parts of the DATE'07 paper spec that are actually not needed ==============
+
+# Assumption 3 

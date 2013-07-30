@@ -277,13 +277,13 @@ protected:
                     allowedTypes.insert(PreInput);
                     allowedTypes.insert(PreOutput);
                     if (positionOfFirstSpace==std::string::npos) {
-                        std::cerr << "Error: Expected name of property and property string (case 1).\n";
+                        std::cerr << "Error: Expected name of property and property string (case 1): " << currentLine << "\n";
                         if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                     } else {
                         std::string restOfTheCommand = currentLine.substr(positionOfFirstSpace+1,std::string::npos);
                         size_t positionOfSecondSpace = restOfTheCommand.find(" ");
                         if (positionOfSecondSpace==std::string::npos) {
-                            std::cerr << "Error: Expected name of property and property string (case 2).\n";
+                            std::cerr << "Error: Expected name of property and property string (case 2): " << currentLine << "\n";
                             if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                         } else {
                             std::string propertyString = restOfTheCommand.substr(positionOfSecondSpace+1,std::string::npos);
@@ -291,7 +291,7 @@ protected:
                             try {
                                 BF newProperty = parseBooleanFormula(propertyString,allowedTypes);
                                 if (separateInitGuarantees.hasKey(nameString)) {
-                                    std::cerr << "Error: Trying to re-use name of the property string. \n";
+                                    std::cerr << "Error: Trying to re-use name of the property string: " << currentLine << "\n";
                                     if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                                 }
                                 separateInitGuarantees.add(nameString,newProperty);
@@ -306,13 +306,13 @@ protected:
                     std::set<VariableType> allowedTypes;
                     allowedTypes.insert(PreInput);
                     if (positionOfFirstSpace==std::string::npos) {
-                        std::cerr << "Error: Expected name of property and property string (case 1).\n";
+                        std::cerr << "Error: Expected name of property and property string (case 1): " << currentLine << "\n";
                         if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                     } else {
                         std::string restOfTheCommand = currentLine.substr(positionOfFirstSpace+1,std::string::npos);
                         size_t positionOfSecondSpace = restOfTheCommand.find(" ");
                         if (positionOfSecondSpace==std::string::npos) {
-                            std::cerr << "Error: Expected name of property and property string (case 2).\n";
+                            std::cerr << "Error: Expected name of property and property string (case 2): " << currentLine << "\n";
                             if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                         } else {
                             std::string propertyString = restOfTheCommand.substr(positionOfSecondSpace+1,std::string::npos);
@@ -320,7 +320,7 @@ protected:
                             try {
                                 BF newProperty = parseBooleanFormula(propertyString,allowedTypes);
                                 if (separateInitAssumptions.hasKey(nameString)) {
-                                    std::cerr << "Error: Trying to re-use name of the property string. \n";
+                                    std::cerr << "Error: Trying to re-use name of the property string: " << currentLine << " \n";
                                     if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                                 }
                                 separateInitAssumptions.add(nameString,newProperty);
@@ -332,7 +332,7 @@ protected:
                     }
                 } else if (currentCommand=="EXITONERROR") {
                     if (positionOfFirstSpace==std::string::npos) {
-                        std::cerr << "Error: Expected 0 or 1.\n";
+                        std::cerr << "Error: Expected 0 or 1: " << currentLine << "\n";
                         if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                     }
                     std::string restOfTheCommand = currentLine.substr(positionOfFirstSpace+1,std::string::npos);
@@ -413,13 +413,13 @@ protected:
                                 allowedTypes.insert(PreOutput);
                                 allowedTypes.insert(PostInput);
                                 if (positionOfFirstSpace==std::string::npos) {
-                                    std::cerr << "Error: Expected name of property and property string (case 1).\n";
+                                    std::cerr << "Error: Expected name of property and property string (case 1): " << currentLine << "\n";
                                     if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                                 } else {
                                     std::string restOfTheCommand = currentLine.substr(positionOfFirstSpace+1,std::string::npos);
                                     size_t positionOfSecondSpace = restOfTheCommand.find(" ");
                                     if (positionOfSecondSpace==std::string::npos) {
-                                        std::cerr << "Error: Expected name of property and property string (case 2).\n";
+                                        std::cerr << "Error: Expected name of property and property string (case 2): " << currentLine << "\n";
                                         if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                                     } else {
                                         std::string propertyString = restOfTheCommand.substr(positionOfSecondSpace+1,std::string::npos);
@@ -427,7 +427,7 @@ protected:
                                         try {
                                             BF newProperty = parseBooleanFormula(propertyString,allowedTypes);
                                             if (separateSafetyAssumptions.hasKey(nameString)) {
-                                                std::cerr << "Error: Trying to re-use name of the property string. \n";
+                                                std::cerr << "Error: Trying to re-use name of the property string: " << currentLine << " \n";
                                                 if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                                             }
                                             separateSafetyAssumptions.add(nameString,newProperty);
@@ -448,13 +448,13 @@ protected:
                                 allowedTypes.insert(PreOutput);
                                 allowedTypes.insert(PostInput);
                                 if (positionOfFirstSpace==std::string::npos) {
-                                    std::cerr << "Error: Expected name of property and property string (case 1).\n";
+                                    std::cerr << "Error: Expected name of property and property string (case 1): " << currentLine << "\n";
                                     if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                                 } else {
                                     std::string restOfTheCommand = currentLine.substr(positionOfFirstSpace+1,std::string::npos);
                                     size_t positionOfSecondSpace = restOfTheCommand.find(" ");
                                     if (positionOfSecondSpace==std::string::npos) {
-                                        std::cerr << "Error: Expected name of property and property string (case 2).\n";
+                                        std::cerr << "Error: Expected name of property and property string (case 2): " << currentLine << "\n";
                                         if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                                     } else {
                                         std::string propertyString = restOfTheCommand.substr(positionOfSecondSpace+1,std::string::npos);
@@ -462,7 +462,7 @@ protected:
                                         try {
                                             BF newProperty = parseBooleanFormula(propertyString,allowedTypes);
                                             if (separateLivenessAssumptions.hasKey(nameString)) {
-                                                std::cerr << "Error: Trying to re-use name of the property string. \n";
+                                                std::cerr << "Error: Trying to re-use name of the property string: " << currentLine << " \n";
                                                 if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                                             }
                                             separateLivenessAssumptions.add(nameString,newProperty);
@@ -504,13 +504,13 @@ protected:
                                 allowedTypes.insert(PostInput);
                                 allowedTypes.insert(PostOutput);
                                 if (positionOfFirstSpace==std::string::npos) {
-                                    std::cerr << "Error: Expected name of property and property string (case 1).\n";
+                                    std::cerr << "Error: Expected name of property and property string (case 1): " << currentLine << "\n";
                                     if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                                 } else {
                                     std::string restOfTheCommand = currentLine.substr(positionOfFirstSpace+1,std::string::npos);
                                     size_t positionOfSecondSpace = restOfTheCommand.find(" ");
                                     if (positionOfSecondSpace==std::string::npos) {
-                                        std::cerr << "Error: Expected name of property and property string (case 2).\n";
+                                        std::cerr << "Error: Expected name of property and property string (case 2): " << currentLine << "\n";
                                         if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                                     } else {
                                         std::string propertyString = restOfTheCommand.substr(positionOfSecondSpace+1,std::string::npos);
@@ -518,7 +518,7 @@ protected:
                                         try {
                                             BF newProperty = parseBooleanFormula(propertyString,allowedTypes);
                                             if (separateLivenessGuarantees.hasKey(nameString)) {
-                                                std::cerr << "Error: Trying to re-use name of the property string. \n";
+                                                std::cerr << "Error: Trying to re-use name of the property string: " << currentLine << " \n";
                                                 if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                                             }
                                             separateLivenessGuarantees.add(nameString,newProperty);
@@ -537,13 +537,13 @@ protected:
                                 allowedTypes.insert(PostInput);
                                 allowedTypes.insert(PostOutput);
                                 if (positionOfFirstSpace==std::string::npos) {
-                                    std::cerr << "Error: Expected name of property and property string (case 1).\n";
+                                    std::cerr << "Error: Expected name of property and property string (case 1): " << currentLine << "\n";
                                     if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                                 } else {
                                     std::string restOfTheCommand = currentLine.substr(positionOfFirstSpace+1,std::string::npos);
                                     size_t positionOfSecondSpace = restOfTheCommand.find(" ");
                                     if (positionOfSecondSpace==std::string::npos) {
-                                        std::cerr << "Error: Expected name of property and property string (case 2).\n";
+                                        std::cerr << "Error: Expected name of property and property string (case 2): " << currentLine << "\n";
                                         if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                                     } else {
                                         std::string propertyString = restOfTheCommand.substr(positionOfSecondSpace+1,std::string::npos);
@@ -551,7 +551,7 @@ protected:
                                         try {
                                             BF newProperty = parseBooleanFormula(propertyString,allowedTypes);
                                             if (separateSafetyGuarantees.hasKey(nameString)) {
-                                                std::cerr << "Error: Trying to re-use name of the property string. \n";
+                                                std::cerr << "Error: Trying to re-use name of the property string: " << currentLine << " \n";
                                                 if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                                             }
                                             separateSafetyGuarantees.add(nameString,newProperty);
@@ -705,15 +705,15 @@ protected:
                             if (mu1.getValue()==mgr.constantFalse()) {
                                 if (intermediateResults.sub[j]->prefixPointY_infty_0_infty.size()>i) {
                                     std::cout << "Recycling prefixPointY_infty_0_infty!\n";
-                                    nu0init = intermediateResults.sub[j]->prefixPointY_infty_0_infty[i];
+                                    nu0init = intermediateResults.sub[j]->prefixPointY_infty_0_infty[i] & nu2.getValue();
                                 } else if ((nu2.getValue()==mgr.constantTrue()) && intermediateResults.sub[j]->prefixPointY_0_0_infty.size()>i) {
-                                    nu0init = intermediateResults.sub[j]->prefixPointY_0_0_infty[i];
+                                    nu0init = intermediateResults.sub[j]->prefixPointY_0_0_infty[i] & nu2.getValue();
                                     std::cout << "Recycling prefixPointY_0_0_infty!\n";
                                 } else {
-                                    nu0init = mgr.constantTrue();
+                                    nu0init = nu2.getValue();
                                 }
                             } else {
-                                nu0init = mgr.constantTrue();
+                                nu0init = nu2.getValue();
                             }
                             BFFixedPoint nu0(nu0init);
                             for (;!nu0.isFixedPointReached();) {
