@@ -1,6 +1,6 @@
 # QMake Build file
 BDDFLAGS = $$system(gcc BFAbstractionLibrary/compilerOptionGenerator.c -o /tmp/BFAbstractionCompilerOptionsProducer-$$(USER);/tmp/BFAbstractionCompilerOptionsProducer-$$(USER))
-DEFINES += USE_CUDD NDEBUG
+DEFINES += USE_CUDD
 CFLAGS += -g -fpermissive
 QMAKE_CFLAGS_RELEASE += -g \
     $$BDDFLAGS
@@ -19,7 +19,7 @@ CONFIG -= qt
 HEADERS += BFAbstractionLibrary/BF.h gr1context.hpp extensionExtractExplicitStrategy.hpp extensionRoboticsSemantics.hpp \
     extensionWeakenSafetyAssumptions.hpp extensionBiasForAction.hpp \
     extensionComputeCNFFormOfTheSpecification.hpp extensionCounterstrategy.hpp extensionExtractExplicitCounterstrategy.hpp \
-    extensionIncrementalSynthesis.hpp extensionFixedPointRecycling.hpp BFAbstractionLibrary/BFCudd.h
+    extensionIncrementalSynthesis.hpp extensionFixedPointRecycling.hpp BFAbstractionLibrary/BFCudd.h BFAbstractionLibrary/BFCuddManager.h BFAbstractionLibrary/BFCuddVarVector.h BFAbstractionLibrary/BFCuddVarCube.h
 
 SOURCES += main.cpp BFAbstractionLibrary/bddDump.cpp BFAbstractionLibrary/BFCuddVarVector.cpp BFAbstractionLibrary/BFCudd.cpp BFAbstractionLibrary/BFCuddManager.cpp BFAbstractionLibrary/BFCuddVarCube.cpp tools.cpp synthesisAlgorithm.cpp synthesisContextBasics.cpp
 

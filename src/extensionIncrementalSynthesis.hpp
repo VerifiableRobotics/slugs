@@ -78,36 +78,124 @@ protected:
     // 4: Iteration over the liveness assumptions
     // 5: Inner-most fixed point
 
-    class Level5IntermediateResults {
-
+    /**
+     * @brief Hyper-Recyling means that we check if there exists a exists some outer-prefixed-point pairs that we can
+     *        use as starting point for the current case under observation.
+     *        This class is for inner-most fixed point recycling, i.e., for the nu0's.
+     */
+    class HyperRecyclingContainerFromPairFromAbove {
+        std::list<boost::tuple<BF,BF,BF> > elements;
+    public:
+        HyperRecyclingContainerFromPairFromAbove() {}
+        BF find(BF element1, BF element2) {
+            BF result = element1.manager()->constantTrue();
+            for (auto it = elements.begin();it!=elements.end();it++) {
+                if ((it->get<0>()>=element1) && (it->get<1>()>=element2)) {
+                    // std::cout << "HyperRecycle!\n";
+                    result &= it->get<2>();
+                }
+            }
+            // std::cout << "No hyperrecycling.\n";
+            return result;
+        }
+        void insert(BF element1, BF element2, BF element3) {
+            // Insert before the first element that is >= than this one
+            for (auto it = elements.begin();it!=elements.end();) {
+                if ((element1==it->get<0>()) && (element2==it->get<1>())) {
+                    it->get<2>() &= element3;
+                    assert((it->get<2>() & !element3)==element1.manager()->constantFalse());
+                    for (auto it2 = elements.begin();it2!=it;) {
+                        if ((it->get<0>()>=it2->get<0>()) && (it->get<1>()>=it2->get<1>()) && (it->get<2>()<=it2->get<2>())) {
+                            elements.erase(it2++);
+                        } else {
+                            it2++;
+                        }
+                    }
+                    return;
+                } else if ((element1>=it->get<0>()) && (element2>=it->get<1>()) && (element3<=it->get<2>())) {
+                    // The currently added data is a good fallback.
+                    elements.erase(it++);
+                } else if ((element1<=it->get<0>()) && (element2<=it->get<1>())) {
+                    elements.insert(it,boost::make_tuple(element1,element2,element3));
+                    return;
+                } else {
+                    it++;
+                }
+            }
+            // Nothing found? Then just insert at the end.
+            elements.insert(elements.end(),boost::make_tuple(element1,element2,element3));
+        }
+        void clear() {
+            elements.clear();
+        }
     };
 
-    class Level4IntermediateResults {
-
+    class HyperRecyclingContainerFromBelow {
+        std::list<boost::tuple<BF,BF> > elements;
+    public:
+        HyperRecyclingContainerFromBelow() {}
+        BF find(BF element1) {
+            BF result = element1.manager()->constantFalse();
+            for (auto it = elements.begin();it!=elements.end();it++) {
+                if ((it->get<0>()<=element1)) {
+                    result |= it->get<1>();
+                }
+            }
+            // std::cout << "No hyperrecycling.\n";
+            return result;
+        }
+        void insert(BF element1, BF element2) {
+            // Insert before the first element that is >= than this one
+            for (auto it = elements.begin();it!=elements.end();) {
+                if ((element1==it->get<0>())) {
+                    it->get<1>() |= element2;
+                    for (auto it2 = elements.begin();it2!=it;) {
+                        if ((it->get<0>()<=it2->get<0>()) && (it->get<1>()>=it2->get<1>())) {
+                            elements.erase(it2++);
+                        } else {
+                            it2++;
+                        }
+                    }
+                    return;
+                } else if ((element1<=it->get<0>()) && ((element2>=it->get<1>()))) {
+                    // The currently added data is a good fallback.
+                    elements.erase(it++);
+                } else if ((element1>=it->get<0>())) {
+                    elements.insert(it,boost::make_tuple(element1,element2));
+                    return;
+                } else {
+                    it++;
+                }
+            }
+            // Nothing found? Then just insert at the end.
+            elements.insert(elements.end(),boost::make_tuple(element1,element2));
+        }
+        void clear() {
+            elements.clear();
+        }
     };
 
-    class Level3IntermediateResults {
-
+    class IntermediateResultsForALivenessGuaranteeAndLivenessAssumption {
+    public:
+        HyperRecyclingContainerFromPairFromAbove recycler;
     };
 
     class IntermediateResultsForALivenessGuarantee {
     public:
 
-        BF prefixPointY_0_infty_infty;
-        bool prefixPointY_0_infty_infty_valid;
+        HyperRecyclingContainerFromBelow recycler;
 
-        std::vector<BF> prefixPointY_infty_0_infty;
-        std::vector<BF> prefixPointY_0_0_infty;
-
+        std::vector<IntermediateResultsForALivenessGuaranteeAndLivenessAssumption> sub;
         bool globalWinningPositionsStillUnderapproximateTheOnesForThisGuarantee; // Not true after adding assumptions
 
-        IntermediateResultsForALivenessGuarantee() : prefixPointY_0_infty_infty_valid(false), globalWinningPositionsStillUnderapproximateTheOnesForThisGuarantee(false) {}
+        IntermediateResultsForALivenessGuarantee() : globalWinningPositionsStillUnderapproximateTheOnesForThisGuarantee(false) {}
     };
 
     class Level1IntermediateResults {
     public:
         // Important Variables
         BF winningPositions;
+        unsigned int nofLivenessAssumptions;
 
         std::vector<IntermediateResultsForALivenessGuarantee*> sub;
 
@@ -121,23 +209,32 @@ protected:
         bool isEmpty() {
             return sub.size()==0;
         }
-        void addNewLevel2() {
+        void addLivenessGuarantee() {
             sub.push_back(new IntermediateResultsForALivenessGuarantee());
+            for (unsigned int i=0;i<nofLivenessAssumptions;i++) {
+                sub.back()->sub.push_back(IntermediateResultsForALivenessGuaranteeAndLivenessAssumption());
+            }
         }
 
-        void invalidateAllPrefixPointY_0_infty_infty() {
+        void invalidateAllApproximationsFromAbove() {
             for (auto it=sub.begin();it!=sub.end();it++) {
-                (*it)->prefixPointY_0_infty_infty_valid = false;
+                for (auto it2=(*it)->sub.begin();it2!=(*it)->sub.end();it2++) {
+                    it2->recycler.clear();
+                }
             }
         }
-        void invalidateAllPrefixPointY_infty_0_infty() {
+
+        void addLivenessAssumption() {
             for (auto it=sub.begin();it!=sub.end();it++) {
-                (*it)->prefixPointY_infty_0_infty.clear();
+                (*it)->sub.push_back(IntermediateResultsForALivenessGuaranteeAndLivenessAssumption());
             }
+            nofLivenessAssumptions++;
         }
-        void invalidateAllPrefixPointY_0_0_infty() {
+
+
+        void invalidateAllApproximationsFromBelow() {
             for (auto it=sub.begin();it!=sub.end();it++) {
-                (*it)->prefixPointY_0_0_infty.clear();
+                (*it)->recycler.clear();
             }
         }
         void clearAllGlobalWinningPositionsStillUnderapproximateTheOnesForThisGuaranteeBits() {
@@ -146,6 +243,7 @@ protected:
             }
         }
 
+        Level1IntermediateResults() : nofLivenessAssumptions(0) {}
 
         ~Level1IntermediateResults() {
             clearEverythingExceptForTheWinningPositions(); // No need to delete the winning positions
@@ -389,10 +487,11 @@ protected:
                     // Add Trueliveness assumptions/guarantee if needed
                     if (separateLivenessAssumptions.size()==0) {
                         separateLivenessAssumptions.add("__AUTO_ADDED__",mgr.constantTrue());
+                        intermediateResults.addLivenessAssumption();
                     }
                     if (separateLivenessGuarantees.size()==0) {
                         separateLivenessGuarantees.add("__AUTO_ADDED__",mgr.constantTrue());
-                        intermediateResults.addNewLevel2();
+                        intermediateResults.addLivenessGuarantee();
                     }
 
                     //==================================
@@ -431,8 +530,7 @@ protected:
                                                 if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                                             }
                                             separateSafetyAssumptions.add(nameString,newProperty);
-                                            intermediateResults.invalidateAllPrefixPointY_infty_0_infty();
-                                            intermediateResults.invalidateAllPrefixPointY_0_0_infty();
+                                            intermediateResults.invalidateAllApproximationsFromAbove();
                                             intermediateResults.clearAllGlobalWinningPositionsStillUnderapproximateTheOnesForThisGuaranteeBits(); // Forces going over all of the liveness guarantees at least once more
                                             intermediateResults.winningPositions = mgr.constantTrue();
                                         } catch (SlugsException e) {
@@ -466,9 +564,9 @@ protected:
                                                 if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                                             }
                                             separateLivenessAssumptions.add(nameString,newProperty);
-                                            intermediateResults.invalidateAllPrefixPointY_infty_0_infty();
                                             intermediateResults.winningPositions = mgr.constantTrue();
                                             intermediateResults.clearAllGlobalWinningPositionsStillUnderapproximateTheOnesForThisGuaranteeBits(); // Forces going over all of the liveness guarantees at least once more
+                                            intermediateResults.addLivenessAssumption();
                                         } catch (SlugsException e) {
                                             if (exitOnError) throw e;
                                             std::cerr << "Error: " << e.getMessage() << std::endl;
@@ -522,7 +620,7 @@ protected:
                                                 if (exitOnError) throw SlugsException(false,"Aborting due to ExitOnError being set to true.");
                                             }
                                             separateLivenessGuarantees.add(nameString,newProperty);
-                                            intermediateResults.addNewLevel2();
+                                            intermediateResults.addLivenessGuarantee();
                                         } catch (SlugsException e) {
                                             if (exitOnError) throw e;
                                             std::cerr << "Error: " << e.getMessage() << std::endl;
@@ -556,7 +654,7 @@ protected:
                                             }
                                             separateSafetyGuarantees.add(nameString,newProperty);
                                             intermediateResults.clearAllGlobalWinningPositionsStillUnderapproximateTheOnesForThisGuaranteeBits(); // Forces going over all of the liveness guarantees at least once more
-                                            intermediateResults.invalidateAllPrefixPointY_0_infty_infty();
+                                            intermediateResults.invalidateAllApproximationsFromBelow();
                                         } catch (SlugsException e) {
                                             if (exitOnError) throw e;
                                             std::cerr << "Error: " << e.getMessage() << std::endl;
@@ -684,8 +782,7 @@ protected:
                     BF livetransitions = livenessGuarantees[j] & (nu2.getValue().SwapVariables(varVectorPre,varVectorPost));
 
                     // Compute the middle least-fixed point (called 'Y' in the GR(1) paper)
-                    if (((nu2.getValue()==mgr.constantTrue())) && intermediateResults.sub[j]->prefixPointY_0_infty_infty_valid) std::cout << "Can recycle mu1!\n";
-                    BFFixedPoint mu1(((nu2.getValue()==mgr.constantTrue()) && intermediateResults.sub[j]->prefixPointY_0_infty_infty_valid)?intermediateResults.sub[j]->prefixPointY_0_infty_infty:mgr.constantFalse());
+                    BFFixedPoint mu1(intermediateResults.sub[j]->recycler.find(nu2.getValue()));
                     for (;!mu1.isFixedPointReached();) {
 
                         // Update the set of transitions that lead closer to the goal.
@@ -701,20 +798,7 @@ protected:
                             BF foundPaths = mgr.constantTrue();
 
                             // Inner-most greatest fixed point. The corresponding variable in the paper would be 'X'.
-                            BF nu0init;
-                            if (mu1.getValue()==mgr.constantFalse()) {
-                                if (intermediateResults.sub[j]->prefixPointY_infty_0_infty.size()>i) {
-                                    std::cout << "Recycling prefixPointY_infty_0_infty!\n";
-                                    nu0init = intermediateResults.sub[j]->prefixPointY_infty_0_infty[i] & nu2.getValue();
-                                } else if ((nu2.getValue()==mgr.constantTrue()) && intermediateResults.sub[j]->prefixPointY_0_0_infty.size()>i) {
-                                    nu0init = intermediateResults.sub[j]->prefixPointY_0_0_infty[i] & nu2.getValue();
-                                    std::cout << "Recycling prefixPointY_0_0_infty!\n";
-                                } else {
-                                    nu0init = nu2.getValue();
-                                }
-                            } else {
-                                nu0init = nu2.getValue();
-                            }
+                            BF nu0init = intermediateResults.sub[j]->sub[i].recycler.find(nu2.getValue(),mu1.getValue());
                             BFFixedPoint nu0(nu0init);
                             for (;!nu0.isFixedPointReached();) {
 
@@ -728,42 +812,23 @@ protected:
                                 nu0.update(safetyEnv.Implies(foundPaths).ExistAbstract(varCubePostOutput).UnivAbstract(varCubePostInput));
                             }
 
-
                             // Update the set of positions that are winning for some liveness assumption
                             goodForAnyLivenessAssumption |= nu0.getValue();
 
                             // Update data
-                            if (mu1.getValue()==mgr.constantFalse()) {
-                                if (intermediateResults.sub[j]->prefixPointY_infty_0_infty.size()<=i)
-                                    intermediateResults.sub[j]->prefixPointY_infty_0_infty.push_back(nu0.getValue());
-                                else
-                                    intermediateResults.sub[j]->prefixPointY_infty_0_infty[i] = nu0.getValue();
-                                if (nu2.getValue()==mgr.constantTrue()) {
-                                    if (intermediateResults.sub[j]->prefixPointY_0_0_infty.size()<=i)
-                                        intermediateResults.sub[j]->prefixPointY_0_0_infty.push_back(nu0.getValue());
-                                    else
-                                        intermediateResults.sub[j]->prefixPointY_0_0_infty[i] = nu0.getValue();
-                                }
-                            }
+                            intermediateResults.sub[j]->sub[i].recycler.insert(nu2.getValue(),mu1.getValue(),nu0.getValue());
 
                         }
 
                         // Update the moddle fixed point
                         mu1.update(goodForAnyLivenessAssumption);
-                        if (nu2.getValue()==mgr.constantTrue()) {
-                            intermediateResults.sub[j]->prefixPointY_0_infty_infty_valid = true;
-                            intermediateResults.sub[j]->prefixPointY_0_infty_infty = mu1.getValue();
-                        }
                     }
 
                     // Update the set of positions that are winning for any goal for the outermost fixed point
                     nextContraintsForGoals &= mu1.getValue();
                     //BF_newDumpDot(*this,nextContraintsForGoals,NULL,"/tmp/inter.dot");
                     //throw 23;
-                    if (nu2.getValue()==mgr.constantTrue()) {
-                        intermediateResults.sub[j]->prefixPointY_0_infty_infty = mu1.getValue();
-                        intermediateResults.sub[j]->prefixPointY_0_infty_infty_valid = true;
-                    }
+                    intermediateResults.sub[j]->recycler.insert(nu2.getValue(),mu1.getValue());
                 }
             }
             if (nu2.getValue() == nextContraintsForGoals) {

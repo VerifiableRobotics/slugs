@@ -104,7 +104,7 @@ std::string GR1Context::bddSemanticHash(BF bdd) {
             delete[] it->second;
         }
         for (auto it = cache.begin();it!=cache.end();it++) {
-            delete it->second;
+            delete[] it->second;
         }
     }
 
