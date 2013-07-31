@@ -1,6 +1,6 @@
 # QMake Build file
 BDDFLAGS = $$system(gcc BFAbstractionLibrary/compilerOptionGenerator.c -o /tmp/BFAbstractionCompilerOptionsProducer-$$(USER);/tmp/BFAbstractionCompilerOptionsProducer-$$(USER))
-DEFINES += USE_CUDD
+DEFINES += USE_CUDD NDEBUG
 CFLAGS += -g -fpermissive
 QMAKE_CFLAGS_RELEASE += -g \
     $$BDDFLAGS
