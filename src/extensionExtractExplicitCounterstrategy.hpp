@@ -105,7 +105,7 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
         for (unsigned int j=0;j<livenessGuarantees.size()+1;j++) {
             strategy[j] = mgr.constantFalse();
         }
-        uint nr = 0;
+        unsigned int nr = 0;
         for (auto it = strategyDumpingData.begin();it!=strategyDumpingData.end();it++) {
             if (boost::get<0>(*it) == i) {
                 //Have to cover each guarantee (since the winning strategy depends on which guarantee is being pursued)
