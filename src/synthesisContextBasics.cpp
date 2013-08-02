@@ -117,8 +117,6 @@ GR1Context::GR1Context(std::list<std::string> &filenames) {
     }
 
     // Compute VarVectors and VarCubes
-    std::vector<BF> postOutputVars;
-    std::vector<BF> postInputVars;
     std::vector<BF> preOutputVars;
     std::vector<BF> preInputVars;
     for (unsigned int i=0;i<variables.size();i++) {
@@ -150,6 +148,7 @@ GR1Context::GR1Context(std::list<std::string> &filenames) {
     varCubePreInput = mgr.computeCube(preInputVars);
     varCubePreOutput = mgr.computeCube(preOutputVars);
     varCubePre = mgr.computeCube(preVars);
+    varCubePost = mgr.computeCube(postVars);
 
     // Check if variable names have been used twice
     std::set<std::string> variableNameSet(variableNames.begin(),variableNames.end());

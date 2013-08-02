@@ -59,12 +59,11 @@ public:
     for (;!mu2.isFixedPointReached();) {
 
         // To extract a counterstrategy in case of unrealizability, we need to store a sequence of 'preferred' transitions in the
-        // game structure. These preferred transitions only need to be computed during the last execution of the outermost
+        // game structure. These preferred transitions only need to be computed during the last execution of the middle
         // greatest fixed point. Since we don't know which one is the last one, we store them in every iteration,
         // so that after the last iteration, we obtained the necessary data. Before any new iteration, we need to
-        // clear the old data.
-        
-        strategyDumpingData.clear();
+        // store the old date so that it can be discarded if needed
+        std::vector<boost::tuple<unsigned int, unsigned int,BF> > strategyDumpingDataOld = strategyDumpingData;
 
         // Iterate over all of the liveness guarantees. Put the results into the variable 'nextContraintsForGoals' for every
         // goal. Then, after we have iterated over the goals, we can update mu2.
@@ -79,6 +78,9 @@ public:
             // Compute the middle least-fixed point (called 'Y' in the GR(1) paper)
             BFFixedPoint nu1(mgr.constantTrue());
             for (;!nu1.isFixedPointReached();) {
+
+                // New middle iteration has begun -> revert to the data before the first iteration.
+                strategyDumpingData = strategyDumpingDataOld;
 
                 // Update the set of transitions that lead closer to the goal.
                 livetransitions &= nu1.getValue().SwapVariables(varVectorPre,varVectorPost);
@@ -98,14 +100,14 @@ public:
 
                         // Compute a set of paths that are safe to take - used for the enforceable predecessor operator ('cox')
                         foundPaths = livetransitions & (mu0.getValue().SwapVariables(varVectorPre,varVectorPost) | (livenessAssumptions[i]));
-                        foundPaths = safetyEnv & safetySys.Implies(foundPaths);
+                        foundPaths = (safetyEnv & safetySys.Implies(foundPaths)).UnivAbstract(varCubePostOutput);
 
                         // Dump the paths that we just found into 'strategyDumpingData' - store the current goal
                         // with the BDD
                         strategyDumpingData.push_back(boost::make_tuple(i,j,foundPaths));
 
                         // Update the inner-most fixed point with the result of applying the enforcable predecessor operator
-                        mu0.update(foundPaths.UnivAbstract(varCubePostOutput).ExistAbstract(varCubePostInput));
+                        mu0.update(foundPaths.ExistAbstract(varCubePostInput));
                     }
 
                     // Update the set of positions that are winning for some liveness assumption

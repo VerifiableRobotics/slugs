@@ -43,8 +43,11 @@ protected:
     BFVarCube varCubePreInput;
     BFVarCube varCubePreOutput;
     BFVarCube varCubePre;
+    BFVarCube varCubePost;
     std::vector<BF> preVars;
     std::vector<BF> postVars;
+    std::vector<BF> postInputVars;
+    std::vector<BF> postOutputVars;
     //@}
 
     //@{
