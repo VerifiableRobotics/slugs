@@ -38,7 +38,7 @@ imageData = pngfile.getdata()
 # =============================================================
 # Locate "inactive reagions" (Doors, Pick-up zones, drop zones, etc.)
 # =============================================================
-nonFeatureColors = set([0,7])
+nonFeatureColors = set([0,1])
 assigned = [] # Which parts of the workspace have been assigned some "meaning" already?
 for y in xrange(0,ysize):
     assigned.append([])
@@ -75,8 +75,20 @@ for y in xrange(0,ysize):
             floodFill(x,y,elements,imageData[y*xsize+x])
             actionZones.append((imageData[y*xsize+x],elements))
 
-print "ActionZones: "
+
+# Merge zones with the same number >= 2 so that they appear as one
+groupedZones = {}
 for (a,b) in actionZones:
+    groupedZones[a] = []
+for (a,b) in actionZones:
+    groupedZones[a] += b
+actionZones = [(a,b) for (a,b) in actionZones if a<=1]+[(a,groupedZones[a]) for a in groupedZones.keys() if a>=2]
+
+
+print "ActionZones: "
+colorsUsed = set([])
+for (a,b) in actionZones:
+    colorsUsed.add(a)
     print " - "+str(a)+": "+" ".join([str(c) for c in b])
 
 # =============================================================
@@ -85,9 +97,9 @@ for (a,b) in actionZones:
 deliveries = []
 doors = []
 for (a,b) in actionZones:
-    if (a==6):
-        doors.append(b)
-    elif (a>=14) and (((a-14)%6)==0):
+    if ((a%2)==0) and (not (a+1 in colorsUsed)):
+        doors.append((a,b))
+    elif (a>=2) and ((a%2)==0):
         deliveries.append((a,b))
 
 # =============================================================
@@ -275,7 +287,7 @@ slugsFile.write("1\n")
 slugsFile.write("\n[SYS_TRANS]\n")
 for y in xrange(0,ysize):
     for x in xrange(0,xsize):
-        if imageData[y*xsize+x]==0:
+        if imageData[y*xsize+x]==1:
             # Forbidden zone!!!!!!
             slugsFile.write("| ! "+encodeXPrimeValue(x)+" ! "+encodeYPrimeValue(y)+"\n")
             
@@ -287,79 +299,129 @@ slugsFile.write("\n[SYS_TRANS]\n| ! left' ! right'\n| ! up' ! down'\n")
 
 
 # =============================================================
-# Always eventually do not obstruct a door
+# Work on the properties under concern
 # =============================================================
-allDoors = []
-for d in doors:
-    allDoors += d
-slugsFile.write("\n[SYS_LIVENESS]\n")
-for i in xrange(0,len(allDoors)-1):
-    slugsFile.write("& ")
-for i in xrange(0,len(allDoors)):
-    (a,b) = allDoors[i]
-    if i>0:
-        slugsFile.write(" ")
-    slugsFile.write("| ! "+encodeXValue(a)+" ! "+encodeYValue(b))
-slugsFile.write("\n\n")
+for activeColor in xrange(2,256,2):
 
+    if activeColor in colorsUsed:
+        slugsFile.write("\n#INCREMENTAL: Color"+str(activeColor)+"\n\n")
 
-# =============================================================
-# Bring stuff from A to B whenever requested to do so!
-# =============================================================
-for i,(a,pickupZones) in enumerate(deliveries):
-    slugsFile.write("\n[SYS_INIT]\n! pendingdelivery"+str(i)+"\n! deliverypickedup"+str(i)+"\n\n[SYS_TRANS]\n")
+    if activeColor in colorsUsed and not activeColor+1 in colorsUsed:
 
-    deliveryZoneNumber = a+1
-    deliveryZones = None
-    for (a,b) in actionZones:
-        if a==deliveryZoneNumber:
-            if deliveryZones!=None:
-                print >>sys.stderr, "Error: Non-continuous delivery zone: "+str(a)
-                sys.exit(1)
-            deliveryZones = b
+        # =============================================================
+        # Always eventually do not obstruct a door - for every door individually
+        # =============================================================
+        allDoors = []
+        for (color,d) in doors:
+            if (color==activeColor):
+                allDoors += d
+        slugsFile.write("\n[SYS_LIVENESS]\n")
+        for i in xrange(0,len(allDoors)-1):
+            slugsFile.write("& ")
+        for i in xrange(0,len(allDoors)):
+            (a,b) = allDoors[i]
+            if i>0:
+                slugsFile.write(" ")
+            slugsFile.write("| ! "+encodeXValue(a)+" ! "+encodeYValue(b))
+        slugsFile.write("\n\n")
 
-    # PendingDelivery is updated correctly (deliveries only get counted after they have been registered for simplicity
-    slugsFile.write("| | pendingdelivery"+str(i)+" ! pendingdelivery"+str(i)+"' deliveryrequest"+str(i)+"\n")
-    slugsFile.write("| | pendingdelivery"+str(i)+" pendingdelivery"+str(i)+"' ! deliveryrequest"+str(i)+"\n")
-    slugsFile.write("| | ! pendingdelivery"+str(i)+" pendingdelivery"+str(i)+"' drop'\n")
-    slugsFile.write("| | ! pendingdelivery"+str(i)+" pendingdelivery"+str(i)+"' deliverypickedup"+str(i)+"\n")
-    slugsFile.write("| | ! pendingdelivery"+str(i)+" pendingdelivery"+str(i)+" ")
-    slugsFile.write("| "*len(deliveryZones))
-    for (a,b) in deliveryZones:
-        slugsFile.write("& "+encodeXPrimeValue(a)+" "+encodeYPrimeValue(b)+" ")
-    slugsFile.write("0\n")
-    slugsFile.write("| | ! pendingdelivery"+str(i)+" ! pendingdelivery"+str(i)+"' | ! drop' | ! deliverypickedup"+str(i)+" ! ")
-    slugsFile.write("| "*len(deliveryZones))
-    for (a,b) in deliveryZones:
-        slugsFile.write("& "+encodeXPrimeValue(a)+" "+encodeYPrimeValue(b)+" ")
-    slugsFile.write("0\n")
+        # =============================================================
+        # Never walk towards a close door
+        # =============================================================
+        slugsFile.write("\n[SYS_TRANS]\n")
+        for doorNum,doorTuple in enumerate(doors):
+            if doorTuple[0]==activeColor:   
+                for (a,b) in doorTuple[1]:
+                    door = doorTuple[1]
+                    candidates = []
+                    if a>0 and not (a-1,b) in door:
+                        candidates.append((a-1,b,"right"))
+                    if a<(xsize-1) and not (a+1,b) in door:
+                        candidates.append((a+1,b,"left"))
+                    if b>0 and not (a,b-1) in door:
+                        candidates.append((a,b-1,"down"))
+                    if b<(ysize-1) and not (a,b+1) in door:
+                        candidates.append((a,b+1,"up"))
+                    if a>0 and b>0 and not (a-1,b-1) in door:
+                        candidates.append((a-1,b-1,"& right down"))
+                    if a>0 and b<(ysize-1) and not (a-1,b+1) in door:
+                        candidates.append((a-1,b-1,"& right up"))
+                    if a<(xsize-1) and b>0 and not (a+1,b-1) in door:
+                        candidates.append((a-1,b-1,"& left down"))
+                    if a<(xsize-1) and b<(ysize-1) and not (a+1,b+1) in door:
+                        candidates.append((a-1,b-1,"& left up"))
+                    for (a,b,cond) in candidates:
+                        slugsFile.write("| | | ! door" + str(doorNum)+ " ! "+cond+" ! "+encodeXValue(a)+" ! "+encodeYValue(b)+"\n")
+        slugsFile.write("\n\n")
 
-    # Picked up is updated correctly
-    slugsFile.write("| | deliverypickedup"+str(i)+" deliverypickedup"+str(i)+"' | ! pickup' ! ")
-    slugsFile.write("| "*len(pickupZones))
-    for (a,b) in pickupZones:
-        slugsFile.write("& "+encodeXPrimeValue(a)+" "+encodeYPrimeValue(b)+" ")
-    slugsFile.write("0\n")
-    slugsFile.write("| | deliverypickedup"+str(i)+" ! deliverypickedup"+str(i)+"' & pickup' ")
-    slugsFile.write("| "*len(pickupZones))
-    for (a,b) in pickupZones:
-        slugsFile.write("& "+encodeXPrimeValue(a)+" "+encodeYPrimeValue(b)+" ")
-    slugsFile.write("0\n")
-    slugsFile.write("| | ! deliverypickedup"+str(i)+" deliverypickedup"+str(i)+"' drop'\n")
-    slugsFile.write("| | ! deliverypickedup"+str(i)+" ! deliverypickedup"+str(i)+"' ! drop'\n")
-    
-    # Drop is only allowed at the target position
-    slugsFile.write("| | ! deliverypickedup"+str(i)+" ! drop' ")
-    slugsFile.write("| "*len(deliveryZones))
-    for (a,b) in deliveryZones:
-        slugsFile.write("& "+encodeXPrimeValue(a)+" "+encodeYPrimeValue(b)+" ")
-    slugsFile.write("0\n")
+        slugsFile.write("\n[ENV_LIVENESS]\n")
+        for doorNum,doorTuple in enumerate(doors):
+            if doorTuple[0]==activeColor:   
+                slugsFile.write("! door" + str(doorNum)+"\n")
+        
+    if activeColor in colorsUsed and activeColor+1 in colorsUsed:
 
-    # No pickup until dropped
-    slugsFile.write("| ! deliverypickedup"+str(i)+" ! pickup'\n")
+        # =============================================================
+        # Bring stuff from A to B whenever requested to do so!
+        # =============================================================
+        for i,(a,pickupZones) in enumerate(deliveries):
+            if a==activeColor:
+                slugsFile.write("\n[SYS_INIT]\n! pendingdelivery"+str(i)+"\n! deliverypickedup"+str(i)+"\n\n[SYS_TRANS]\n")
 
-    # Requests are always satisfied -- Crying for more immediately may be ignored.
-    slugsFile.write("\n[SYS_LIVENESS]\n! pendingdelivery"+str(i)+"'\n")
+                deliveryZoneNumber = a+1
+                deliveryZones = None
+                for (a,b) in actionZones:
+                    if a==deliveryZoneNumber:
+                        if deliveryZones!=None:
+                            print >>sys.stderr, "Error: Non-continuous delivery zone: "+str(a)
+                            sys.exit(1)
+                        deliveryZones = b
+
+                print "PI: "+str(pickupZones)
+                print "DE: "+str(deliveryZones)
+
+                # PendingDelivery is updated correctly (deliveries only get counted after they have been registered for simplicity
+                slugsFile.write("| | pendingdelivery"+str(i)+" ! pendingdelivery"+str(i)+"' deliveryrequest"+str(i)+"\n")
+                slugsFile.write("| | pendingdelivery"+str(i)+" pendingdelivery"+str(i)+"' ! deliveryrequest"+str(i)+"\n")
+                slugsFile.write("| | ! pendingdelivery"+str(i)+" pendingdelivery"+str(i)+"' drop'\n")
+                slugsFile.write("| | ! pendingdelivery"+str(i)+" pendingdelivery"+str(i)+"' deliverypickedup"+str(i)+"\n")
+                slugsFile.write("| | ! pendingdelivery"+str(i)+" pendingdelivery"+str(i)+" ")
+                slugsFile.write("| "*len(deliveryZones))
+                for (a,b) in deliveryZones:
+                    slugsFile.write("& "+encodeXPrimeValue(a)+" "+encodeYPrimeValue(b)+" ")
+                slugsFile.write("0\n")
+                slugsFile.write("| | ! pendingdelivery"+str(i)+" ! pendingdelivery"+str(i)+"' | ! drop' | ! deliverypickedup"+str(i)+" ! ")
+                slugsFile.write("| "*len(deliveryZones))
+                for (a,b) in deliveryZones:
+                    slugsFile.write("& "+encodeXPrimeValue(a)+" "+encodeYPrimeValue(b)+" ")
+                slugsFile.write("0\n")
+
+                # Picked up is updated correctly
+                slugsFile.write("| | deliverypickedup"+str(i)+" deliverypickedup"+str(i)+"' | ! pickup' ! ")
+                slugsFile.write("| "*len(pickupZones))
+                for (a,b) in pickupZones:
+                    slugsFile.write("& "+encodeXPrimeValue(a)+" "+encodeYPrimeValue(b)+" ")
+                slugsFile.write("0\n")
+                slugsFile.write("| | deliverypickedup"+str(i)+" ! deliverypickedup"+str(i)+"' & pickup' ")
+                slugsFile.write("| "*len(pickupZones))
+                for (a,b) in pickupZones:
+                    slugsFile.write("& "+encodeXPrimeValue(a)+" "+encodeYPrimeValue(b)+" ")
+                slugsFile.write("0\n")
+                slugsFile.write("| | ! deliverypickedup"+str(i)+" deliverypickedup"+str(i)+"' drop'\n")
+                slugsFile.write("| | ! deliverypickedup"+str(i)+" ! deliverypickedup"+str(i)+"' ! drop'\n")
+                
+                # Drop is only allowed at the target position
+                slugsFile.write("| | ! deliverypickedup"+str(i)+" ! drop' ")
+                slugsFile.write("| "*len(deliveryZones))
+                for (a,b) in deliveryZones:
+                    slugsFile.write("& "+encodeXPrimeValue(a)+" "+encodeYPrimeValue(b)+" ")
+                slugsFile.write("0\n")
+
+                # No pickup until dropped
+                slugsFile.write("| ! deliverypickedup"+str(i)+" ! pickup'\n")
+
+                # Requests are always satisfied -- Crying for more immediately may be ignored.
+                slugsFile.write("\n[SYS_LIVENESS]\n! pendingdelivery"+str(i)+"'\n")
 
 slugsFile.close()
         

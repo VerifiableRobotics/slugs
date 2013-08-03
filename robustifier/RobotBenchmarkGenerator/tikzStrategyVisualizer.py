@@ -74,7 +74,9 @@ for y in xrange(0,ysize):
             actionZones.append((imageData[y*xsize+x],elements))
 
 # print "ActionZones: "
-# for (a,b) in actionZones:
+colorsUsed = set([])
+for (a,b) in actionZones:
+    colorsUsed.add(a)
 #     print " - "+str(a)+": "+" ".join([str(c) for c in b])
 
 # =============================================================
@@ -83,9 +85,9 @@ for y in xrange(0,ysize):
 deliveries = []
 doors = []
 for (a,b) in actionZones:
-    if (a==6):
+    if ((a%2)==0) and (not (a+1 in colorsUsed)):
         doors.append(b)
-    elif (a>=14) and (((a-14)%6)==0):
+    elif (a>=2) and ((a%2)==0):
         deliveries.append((a,b))
 
 # =============================================================
@@ -97,7 +99,7 @@ def printBasicTikzFigure():
         for y in xrange(0,ysize):
             print "\\draw[line width=0.2pt,color=black!50!white,fill=black!10!white] ("+str(x)+","+str(y)+") rectangle ("+str(x+1)+","+str(y+1)+");"
     # Walls
-            if imageData[y*xsize+x]==0:
+            if imageData[y*xsize+x]==1:
                 print "\\fill[color=black!50!white,line width=0.2pt,fill=black] ("+str(x)+","+str(y)+") rectangle ("+str(x+1)+","+str(y+1)+");"
     
     
@@ -250,9 +252,9 @@ for preVarCombination in xrange(0,(1 << len(vars))):
             print v,
         print "$}"
 
-        print "General plot:\n\n"
+        # print "General plot:\n\n"
 
-        print "\\begin{tikzpicture}[yscale=-1]"
+        print "\\resizebox{0.99\\linewidth}{!}{\\begin{tikzpicture}[yscale=-1]"
         printBasicTikzFigure()
         for (stateNr,xpos,ypos,xmove,ymove,successors) in preStatesTotal[preVarCombination]:
             if (xmove==0) and (ymove==0):
@@ -260,7 +262,7 @@ for preVarCombination in xrange(0,(1 << len(vars))):
         for (stateNr,xpos,ypos,xmove,ymove,successors) in preStatesTotal[preVarCombination]:
             if not ((xmove==0) and (ymove==0)):
                 print "\\draw[->,thick,color=red] ("+str(xpos+0.5)+","+str(ypos+0.5)+") -- ("+str(xpos+xmove*0.92+0.5)+","+str(ypos+ymove*0.92+0.5)+");"
-        print "\\end{tikzpicture}"
+        print "\\end{tikzpicture}}"
 
         
     

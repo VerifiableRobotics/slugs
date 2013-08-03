@@ -43,6 +43,7 @@
 #include "extensionRoboticsSemantics.hpp"
 #include "extensionWeakenSafetyAssumptions.hpp"
 #include "extensionFixedPointRecycling.hpp"
+#include "extensionInteractiveStrategy.hpp"
 
 //===================================================================================
 // List of command line arguments
@@ -56,7 +57,8 @@ const char *commandLineArguments[] = {
     "--counterStrategy","Computes the environment counterstrategy",
     "--simpleRecovery","Adds transitions to the system implementation that allow it to recover from sparse environment safety assumption faults in many cases",
     "--experimentalIncrementalSynthesis","A very experimental implementation of incremental synthesis for sequences of changing GR(1) specifications. By no means stable yet!",
-    "--fixedPointRecycling","Modifies the realizability checking algorithm to recycle previous innermost fixed points. Realizability checking should typically become faster this way."
+    "--fixedPointRecycling","Modifies the realizability checking algorithm to recycle previous innermost fixed points. Realizability checking should typically become faster this way.",
+    "--interactiveStrategy","Opens an interactive shell after realizability checking to allow examining the properties of the generated strategy."
 };
 
 //===================================================================================
@@ -99,7 +101,9 @@ OptionCombination optionCombinations[] = {
     OptionCombination("--fixedPointRecycling --onlyRealizability --sysInitRoboticsSemantics",XRoboticsSemantics<XFixedPointRecycling<GR1Context> >::makeInstance),
     OptionCombination("--computeWeakenedSafetyAssumptions --fixedPointRecycling --onlyRealizability",XComputeWeakenedSafetyAssumptions<XFixedPointRecycling<GR1Context> >::makeInstance),
     OptionCombination("--computeWeakenedSafetyAssumptions --fixedPointRecycling --onlyRealizability --sysInitRoboticsSemantics",XComputeWeakenedSafetyAssumptions<XRoboticsSemantics<XFixedPointRecycling<GR1Context> > >::makeInstance),
-    OptionCombination("--computeCNFFormOfTheSpecification --fixedPointRecycling --sysInitRoboticsSemantics",XComputeCNFFormOfTheSpecification<XFixedPointRecycling<GR1Context> >::makeInstance)
+    OptionCombination("--computeCNFFormOfTheSpecification --fixedPointRecycling --sysInitRoboticsSemantics",XComputeCNFFormOfTheSpecification<XFixedPointRecycling<GR1Context> >::makeInstance),
+    OptionCombination("--interactiveStrategy",XInteractiveStrategy<GR1Context>::makeInstance)
+
     // TODO: Combination between BiasForAction and FixedPointRecycling is not supported yet but would make sense
 };
 
