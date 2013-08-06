@@ -153,7 +153,7 @@ public:
 
             // Switching goals
             while (!(remainingTransitions.isFalse())) {
-                BF newCombination = determinize(currentPossibilities & remainingTransitions,postVars);
+                BF newCombination = determinize(remainingTransitions,postVars);
 
                 // Jump as much forward  in the liveness guarantee list as possible ("stuttering avoidance")
                 unsigned int nextLivenessGuarantee = current.second;
