@@ -184,11 +184,12 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
             while (!(remainingTransitions & safetySys).isFalse()) {
 
                 BF newCombination;
-
-                if ((remainingTransitions & livenessAssumptions[current.second.first]).isFalse()) {
-                    newCombination = determinize(remainingTransitions & safetySys, postOutputVars);
+                BF safeTransition = remainingTransitions & safetySys;
+                BF testerForLivenessAssumptions = safeTransition & livenessAssumptions[current.second.first];
+                if (testerForLivenessAssumptions.isFalse()) {
+                    newCombination = determinize(safeTransition, postOutputVars);
                 } else {
-                    newCombination = determinize((remainingTransitions & safetySys & livenessAssumptions[current.second.first]),postOutputVars);
+                    newCombination = determinize(testerForLivenessAssumptions,postOutputVars);
                 }
 
                 // Jump as much forward  in the liveness assumption list as possible ("stuttering avoidance")
