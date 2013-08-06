@@ -212,7 +212,7 @@ public:
                         std::cout << "To: \n";
                         BF to = mgr.constantTrue();
                         for (unsigned int i=0;i<variables.size();i++) {
-                            if ((variableTypes[i]==PostInput)) {
+                            if (variableTypes[i]==PostInput) {
                                 std::cout << " - " << variableNames[i] << ": ";
                                 std::cout.flush();
                                 int value;
@@ -244,7 +244,7 @@ public:
                             transition = determinize(transition,postOutputVars);
 
                             for (unsigned int i=0;i<variables.size();i++) {
-                                if ((variableTypes[i]==PostOutput)) {
+                                if (variableTypes[i]==PostOutput) {
                                     if ((variables[i] & transition).isFalse()) {
                                         std::cout << " - " << variableNames[i] << " = 0\n";
                                     } else {
