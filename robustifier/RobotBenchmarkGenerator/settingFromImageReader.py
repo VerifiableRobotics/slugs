@@ -147,20 +147,12 @@ def encodeYPrimeValue(x):
 # Input and Output
 slugsFile = open(outputFileBasis+".slugsin","w")
 slugsFile.write("[OUTPUT]\nleft\nright\nup\ndown\npickup\ndrop\n")
-for i in xrange(0,len(deliveries)):
-    slugsFile.write("pendingdelivery"+str(i)+"\n")
-for i in xrange(0,len(deliveries)):
-    slugsFile.write("deliverypickedup"+str(i)+"\n")
 
 slugsFile.write("\n[INPUT]\n")
 for i in xrange(0,nofXCoordinateBits):
     slugsFile.write("x"+str(i)+"\n")
 for i in xrange(0,nofYCoordinateBits):
     slugsFile.write("y"+str(i)+"\n")
-for i in xrange(0,len(deliveries)):
-    slugsFile.write("deliveryrequest"+str(i)+"\n")
-for i in xrange(0,len(doors)):
-    slugsFile.write("door"+str(i)+"\n")
 
 slugsFile.write("\n[ENV_INIT]\n")
 for i in xrange(0,nofXCoordinateBits):
@@ -308,6 +300,13 @@ for activeColor in xrange(2,256,2):
 
     if activeColor in colorsUsed and not activeColor+1 in colorsUsed:
 
+        # Write input bit
+        for doorNum,doorTuple in enumerate(doors):
+            if doorTuple[0]==activeColor:   
+                slugsFile.write("\n\n[INPUT]\n")
+                slugsFile.write("door"+str(doorNum)+"\n\n")
+                slugsFile.write("\n[ENV_INIT]\n! door"+str(doorNum)+"\n")
+
         # =============================================================
         # Always eventually do not obstruct a door - for every door individually
         # =============================================================
@@ -366,6 +365,12 @@ for activeColor in xrange(2,256,2):
         # =============================================================
         for i,(a,pickupZones) in enumerate(deliveries):
             if a==activeColor:
+                slugsFile.write("\n\n[INPUT]\n")
+                slugsFile.write("deliveryrequest"+str(i)+"\n")
+                slugsFile.write("\n\n[OUTPUT]\n")
+                slugsFile.write("pendingdelivery"+str(i)+"\n")
+                slugsFile.write("deliverypickedup"+str(i)+"\n")
+                slugsFile.write("\n[ENV_INIT]\n! deliveryrequest"+str(i)+"\n")
                 slugsFile.write("\n[SYS_INIT]\n! pendingdelivery"+str(i)+"\n! deliverypickedup"+str(i)+"\n\n[SYS_TRANS]\n")
 
                 deliveryZoneNumber = a+1
