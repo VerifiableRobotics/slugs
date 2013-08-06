@@ -36,7 +36,16 @@ protected:
         // The greatest fixed point - called "Z" in the GR(1) synthesis paper
         BFFixedPoint nu2(mgr.constantTrue());
 
-        BF recyclingInnermostFixedPoints[livenessGuarantees.size()][livenessAssumptions.size()];
+        //std::vector<std::vector<BF>> recyclingInnermostFixedPoints;
+        //
+        //std::vector<std::vector<BF>> recyclingInnermostFixedPoints[livenessGuarantees.size()][livenessAssumptions.size()];
+        unsigned int m = livenessAssumptions.size();
+        unsigned int n = livenessGuarantees.size();
+        std::vector<std::vector<BF>> recyclingInnermostFixedPoints(n);
+        for (unsigned int i = 0; i < n; i++) {
+            recyclingInnermostFixedPoints[i].resize(m);
+        }
+        
         bool firstOutermost = true;
 
         // Iterate until we have found a fixed point
