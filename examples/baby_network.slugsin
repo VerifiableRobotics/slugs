@@ -1,0 +1,100 @@
+[INPUT]
+before_update
+pkt_in
+src_Auth
+src_Guest
+
+[OUTPUT]
+port_I
+port_START
+port_WORLD
+port_DROP
+update
+pkt_out
+mem_WORLD
+
+[ENV_TRANS]
+| update before_update'
+| before_update ! before_update'
+
+| ! & pkt_in ! pkt_out pkt_in'
+| ! & pkt_in pkt_out ! pkt_in'
+
+| ! pkt_in' | src_Auth' src_Guest'
+| pkt_in' ! | src_Auth' src_Guest'
+| ! src_Auth' ! src_Guest'
+ 
+| ! & & pkt_in src_Guest ! pkt_out src_Guest'
+| ! & & pkt_in src_Auth ! pkt_out src_Auth'
+
+[ENV_LIVENESS]
+| ! update ! before_update'
+
+[ENV_INIT]
+before_update
+! src_Auth
+! src_Guest
+! pkt_in
+
+
+
+[SYS_TRANS]
+
+| | | port_I port_START port_WORLD port_DROP
+
+| ! port_I & & ! port_START ! port_WORLD ! port_DROP
+| ! port_START & & ! port_I ! port_WORLD ! port_DROP
+| ! port_WORLD & & ! port_I ! port_START ! port_DROP
+| ! port_DROP & & ! port_I ! port_START ! port_WORLD
+
+| before_update | ! & port_I mem_WORLD ! port_DROP'
+| before_update | ! & port_I mem_WORLD port_WORLD'
+| before_update | ! & port_I ! mem_WORLD port_DROP'
+| before_update | ! & port_I ! mem_WORLD ! port_WORLD'
+
+| ! before_update | ! & port_I src_Guest port_DROP'
+| ! before_update | ! & port_I src_Guest ! port_WORLD'
+
+
+| ! src_Auth mem_WORLD
+| ! & before_update src_Guest mem_WORLD
+
+| ! port_START | port_START' port_I'
+| ! & ! pkt_in' port_START port_START'
+| ! | port_DROP port_WORLD port_START'
+
+| pkt_out' ! | port_DROP' port_WORLD'
+| ! pkt_out' | port_DROP' port_WORLD'
+
+| ! update update'
+
+| ! mem_WORLD ! port_DROP
+| mem_WORLD' ! & mem_WORLD ! port_WORLD
+
+
+| ! & mem_WORLD ! update ! update'
+
+
+[SYS_LIVENESS]
+update
+| ! pkt_in pkt_out'
+| ! mem_WORLD port_WORLD'
+
+
+[SYS_INIT]
+! update
+! pkt_out
+! mem_WORLD
+port_START
+! port_I
+! port_WORLD
+! port_DROP
+
+
+
+
+
+
+
+
+
