@@ -113,7 +113,6 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
                 strategy[boost::get<1>(*it)] |= boost::get<2>(*it).UnivAbstract(varCubePostOutput) & !(strategy[boost::get<1>(*it)].ExistAbstract(varCubePost));
             }
         }
-
         positionalStrategiesForTheIndividualGoals[i] = strategy;
     }
     
@@ -239,7 +238,7 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
     
     BF newCombination = determinize(targetPositionCandidateSet, postVars) ;
     
-    newCombination  = newCombination.ExistAbstract(varCubePreOutput);
+    newCombination  = newCombination.ExistAbstract(varCubePreOutput).SwapVariables(varVectorPre,varVectorPost);
     
     
     
@@ -256,7 +255,7 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
         outputStream << "State " << tn << " with rank (" << current.second.first << "," << current.second.second << ") -> <";
         bool first = true;
         for (unsigned int i=0;i<variables.size();i++) {
-            if (variableTypes[i] < PreOutput) {
+            if (variableTypes[i] == PreInput) {
                 if (first) {
                     first = false;
                 } else {
