@@ -135,7 +135,7 @@ public:
                     }
                     std::cout << "- The transition is a goal transition for the following liveness assumptions: ";
                     bool foundOne = false;
-                    for (uint i=0;i<livenessAssumptions.size();i++) {
+                    for (unsigned int i=0;i<livenessAssumptions.size();i++) {
                         if (!(livenessAssumptions[i] & from & to).isFalse()) {
                             if (foundOne) std::cout << ", ";
                             foundOne = true;
@@ -146,7 +146,7 @@ public:
                     std::cout << std::endl;
                     std::cout << "- The transition is a goal transition for the following liveness guarantees: ";
                     foundOne = false;
-                    for (uint i=0;i<livenessGuarantees.size();i++) {
+                    for (unsigned int i=0;i<livenessGuarantees.size();i++) {
                         if (!(livenessGuarantees[i] & from & to).isFalse()) {
                             if (foundOne) std::cout << ", ";
                             foundOne = true;
@@ -159,7 +159,7 @@ public:
                     // Analyse if it is part of a possible strategy
                     std::cout << "- The transition is a possible transition in a strategy for the following goals: ";
                     foundOne = false;
-                    for (uint i=0;i<livenessGuarantees.size();i++) {
+                    for (unsigned int i=0;i<livenessGuarantees.size();i++) {
                         if (!(positionalStrategiesForTheIndividualGoals[i] & from & to).isFalse()) {
                             if (foundOne) std::cout << ", ";
                             foundOne = true;
@@ -212,7 +212,7 @@ public:
                         std::cout << "To: \n";
                         BF to = mgr.constantTrue();
                         for (unsigned int i=0;i<variables.size();i++) {
-                            if ((variableTypes[i]==PostInput)) {
+                            if (variableTypes[i]==PostInput) {
                                 std::cout << " - " << variableNames[i] << ": ";
                                 std::cout.flush();
                                 int value;
@@ -244,7 +244,7 @@ public:
                             transition = determinize(transition,postOutputVars);
 
                             for (unsigned int i=0;i<variables.size();i++) {
-                                if ((variableTypes[i]==PostOutput)) {
+                                if (variableTypes[i]==PostOutput) {
                                     if ((variables[i] & transition).isFalse()) {
                                         std::cout << " - " << variableNames[i] << " = 0\n";
                                     } else {
@@ -255,7 +255,7 @@ public:
 
                             std::cout << "- The transition is a goal transition for the following liveness assumptions: ";
                             bool foundOne = false;
-                            for (uint i=0;i<livenessAssumptions.size();i++) {
+                            for (unsigned int i=0;i<livenessAssumptions.size();i++) {
                                 if (!(livenessAssumptions[i] & transition).isFalse()) {
                                     if (foundOne) std::cout << ", ";
                                     foundOne = true;
@@ -266,7 +266,7 @@ public:
                             std::cout << std::endl;
                             std::cout << "- The transition is a goal transition for the following liveness guarantees: ";
                             foundOne = false;
-                            for (uint i=0;i<livenessGuarantees.size();i++) {
+                            for (unsigned int i=0;i<livenessGuarantees.size();i++) {
                                 if (!(livenessGuarantees[i] & transition).isFalse()) {
                                     if (foundOne) std::cout << ", ";
                                     foundOne = true;
@@ -279,7 +279,7 @@ public:
                             // Analyse if it is part of a possible strategy
                             std::cout << "- The transition is a possible transition in a strategy for the following goals: ";
                             foundOne = false;
-                            for (uint i=0;i<livenessGuarantees.size();i++) {
+                            for (unsigned int i=0;i<livenessGuarantees.size();i++) {
                                 if (!(positionalStrategiesForTheIndividualGoals[i] & transition).isFalse()) {
                                     if (foundOne) std::cout << ", ";
                                     foundOne = true;

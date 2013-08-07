@@ -148,8 +148,8 @@ public:
             currentPossibilities &= positionalStrategiesForTheIndividualGoals[current.second];
             BF remainingTransitions =
                     (oneStepRecovery)?
-                    (currentPossibilities).ExistAbstract(varCubePre):
-                    (currentPossibilities & safetyEnv).ExistAbstract(varCubePre);
+                    currentPossibilities:
+                    (currentPossibilities & safetyEnv);
 
             // Switching goals
             while (!(remainingTransitions.isFalse())) {
@@ -158,14 +158,14 @@ public:
                 // Jump as much forward  in the liveness guarantee list as possible ("stuttering avoidance")
                 unsigned int nextLivenessGuarantee = current.second;
                 bool firstTry = true;
-                while (((nextLivenessGuarantee != current.second) | firstTry) && !((livenessGuarantees[nextLivenessGuarantee] & newCombination).isFalse())) {
+                while (((nextLivenessGuarantee != current.second) || firstTry) && !((livenessGuarantees[nextLivenessGuarantee] & newCombination).isFalse())) {
                     nextLivenessGuarantee = (nextLivenessGuarantee + 1) % livenessGuarantees.size();
                     firstTry = false;
                 }
 
                 // Mark which input has been captured by this case
                 BF inputCaptured = newCombination.ExistAbstract(varCubePostOutput);
-                newCombination = newCombination.SwapVariables(varVectorPre,varVectorPost);
+                newCombination = newCombination.ExistAbstract(varCubePre).SwapVariables(varVectorPre,varVectorPost);
                 remainingTransitions &= !inputCaptured;
 
                 // Search for newCombination

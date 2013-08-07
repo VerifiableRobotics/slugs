@@ -113,14 +113,12 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
                 strategy[boost::get<1>(*it)] |= boost::get<2>(*it).UnivAbstract(varCubePostOutput) & !(strategy[boost::get<1>(*it)].ExistAbstract(varCubePost));
             }
         }
-        
         positionalStrategiesForTheIndividualGoals[i] = strategy;
     }
     
     // Prepare initial to-do list from the allowed initial states. Select a single initial input valuation.
 
     // TODO: Support for non-special-robotics semantics
-    BF_newDumpDot(*this,winningPositions,"PreInput PreOutput PostInput PostOutput","/tmp/winningPositions.dot");
     BF todoInit = (winningPositions & initEnv & initSys);
     while (!(todoInit.isFalse())) {
         BF concreteState = determinize(todoInit,preVars);
@@ -170,11 +168,13 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
         // Can we enforce a deadlock?
         BF deadlockInput = (currentPossibilities & safetyEnv & !safetySys).UnivAbstract(varCubePostOutput);
         if (deadlockInput!=mgr.constantFalse()) {
-            addDeadlocked(deadlockInput.ExistAbstract(varCubePre), current, bfsUsedInTheLookupTable,  lookupTableForPastStates, outputStream);
+            addDeadlocked(deadlockInput, current, bfsUsedInTheLookupTable,  lookupTableForPastStates, outputStream);
         } else {
 
-            // No deadlock in sight
+            // No deadlock in sight -> Jump to a different liveness guarantee if necessary.
+            while ((currentPossibilities & positionalStrategiesForTheIndividualGoals[current.second.first][current.second.second])==mgr.constantFalse()) current.second.second = (current.second.second + 1) % livenessGuarantees.size();
             currentPossibilities &= positionalStrategiesForTheIndividualGoals[current.second.first][current.second.second];
+            assert(currentPossibilities != mgr.constantFalse());
             BF remainingTransitions = currentPossibilities;
 
             // Choose one next input and stick to it!
@@ -183,13 +183,8 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
             // Switching goals
             while (!(remainingTransitions & safetySys).isFalse()) {
 
-                BF newCombination;
-
-                if ((remainingTransitions & livenessAssumptions[current.second.first]).isFalse()) {
-                    newCombination = determinize(remainingTransitions & safetySys, postOutputVars);
-                } else {
-                    newCombination = determinize((remainingTransitions & safetySys & livenessAssumptions[current.second.first]),postOutputVars);
-                }
+                BF safeTransition = remainingTransitions & safetySys;
+                BF newCombination = determinize(safeTransition, postOutputVars);
 
                 // Jump as much forward  in the liveness assumption list as possible ("stuttering avoidance")
                 unsigned int nextLivenessAssumption = current.second.first;
@@ -201,17 +196,6 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
 
                 //Mark which input has been captured by this case. Use the same input for other successors
                 remainingTransitions &= !newCombination;
-
-                if (nextLivenessAssumption != current.second.second) {
-                    unsigned int found_j_index = 0;
-                    for (unsigned int j=0;j<livenessGuarantees.size();j++) {
-                        if (!(newCombination & !livenessGuarantees[j] & positionalStrategiesForTheIndividualGoals[current.second.first][j]).isFalse()) {
-                            found_j_index = j;
-                            break;
-                        }
-                    }
-                    current.second.second = found_j_index;
-                }
 
                 // We don't need the pre information from the point onwards anymore.
                 newCombination = newCombination.ExistAbstract(varCubePre).SwapVariables(varVectorPre,varVectorPost);
@@ -254,7 +238,7 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
     
     BF newCombination = determinize(targetPositionCandidateSet, postVars) ;
     
-    newCombination  = newCombination.ExistAbstract(varCubePreOutput);
+    newCombination  = newCombination.ExistAbstract(varCubePreOutput).SwapVariables(varVectorPre,varVectorPost);
     
     
     
@@ -271,7 +255,7 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
         outputStream << "State " << tn << " with rank (" << current.second.first << "," << current.second.second << ") -> <";
         bool first = true;
         for (unsigned int i=0;i<variables.size();i++) {
-            if (variableTypes[i] < PreOutput) {
+            if (variableTypes[i] == PreInput) {
                 if (first) {
                     first = false;
                 } else {

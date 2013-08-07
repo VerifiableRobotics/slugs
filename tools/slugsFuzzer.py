@@ -84,7 +84,7 @@ def fuzzOnce():
     out.write("LTLSPEC -- Assumptions\n	( \n		TRUE  ")
     # Init assumptions
     while random.random() < probabilityPerProperty:
-        out.write("  &  []<>("+makeAProperty(apsInput,[])+")\n")
+        out.write("  &  []("+makeAProperty(apsInput,[])+")\n")
     # Safety assumptions
     while random.random() < probabilityPerProperty:
         out.write("  &  []("+makeAProperty(apsInput+apsOutput,apsInput)+")\n")
@@ -96,7 +96,7 @@ def fuzzOnce():
     out.write("LTLSPEC -- Guarantees\n	( \n		TRUE  ")
     # Init assumptions
     while random.random() < probabilityPerProperty:
-        out.write("  &  []<>("+makeAProperty(apsInput+apsOutput,[])+")\n")
+        out.write("  &  []("+makeAProperty(apsInput+apsOutput,[])+")\n")
     # Safety assumptions
     while random.random() < probabilityPerProperty:
         out.write("  &  []("+makeAProperty(apsInput+apsOutput,apsInput+apsOutput)+")\n")
