@@ -25,8 +25,16 @@ protected:
     using T::safetySys;
     using T::strategyDumpingData;
     using T::varCubePostOutput;
+    using T::varCubePre;
     using T::postOutputVars;
     using T::determinize;
+    using T::initEnv;
+    using T::initSys;
+    using T::preVars;
+    using T::postVars;
+    using T::varVectorPre;
+    using T::varVectorPost;
+
 
 public:
     static GR1Context* makeInstance(std::list<std::string> &filenames) {
@@ -54,6 +62,7 @@ public:
         if (realizable) {
 
             BF currentPosition = mgr.constantFalse();
+            unsigned int currentLivenessGuarantee = 0;
 
             while(true) {
 
@@ -62,6 +71,7 @@ public:
                 std::cout.flush();
                 std::string command;
                 std::getline(std::cin,command);
+                if (std::cin.eof()) return;
 
                 // Check the command
                 boost::trim(command);
@@ -291,12 +301,114 @@ public:
 
                         }
                     }
-
-
-
-
-
                 }
+
+                //========================================
+                // Simplified functions to be called from
+                // other tools.
+                //========================================
+                else if (command=="XMAKETRANS") {
+                    std::cout << "\n"; // Get rid of the prompt
+                    BF postInput = mgr.constantTrue();
+                    for (unsigned int i=0;i<variables.size();i++) {
+                        if (variableTypes[i]==PostInput) {
+                            char c;
+                            std::cin >> c;
+                            if (c=='0') {
+                                postInput &= !variables[i];
+                            } else if (c=='1') {
+                                postInput &= variables[i];
+                            } else {
+                                std::cerr << "Error: Illegal XMAKETRANS string given.\n";
+                            }
+                        }
+                    }
+                    BF trans = currentPosition & postInput & safetyEnv;
+                    if (trans.isFalse()) {
+                        std::cout << "ERROR\n";
+                        if (currentPosition.isFalse()) {
+                            std::cerr << "Waaah!\n";
+                        }
+                        std::cerr << "Wupp!\n";
+                    } else {
+                        trans &= positionalStrategiesForTheIndividualGoals[currentLivenessGuarantee];
+
+                        // Switching goals
+                        BF newCombination = determinize(trans,postVars);
+
+                        // Jump as much forward  in the liveness guarantee list as possible ("stuttering avoidance")
+                        unsigned int nextLivenessGuarantee = currentLivenessGuarantee;
+                        bool firstTry = true;
+                        while (((nextLivenessGuarantee != currentLivenessGuarantee) || firstTry) && !((livenessGuarantees[nextLivenessGuarantee] & newCombination).isFalse())) {
+                            nextLivenessGuarantee = (nextLivenessGuarantee + 1) % livenessGuarantees.size();
+                            firstTry = false;
+                        }
+
+                        currentLivenessGuarantee = nextLivenessGuarantee;
+                        currentPosition = newCombination.ExistAbstract(varCubePre).SwapVariables(varVectorPre,varVectorPost);
+
+                        // Print position
+                        for (unsigned int i=0;i<variables.size();i++) {
+                            if (variableTypes[i]==PreInput) {
+                                if ((variables[i] & currentPosition).isFalse()) {
+                                    std::cout << "0";
+                                } else {
+                                    std::cout << "1";
+                                }
+                            }
+                        }
+                        for (unsigned int i=0;i<variables.size();i++) {
+                            if (variableTypes[i]==PreOutput) {
+                                if ((variables[i] & currentPosition).isFalse()) {
+                                    std::cout << "0";
+                                } else {
+                                    std::cout << "1";
+                                }
+                            }
+                        }
+                        std::cout << "," << currentLivenessGuarantee << std::endl; // Flushes, too.
+                    }
+                    std::cout.flush();
+                } else if (command=="XPRINTINPUTS") {
+                    std::cout << "\n"; // Get rid of the prompt
+                    for (unsigned int i=0;i<variables.size();i++) {
+                        if (variableTypes[i]==PreInput)
+                            std::cout << variableNames[i] << "\n";
+                    }
+                    std::cout << std::endl; // Flushes
+                } else if (command=="XPRINTOUTPUTS") {
+                    std::cout << "\n"; // Get rid of the prompt
+                    for (unsigned int i=0;i<variables.size();i++) {
+                        if (variableTypes[i]==PreOutput)
+                            std::cout << variableNames[i] << "\n";
+                    }
+                    std::cout << std::endl; // Flushes
+                } else if (command=="XGETINIT") {
+                    std::cout << "\n"; // Get rid of the prompt
+                    BF initialPosition = winningPositions & initEnv & initSys;
+                    initialPosition = determinize(initialPosition,preVars);
+                    for (unsigned int i=0;i<variables.size();i++) {
+                        if (variableTypes[i]==PreInput) {
+                            if ((variables[i] & initialPosition).isFalse()) {
+                                std::cout << "0";
+                            } else {
+                                std::cout << "1";
+                            }
+                        }
+                    }
+                    for (unsigned int i=0;i<variables.size();i++) {
+                        if (variableTypes[i]==PreOutput) {
+                            if ((variables[i] & initialPosition).isFalse()) {
+                                std::cout << "0";
+                            } else {
+                                std::cout << "1";
+                            }
+                        }
+                    }
+                    std::cout << ",0" << std::endl; // Flushes, too.
+                    currentPosition = initialPosition;
+                }
+
             }
 
         }
