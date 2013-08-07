@@ -77,7 +77,7 @@ def findMinimalCore(slugsFile):
                 coreFile.write(categories["[SYS_LIVENESS]"][i]+"\n")
         coreFile.close()
         if not isRealizable():
-            categories["[SYS_LIVENESS]"] = categories["[SYS_LIVENESS]"][0:i] + categories["[SYS_LIVENESS]"][i+1:]
+            categories["[SYS_LIVENESS]"] = categories["[SYS_LIVENESS]"][0:lineNr] + categories["[SYS_LIVENESS]"][lineNr+1:]
         else:
             lineNr += 1
 
@@ -95,7 +95,7 @@ def findMinimalCore(slugsFile):
                 coreFile.write(categories["[SYS_TRANS]"][i]+"\n")
         coreFile.close()
         if not isRealizable():
-            categories["[SYS_TRANS]"] = categories["[SYS_TRANS]"][0:i] + categories["[SYS_TRANS]"][i+1:]
+            categories["[SYS_TRANS]"] = categories["[SYS_TRANS]"][0:lineNr] + categories["[SYS_TRANS]"][lineNr+1:]
         else:
             lineNr += 1
 
