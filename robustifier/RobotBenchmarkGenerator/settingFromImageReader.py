@@ -338,11 +338,11 @@ for activeColor in xrange(2,256,2):
                     if a>0 and b>0 and not (a-1,b-1) in door:
                         candidates.append((a-1,b-1,"& right' down'"))
                     if a>0 and b<(ysize-1) and not (a-1,b+1) in door:
-                        candidates.append((a-1,b-1,"& right' up'"))
+                        candidates.append((a-1,b+1,"& right' up'"))
                     if a<(xsize-1) and b>0 and not (a+1,b-1) in door:
-                        candidates.append((a-1,b-1,"& left' down'"))
+                        candidates.append((a+1,b-1,"& left' down'"))
                     if a<(xsize-1) and b<(ysize-1) and not (a+1,b+1) in door:
-                        candidates.append((a-1,b-1,"& left' up'"))
+                        candidates.append((a+1,b+1,"& left' up'"))
                     for (a,b,cond) in candidates:
                         slugsFile.write("| | | ! door" + str(activeColor)+ "' ! "+cond+" ! "+encodeXPrimeValue(a)+" ! "+encodeYPrimeValue(b)+"\n")
         slugsFile.write("\n\n")
