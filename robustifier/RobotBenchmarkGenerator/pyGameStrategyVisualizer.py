@@ -92,7 +92,7 @@ print slugsLink
 # ==================================
 def actionLoop():
     screen = pygame.display.set_mode(((xsize+2)*MAGNIFY,(ysize+2)*MAGNIFY))
-    pygame.display.set_caption('Strategy visualizer')
+    pygame.display.set_caption('Strategy Visualizer')
     clock = pygame.time.Clock()
 
     screenBuffer = pygame.Surface(screen.get_size())
@@ -123,15 +123,12 @@ def actionLoop():
         lastLine = slugsProcess.stdout.readline().strip()
         if lastLine!="":
             outputAPs.append(lastLine)
-    print inputAPs
-    print outputAPs
 
     # Get initial state
     slugsProcess.stdin.write("XGETINIT\n")
     slugsProcess.stdin.flush()
     slugsProcess.stdout.readline() # Skip the prompt
     currentState = slugsProcess.stdout.readline().strip()
-    print "currentState: "+currentState
 
     # Pre-store positions
     doorAndDeliveryInputBitPositions = {}
@@ -180,6 +177,39 @@ def actionLoop():
                 if currentState[i+len(inputAPs)]!="0":
                     robotDeltaY += 1
 
+        # Draw pickup/drop
+        for i,ap in enumerate(outputAPs):
+            if ap=="pickup":
+                if currentState[i+len(inputAPs)]!="0":
+                    fillColor = (255,64,64)
+                else:
+                    fillColor = (64,64,64)
+                pygame.draw.rect(screenBuffer,fillColor,(0,0,MAGNIFY*(xsize+2)/2,MAGNIFY),0)
+            if ap=="drop":
+                if currentState[i+len(inputAPs)]!="0":
+                    fillColor = (64,220,64)
+                else:
+                    fillColor = (64,64,64)
+                pygame.draw.rect(screenBuffer,fillColor,(MAGNIFY*(xsize+2)/2,0,MAGNIFY*(xsize+2)/2,MAGNIFY),0)
+            
+        # Obtain moving obstacle information for drawing
+        movingPos = []
+        for (a,b) in movingObstacles:
+            posX = 0
+            posY = 0
+            for i,ap in enumerate(inputAPs):
+                if ap in ["mox"+str(a)+"_0","mox"+str(a)+"_1","mox"+str(a)+"_2","mox"+str(a)+"_3","mox"+str(a)+"_4","mox"+str(a)+"_5","mox"+str(a)+"_6","mox"+str(a)+"_7","mox"+str(a)+"_8","mox"+str(a)+"_9"]:
+                    if currentState[i]=="1":
+                        posX += (1 << int(ap[ap.rfind("_")+1:]))
+                    elif currentState[i]=="0":
+                        pass
+                    else:
+                        raise 123
+                elif ap in ["moy"+str(a)+"_0","moy"+str(a)+"_1","moy"+str(a)+"_2","moy"+str(a)+"_3","moy"+str(a)+"_4","moy"+str(a)+"_5","moy"+str(a)+"_6","moy"+str(a)+"_7","moy"+str(a)+"_8","moy"+str(a)+"_9"]:
+                    if currentState[i]=="1":
+                        posY += (1 << int(ap[ap.rfind("_")+1:]))
+            movingPos.append((posX,posY))
+
         # Draw Field
         for x in xrange(0,xsize):
             for y in xrange(0,ysize):
@@ -207,15 +237,25 @@ def actionLoop():
         pygame.draw.circle(screenBuffer, (255,255,255), ((robotX+1)*MAGNIFY+MAGNIFY/2,(robotY+1)*MAGNIFY+MAGNIFY/2) , MAGNIFY/3-1, 1)
         pygame.draw.circle(screenBuffer, (0,0,0), ((robotX+1)*MAGNIFY+MAGNIFY/2,(robotY+1)*MAGNIFY+MAGNIFY/2) , MAGNIFY/3, 1)
 
+        # Draw cell frames
         for x in xrange(0,xsize):
             for y in xrange(0,ysize):
                 pygame.draw.rect(screenBuffer,(0,0,0),((x+1)*MAGNIFY,(y+1)*MAGNIFY,MAGNIFY,MAGNIFY),1)
         pygame.draw.rect(screenBuffer,(0,0,0),(MAGNIFY-1,MAGNIFY-1,MAGNIFY*xsize+2,MAGNIFY*ysize+2),1)
 
+        # Draw "Bad" Robot/Moving Obstacle
+        for obstacleNo,(a,b) in enumerate(movingObstacles):
+            speedMO = int(b[1]) # 0 or 1 - 0 is twice as slow
+            xsizeMO = int(b[2])
+            ysizeMO = int(b[3])
+            (xpos,ypos) = movingPos[obstacleNo]
+            pygame.draw.rect(screenBuffer, (32,32,192), ((xpos+1)*MAGNIFY+MAGNIFY/4,(ypos+1)*MAGNIFY+MAGNIFY/4, MAGNIFY*xsizeMO-MAGNIFY/2, MAGNIFY*xsizeMO-MAGNIFY/2),0)
+            pygame.draw.rect(screenBuffer, (255,255,255), ((xpos+1)*MAGNIFY+MAGNIFY/4-1,(ypos+1)*MAGNIFY+MAGNIFY/4-1, MAGNIFY*xsizeMO-MAGNIFY/2+2, MAGNIFY*xsizeMO-MAGNIFY/2+2),1)
+            pygame.draw.rect(screenBuffer, (0,0,0), ((xpos+1)*MAGNIFY+MAGNIFY/4-2,(ypos+1)*MAGNIFY+MAGNIFY/4-2, MAGNIFY*xsizeMO-MAGNIFY/2+4, MAGNIFY*xsizeMO-MAGNIFY/2+4),1)
+        
         # Flip!
         screen.blit(screenBuffer, (0, 0))
         pygame.display.flip()
-
 
         # Update Doors and requests
         nextInput = currentState[0:len(inputAPs)]
@@ -228,7 +268,6 @@ def actionLoop():
         # Update robot X and Y positions
         robotX = robotX + robotDeltaX
         robotY = robotY + robotDeltaY
-        print "Pos and acc: ",robotX, robotY, robotDeltaX, robotDeltaY
         for i,ap in enumerate(inputAPs):
             if ap in ["x0","x1","x2","x3","x4","x5","x6","x7","x8","x9"]:
                 if (robotX & (1 << int(ap[1:])))>0:
@@ -241,14 +280,47 @@ def actionLoop():
                 else:
                     nextInput = nextInput[0:i]+"0"+nextInput[i+1:]
 
-        print currentState, nextInput
+
+        # Update moving obstacles
+        for obstacleNo,(a,b) in enumerate(movingObstacles):
+            speedMO = int(b[1]) # 0 or 1 - 0 is twice as slow
+            (xpos,ypos) = movingPos[obstacleNo]
+
+            mayMove = True
+            if speedMO==0:
+                for i,ap in enumerate(outputAPs):
+                    if ap == "MOSpeederMonitor"+str(a):
+                        if currentState[i+len(inputAPs)]!="1":
+                            mayMove = False
+
+            if mayMove:
+                if pygame.key.get_pressed()[pygame.locals.K_LEFT]:
+                    xpos -= 1
+                elif pygame.key.get_pressed()[pygame.locals.K_RIGHT]:
+                    xpos += 1
+                elif pygame.key.get_pressed()[pygame.locals.K_UP]:
+                    ypos -= 1
+                elif pygame.key.get_pressed()[pygame.locals.K_DOWN]:
+                    ypos += 1
+
+            # Encode new position
+            for i,ap in enumerate(inputAPs):
+                if ap in ["mox"+str(a)+"_0","mox"+str(a)+"_1","mox"+str(a)+"_2","mox"+str(a)+"_3","mox"+str(a)+"_4","mox"+str(a)+"_5","mox"+str(a)+"_6","mox"+str(a)+"_7","mox"+str(a)+"_8","mox"+str(a)+"_9"]:
+                    if (xpos & (1 << int(ap[ap.rfind("_")+1:])))>0:
+                        nextInput = nextInput[0:i]+"1"+nextInput[i+1:]
+                    else:
+                        nextInput = nextInput[0:i]+"0"+nextInput[i+1:]
+                elif ap in ["moy"+str(a)+"_0","moy"+str(a)+"_1","moy"+str(a)+"_2","moy"+str(a)+"_3","moy"+str(a)+"_4","moy"+str(a)+"_5","moy"+str(a)+"_6","moy"+str(a)+"_7","moy"+str(a)+"_8","moy"+str(a)+"_9"]:
+                    if (ypos & (1 << int(ap[ap.rfind("_")+1:])))>0:
+                        nextInput = nextInput[0:i]+"1"+nextInput[i+1:]
+                    else:
+                        nextInput = nextInput[0:i]+"0"+nextInput[i+1:]
 
         # Make the transition
         slugsProcess.stdin.write("XMAKETRANS\n"+nextInput)
         slugsProcess.stdin.flush()
-        print slugsProcess.stdout.readline() # Skip the prompt
+        slugsProcess.stdout.readline() # Skip the prompt
         nextLine = slugsProcess.stdout.readline().strip()
-        print nextLine
         if nextLine=="ERROR":
             screenBuffer.fill((192, 64, 64)) # Red!
             # Keep the state the same
