@@ -73,7 +73,7 @@ GR1Context::GR1Context(const char *inFileName, const char *robotFileName) {
                     variableNames.push_back(currentLine);
                     variableTypes.push_back(PreMotionControlOutput);
                     variables.push_back(mgr.newVariable());
-                    variableNames.push_back(currentLine);
+                    variableNames.push_back(currentLine+"'");
                     variableTypes.push_back(PostMotionControlOutput);
                 } else if (readMode==3) {
                     variables.push_back(mgr.newVariable());
@@ -148,7 +148,7 @@ GR1Context::GR1Context(const char *inFileName, const char *robotFileName) {
         varsBDDread.push_back(variables[i]);
     }
     for (uint i=0;i<variables.size();i++) {
-        if (variableTypes[i]==PreMotionControlOutput)
+        if (variableTypes[i]==PostMotionControlOutput)
         varsBDDread.push_back(variables[i]);
     }
     for (uint i=0;i<variables.size();i++) {
@@ -159,14 +159,6 @@ GR1Context::GR1Context(const char *inFileName, const char *robotFileName) {
     robotBDD = mgr.readBDDFromFile(robotFileName,varsBDDread);
 
     // Compute VarVectors and VarCubes
-    std::vector<BF> postOutputVars;
-    std::vector<BF> postInputVars;
-    std::vector<BF> preOutputVars;
-    std::vector<BF> preInputVars;
-    std::vector<BF> preControllerOutputVars;
-    std::vector<BF> postControllerOutputVars;
-    std::vector<BF> postMotionStateVars;
-    std::vector<BF> preMotionStateVars;
     for (uint i=0;i<variables.size();i++) {
         switch (variableTypes[i]) {
         case PreInput:
@@ -231,14 +223,14 @@ GR1Context::GR1Context(const char *inFileName, const char *robotFileName) {
     if (!(newLivenessAssumption.isTrue())) {
         std::cerr << "Note: Added a liveness assumption that always eventually, we are moving if an action is taken at allows moving.\n";
     }
-    BF_newDumpDot(*this,newLivenessAssumption,"PreMotionState PreMotionControlOutput PostMotionState","/tmp/changeMotionStateLivenessAssumption.dot");
+    BF_newDumpDot(*this,newLivenessAssumption,"PreMotionState PostMotionControlOutput PostMotionState","/tmp/changeMotionStateLivenessAssumption.dot");
 
     // Make sure that there is at least one liveness assumption and one liveness guarantee
     // The synthesis algorithm might be unsound otherwise
     if (livenessGuarantees.size()==0) livenessGuarantees.push_back(mgr.constantTrue());
     if (livenessAssumptions.size()==0) livenessAssumptions.push_back(mgr.constantTrue());
 
-    BF_newDumpDot(*this,robotBDD,"PreMotionState PreMotionControlOutput PostMotionState","/tmp/sometestbdd.dot");
+    BF_newDumpDot(*this,robotBDD,"PreMotionState PostMotionControlOutput PostMotionState","/tmp/sometestbdd.dot");
 }
 
 

@@ -19,6 +19,9 @@
  */
 bool GR1Context::checkRealizability(bool initSpecialRoboticsSemantics) {
 
+    // Compute first which moves by the robot are actually allowed.
+    BF robotAllowedMoves = robotBDD.ExistAbstract(varCubePostMotionState);
+
     // The greatest fixed point - called "Z" in the GR(1) synthesis paper
     BFFixedPoint nu2(mgr.constantTrue());
 
@@ -67,7 +70,7 @@ bool GR1Context::checkRealizability(bool initSpecialRoboticsSemantics) {
                         foundPaths = livetransitions | (nu0.getValue().SwapVariables(varVectorPre,varVectorPost) & !(livenessAssumptions[i]));
                         foundPaths &= safetySys;
                         //BF_newDumpDot(*this,foundPaths,NULL,"/tmp/foundPathsPreRobot.dot");
-                        foundPaths = robotBDD.Implies(foundPaths).UnivAbstract(varCubePostMotionState);
+                        foundPaths = robotAllowedMoves & robotBDD.Implies(foundPaths).UnivAbstract(varCubePostMotionState);
                         //BF_newDumpDot(*this,foundPaths,NULL,"/tmp/foundPathsPostRobot.dot");
 
                         // Update the inner-most fixed point with the result of applying the enforcable predecessor operator

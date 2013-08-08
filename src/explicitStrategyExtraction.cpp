@@ -103,6 +103,7 @@ void GR1Context::computeAndPrintExplicitStateStrategy() {
 
         // Compute successors for all variables that allow these
         currentPossibilities &= positionalStrategiesForTheIndividualGoals[current.second];
+        assert(!currentPossibilities.isFalse());
 
         // For every possible input to the controller, compute a controller output (aux+model input) that is allowed
         // according to the general strategy computed above. For every controller output, compute where we can
@@ -110,14 +111,18 @@ void GR1Context::computeAndPrintExplicitStateStrategy() {
         // with a higher rank whenever this transition has just satisfied some liveness guarantee, or stay in the same rank if not.
         while (!(currentPossibilities.isFalse())) {
 
-            BF nextInput = determinize(currentPossibilities,postVars);
-            BF inputCaptured = nextInput.ExistAbstract(varCubePostControllerOutput);
+            BF preStateAndNextInput = determinize(currentPossibilities,postInputVars);
+            BF inputCaptured = preStateAndNextInput.ExistAbstract(varCubePostControllerOutput);
             currentPossibilities &= !inputCaptured;
+            BF preAndPostWithoutRobotMove = determinize(preStateAndNextInput,postControllerOutputVars);
 
-            BF possibleNextStatesOverTheModel = nextInput & robotBDD;
+            BF_newDumpDot(*this,preAndPostWithoutRobotMove,NULL,"/tmp/testing.dot");
+
+            BF possibleNextStatesOverTheModel = preAndPostWithoutRobotMove & robotBDD;
+            assert(!(possibleNextStatesOverTheModel.isFalse()));
             while (!(possibleNextStatesOverTheModel.isFalse())) {
 
-                BF thisCase = determinize(possibleNextStatesOverTheModel,postVars);
+                BF thisCase = determinize(possibleNextStatesOverTheModel,postMotionStateVars);
                 possibleNextStatesOverTheModel &= !thisCase;
 
                 // Liveness guarantee fulfilled? Then increase guarantee pointer
