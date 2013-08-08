@@ -327,9 +327,7 @@ public:
                     if (trans.isFalse()) {
                         std::cout << "ERROR\n";
                         if (currentPosition.isFalse()) {
-                            std::cerr << "Waaah!\n";
                         }
-                        std::cerr << "Wupp!\n";
                     } else {
                         trans &= positionalStrategiesForTheIndividualGoals[currentLivenessGuarantee];
 
