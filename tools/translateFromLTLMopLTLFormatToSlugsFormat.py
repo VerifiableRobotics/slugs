@@ -89,8 +89,7 @@ def clean_tree(tree):
         return clean_tree(tree[1])
     elif (tree[0]=="AtomicFormula"):
         if len(tree)!=2:
-            print >>sys.stderr, "Error: AtomicFormula must have length 2"
-            sys.exit(1)
+            raise ValueError("AtomicFormula must have length 2")
         return clean_tree(tree[1])
     elif (tree[0]=="Implication"):
         return [tree[0],clean_tree(tree[1]),clean_tree(tree[3])]
@@ -193,72 +192,71 @@ def parseLTL(ltlTxt):
                 print >>sys.stderr, "Error in LTL formula: "+ltlTxt
                 print >>sys.stderr, "Could not parse %s, "%found
                 print >>sys.stderr, "Wanted a token of one of the following forms: "+", ".join([ repr(s) for s in e ])
-        sys.exit(1)
+        raise
 
     # Convert to a tree
     cleaned_tree = flatten_as_much_as_possible(clean_tree(tree))
     return cleaned_tree
 
-# ==================================
-# Entry point
-# ==================================
-if len(sys.argv)<3:
-    print >>sys.stderr, "Error: Need SMV and LTL files as parameter"
-    sys.exit(1)
-smvFile = sys.argv[1]
-ltlFile = sys.argv[2]
-
-# Read LTL file
-ltlFileStream = open(ltlFile,"r")
-mode = 0
-assumptions = ""
-guarantees = ""
-for line in ltlFileStream.readlines():
-    line = line.strip()
-    if (line=="LTLSPEC -- Assumptions"):
-        mode = 1
-    elif (line=="LTLSPEC -- Guarantees"):
-        mode = 2
-    else:
-        if mode == 1:
-            assumptions = assumptions + " " + line
-        elif mode == 2:
-            guarantees = guarantees + " " + line
-ltlFileStream.close()
-
-assumptionTree = parseLTL(assumptions)
-guaranteeTree = parseLTL(guarantees)
-
-# Read SMV file
-smvFileStream = open(smvFile,"r")
-mode = 0
-inputBits = []
-outputBits = []
-for line in smvFileStream.readlines():
-    line = line.strip()
-    if (line.startswith("MODULE env")):
-        mode = 1
-    elif (line.startswith("MODULE sys")):
-        mode = 2
-    else:
-        if line.find(" : ")>0:
+def performConversion(smvFile, ltlFile):
+    # Read LTL file
+    ltlFileStream = open(ltlFile,"r")
+    mode = 0
+    assumptions = ""
+    guarantees = ""
+    for line in ltlFileStream.readlines():
+        line = line.strip()
+        if (line=="LTLSPEC -- Assumptions"):
+            mode = 1
+        elif (line=="LTLSPEC -- Guarantees"):
+            mode = 2
+        else:
             if mode == 1:
-                inputBits.append(line.split(" : ")[0])
+                assumptions = assumptions + " " + line
             elif mode == 2:
-                outputBits.append(line.split(" : ")[0])
-smvFileStream.close()
+                guarantees = guarantees + " " + line
+    ltlFileStream.close()
 
-# ==================================
-# Build Slugs file - I/O Variables
-# ==================================
-print "[INPUT]"
-for bit in inputBits:
-    print bit
-print ""
-print "[OUTPUT]"
-for bit in outputBits:
-    print bit
-print ""
+    assumptionTree = parseLTL(assumptions)
+    guaranteeTree = parseLTL(guarantees)
+
+    # Read SMV file
+    smvFileStream = open(smvFile,"r")
+    mode = 0
+    inputBits = []
+    outputBits = []
+    for line in smvFileStream.readlines():
+        line = line.strip()
+        if (line.startswith("MODULE env")):
+            mode = 1
+        elif (line.startswith("MODULE sys")):
+            mode = 2
+        else:
+            if line.find(" : ")>0:
+                if mode == 1:
+                    inputBits.append(line.split(" : ")[0])
+                elif mode == 2:
+                    outputBits.append(line.split(" : ")[0])
+    smvFileStream.close()
+
+    # ==================================
+    # Build Slugs file - I/O Variables
+    # ==================================
+    print "[INPUT]"
+    for bit in inputBits:
+        print bit
+    print ""
+    print "[OUTPUT]"
+    for bit in outputBits:
+        print bit
+    print ""
+
+    # Iterate over the property types.
+    buildPropertySet(assumptionTree,"ENV_",False,False)
+    buildPropertySet(assumptionTree,"ENV_",False,True)
+    buildPropertySet(guaranteeTree,"SYS_",True,False)
+    buildPropertySet(guaranteeTree,"SYS_",True,True)
+
 
 # ============================================
 # Build Slugs file - Temporal logic properties
@@ -354,10 +352,16 @@ def buildPropertySet(tree,fileprefix,startWithNextOperatorForLivenessProperties,
             print " ".join(a)
         print ""
 
-# Iterate over the property types. Warning: Initialization guarantees are actually put to the initialization assumptions because of
-# the special GR(1) semantics that treats them alike for robotics (where all positions that satisfy the initial conditions have
-# to be winning in order to call a scenario realizable).
-buildPropertySet(assumptionTree,"ENV_",False,False)
-buildPropertySet(assumptionTree,"ENV_",False,True)
-buildPropertySet(guaranteeTree,"SYS_",True,False)
-buildPropertySet(guaranteeTree,"ENV_",True,True)
+# ==================================
+# Entry point
+# ==================================
+if __name__ == "__main__":
+    if len(sys.argv)<3:
+        print >>sys.stderr, "Error: Need SMV and LTL files as parameter"
+        sys.exit(1)
+
+    smvFile = sys.argv[1]
+    ltlFile = sys.argv[2]
+    performConversion(smvFile, ltlFile)
+
+
