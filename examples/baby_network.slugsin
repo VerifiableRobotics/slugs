@@ -47,17 +47,17 @@ before_update
 | ! port_WORLD & & ! port_I ! port_START ! port_DROP
 | ! port_DROP & & ! port_I ! port_START ! port_WORLD
 
-| before_update | ! & port_I mem_WORLD ! port_DROP'
-| before_update | ! & port_I mem_WORLD port_WORLD'
-| before_update | ! & port_I ! mem_WORLD port_DROP'
-| before_update | ! & port_I ! mem_WORLD ! port_WORLD'
+| before_update' | ! & port_I mem_WORLD ! port_DROP'
+| before_update' | ! & port_I mem_WORLD port_WORLD'
+| before_update' | ! & port_I ! mem_WORLD port_DROP'
+| before_update' | ! & port_I ! mem_WORLD ! port_WORLD'
 
-| ! before_update | ! & port_I src_Guest port_DROP'
-| ! before_update | ! & port_I src_Guest ! port_WORLD'
+| before_update' | ! & port_I src_Guest port_DROP'
+| before_update' | ! & port_I src_Guest ! port_WORLD'
 
 
 | ! src_Auth mem_WORLD
-| ! & before_update src_Guest mem_WORLD
+| ! & before_update' src_Guest mem_WORLD
 
 | ! port_START | port_START' port_I'
 | ! & ! pkt_in' port_START port_START'
@@ -89,12 +89,3 @@ port_START
 ! port_I
 ! port_WORLD
 ! port_DROP
-
-
-
-
-
-
-
-
-
