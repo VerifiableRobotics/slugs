@@ -85,6 +85,9 @@ public:
     virtual ~GR1Context() {}
     virtual bool checkRealizability(bool initSpecialRoboticsSemantics);
     virtual void computeAndPrintExplicitStateStrategy();
+    virtual void runSimulator();
+    static BF determinize(BF in, std::vector<BF> vars);
+    static BF randomDeterminize(BF in, std::vector<BF> vars);
 
     //@{
     /**

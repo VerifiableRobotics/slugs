@@ -297,6 +297,7 @@ int main(int argc, const char **args) {
     std::string robotfilename = "";
     bool onlyCheckRealizability = false;
     bool initSpecialRoboticsSemantics = false;
+    bool runSimulator = false;
 
     for (int i=1;i<argc;i++) {
         std::string arg = args[i];
@@ -306,6 +307,8 @@ int main(int argc, const char **args) {
                 onlyCheckRealizability = true;
             } else if (arg=="--sysInitRoboticsSemantics") {
                 initSpecialRoboticsSemantics = true;
+            } else if (arg=="--runSimulator") {
+                runSimulator = true;
             } else {
                 std::cerr << "Error: Did not understand parameter " << arg << std::endl;
                 return 1;
@@ -327,7 +330,11 @@ int main(int argc, const char **args) {
         bool realizable = context.checkRealizability(initSpecialRoboticsSemantics);
         if (realizable) {
             std::cerr << "RESULT: Specification is realizable.\n";
-            if (!onlyCheckRealizability) context.computeAndPrintExplicitStateStrategy();
+            if (runSimulator) {
+                context.runSimulator();
+            } else {
+                if (!onlyCheckRealizability) context.computeAndPrintExplicitStateStrategy();
+            }
         } else {
             std::cerr << "RESULT: Specification is not realizable.\n";
         }

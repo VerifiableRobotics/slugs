@@ -17,7 +17,7 @@ CONFIG += debug
 CONFIG -= qt
 HEADERS += BFAbstractionLibrary/BF.h gr1context.hpp
 
-SOURCES += main.cpp BFAbstractionLibrary/bddDump.cpp BFAbstractionLibrary/BFCuddVarVector.cpp BFAbstractionLibrary/BFCudd.cpp BFAbstractionLibrary/BFCuddManager.cpp BFAbstractionLibrary/BFCuddVarCube.cpp explicitStrategyExtraction.cpp synthesisAlgorithm.cpp
+SOURCES += main.cpp BFAbstractionLibrary/bddDump.cpp BFAbstractionLibrary/BFCuddVarVector.cpp BFAbstractionLibrary/BFCudd.cpp BFAbstractionLibrary/BFCuddManager.cpp BFAbstractionLibrary/BFCuddVarCube.cpp explicitStrategyExtraction.cpp synthesisAlgorithm.cpp simulator.cpp
 
 TARGET = slugs
 INCLUDEPATH = ../lib/cudd-2.5.0/include BFAbstractionLibrary
