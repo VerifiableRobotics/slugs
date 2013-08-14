@@ -40,6 +40,13 @@ wbit2
 1
 
 [SYS_LIVENESS]
-& & & & & & & & & ! xbit2' ! xbit3' ! xbit4' ! xbit5' ! xbit6' ! ybit2' ! ybit3' ! ybit4' ! ybit5' ! ybit6'
-& & & & & & & & & xbit2' ! xbit3' ! xbit4' ! xbit5' xbit6' ybit2' ! ybit3' ! ybit4' ! ybit5' ybit6'
+# & & & & & & & & & ! xbit2' ! xbit3' ! xbit4' ! xbit5' ! xbit6' ! ybit2' ! ybit3' ! ybit4' ! ybit5' ! ybit6'
+# & & & & & & & & & xbit2' ! xbit3' ! xbit4' ! xbit5' xbit6' ybit2' ! ybit3' ! ybit4' ! ybit5' ybit6'
+
+& xbit4' xbit2' ybit4
+
+# & xbit3' ybit2'
+# & ! xbit3' ybit2'
+# & xbit3' ! ybit2'
+# & & & & ! xbit6' ! xbit5' ! xbit4' ! xbit3' ! xbit2'  
 

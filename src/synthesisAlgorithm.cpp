@@ -100,6 +100,7 @@ bool GR1Context::checkRealizability(bool initSpecialRoboticsSemantics) {
 
     // We found the set of winning positions
     winningPositions = nu2.getValue();
+    BF_newDumpDot(*this,winningPositions,NULL,"/tmp/winningPositions.dot");
 
     // Check if for every possible environment initial position the system has a good system initial position
     BF result;

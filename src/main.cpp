@@ -86,21 +86,21 @@ GR1Context::GR1Context(const char *inFileName, const char *robotFileName) {
                     std::set<VariableType> allowedTypes;
                     allowedTypes.insert(PreInput);
                     allowedTypes.insert(PreMotionState);
-                    allowedTypes.insert(PreMotionControlOutput);
+                    // allowedTypes.insert(PreMotionControlOutput); -> Is not taken into account
                     allowedTypes.insert(PreOtherOutput);
                     initEnv &= parseBooleanFormula(currentLine,allowedTypes);
                 } else if (readMode==5) {
                     std::set<VariableType> allowedTypes;
                     allowedTypes.insert(PreInput);
                     allowedTypes.insert(PreMotionState);
-                    allowedTypes.insert(PreMotionControlOutput);
+                     // allowedTypes.insert(PreMotionControlOutput); -> Is not taken into account
                     allowedTypes.insert(PreOtherOutput);
                     initSys &= parseBooleanFormula(currentLine,allowedTypes);
                 } else if (readMode==6) {
                     std::set<VariableType> allowedTypes;
                     allowedTypes.insert(PreInput);
                     allowedTypes.insert(PreMotionState);
-                    allowedTypes.insert(PreMotionControlOutput);
+                     // allowedTypes.insert(PreMotionControlOutput); -> Is not taken into account
                     allowedTypes.insert(PreOtherOutput);
                     allowedTypes.insert(PostInput);
                     allowedTypes.insert(PostMotionState);
@@ -110,7 +110,7 @@ GR1Context::GR1Context(const char *inFileName, const char *robotFileName) {
                     std::set<VariableType> allowedTypes;
                     allowedTypes.insert(PreInput);
                     allowedTypes.insert(PreMotionState);
-                    allowedTypes.insert(PreMotionControlOutput);
+                    allowedTypes.insert(PostMotionControlOutput);
                     allowedTypes.insert(PreOtherOutput);
                     allowedTypes.insert(PostInput);
                     allowedTypes.insert(PostMotionState);
@@ -120,7 +120,7 @@ GR1Context::GR1Context(const char *inFileName, const char *robotFileName) {
                     std::set<VariableType> allowedTypes;
                     allowedTypes.insert(PreInput);
                     allowedTypes.insert(PreMotionState);
-                    allowedTypes.insert(PreMotionControlOutput);
+                     // allowedTypes.insert(PreMotionControlOutput); -> Is not taken into account
                     allowedTypes.insert(PreOtherOutput);
                     allowedTypes.insert(PostInput);
                     livenessAssumptions.push_back(parseBooleanFormula(currentLine,allowedTypes));
@@ -128,7 +128,7 @@ GR1Context::GR1Context(const char *inFileName, const char *robotFileName) {
                     std::set<VariableType> allowedTypes;
                     allowedTypes.insert(PreInput);
                     allowedTypes.insert(PreMotionState);
-                    allowedTypes.insert(PreMotionControlOutput);
+                    allowedTypes.insert(PostMotionControlOutput);
                     allowedTypes.insert(PreOtherOutput);
                     allowedTypes.insert(PostInput);
                     allowedTypes.insert(PostMotionState);
@@ -143,15 +143,16 @@ GR1Context::GR1Context(const char *inFileName, const char *robotFileName) {
     }
 
     std::vector<BF> varsBDDread;
-    for (uint i=0;i<variables.size();i++) {
+    // Invert all order to get the least significant bit first
+    for (int i=variables.size()-1;i>=0;i--) {
         if (variableTypes[i]==PreMotionState)
         varsBDDread.push_back(variables[i]);
     }
-    for (uint i=0;i<variables.size();i++) {
+    for (int i=variables.size()-1;i>=0;i--) {
         if (variableTypes[i]==PostMotionControlOutput)
         varsBDDread.push_back(variables[i]);
     }
-    for (uint i=0;i<variables.size();i++) {
+    for (int i=variables.size()-1;i>=0;i--) {
         if (variableTypes[i]==PostMotionState)
         varsBDDread.push_back(variables[i]);
     }
@@ -307,7 +308,7 @@ int main(int argc, const char **args) {
                 onlyCheckRealizability = true;
             } else if (arg=="--sysInitRoboticsSemantics") {
                 initSpecialRoboticsSemantics = true;
-            } else if (arg=="--runSimulator") {
+            } else if (arg=="--interactiveStrategy") {
                 runSimulator = true;
             } else {
                 std::cerr << "Error: Did not understand parameter " << arg << std::endl;

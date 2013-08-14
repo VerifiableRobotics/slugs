@@ -335,6 +335,7 @@ void GR1Context::runSimulator() {
                     if (trans.isFalse()) {
                         std::cout << "ERROR (3)\n";
                     } else {
+                        BF_newDumpDot(*this,newCombination,NULL,"/tmp/newCombinationPossibilities.dot");
                         newCombination = randomDeterminize(newCombination,postMotionStateVars);
 
                         // Jump as much forward  in the liveness guarantee list as possible ("stuttering avoidance")
@@ -344,6 +345,9 @@ void GR1Context::runSimulator() {
                             nextLivenessGuarantee = (nextLivenessGuarantee + 1) % livenessGuarantees.size();
                             firstTry = false;
                         }
+
+                        BF_newDumpDot(*this,newCombination,NULL,"/tmp/newCombination.dot");
+                        //sleep(30);
 
                         currentLivenessGuarantee = nextLivenessGuarantee;
                         currentPosition = newCombination.ExistAbstract(varCubePre).SwapVariables(varVectorPre,varVectorPost);
@@ -404,7 +408,7 @@ void GR1Context::runSimulator() {
                     std::cout << variableNames[i] << "\n";
             }
             std::cout << std::endl; // Flushes
-        } else if (command=="XPRINTOUTPUTS") {
+        } else if (command=="XPRINTOTHEROUTPUTS") {
             std::cout << "\n"; // Get rid of the prompt
             for (unsigned int i=0; i<variables.size(); i++) {
                 if (variableTypes[i]==PreOtherOutput)

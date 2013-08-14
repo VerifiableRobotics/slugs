@@ -1,0 +1,56 @@
+[INPUT]
+door8
+
+[MOTION STATE OUTPUT]
+headingBit0
+headingBit1
+headingBit2
+headingBit3
+headingBit4
+headingBit5
+
+ybit0
+ybit1
+ybit2
+ybit3
+ybit4
+
+xbit0
+xbit1
+xbit2
+xbit3
+xbit4
+
+
+[MOTION CONTROLLER OUTPUT]
+wbit0
+wbit1
+wbit2
+wbit3
+
+vbit0
+vbit1
+vbit2
+
+[OTHER OUTPUT]
+
+
+[ENV_INIT]
+1
+
+[ENV_TRANS]
+1
+
+[ENV_LIVENESS]
+1
+
+[SYS_INIT]
+1
+
+[SYS_TRANS]
+| | vbit0' vbit1' vbit2'
+
+[SYS_LIVENESS]
+| & xbit4 ybit4 ! door8
+& & & ! xbit3 ! xbit4 ! ybit3 ! ybit4  
+
