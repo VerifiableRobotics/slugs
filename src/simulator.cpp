@@ -330,7 +330,7 @@ void GR1Context::runSimulator() {
                 } else {
 
                     // Switching goals
-                    BF newCombination = determinize(trans,postControllerOutputVars);
+                    BF newCombination = randomDeterminize(trans,postControllerOutputVars);
                     newCombination &= robotBDD;
                     if (trans.isFalse()) {
                         std::cout << "ERROR (3)\n";
