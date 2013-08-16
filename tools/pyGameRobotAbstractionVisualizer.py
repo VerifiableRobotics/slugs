@@ -185,13 +185,20 @@ def actionLoop():
                 if name=="door"+str(a) or name=="deliveryrequest"+str(a)  :
                     doorAndDeliveryInputBitPositions[a] = pos
 
+    # Count the loop
+
+    loopNumber = 0
+    isPaused = False
     while 1:
+        loopNumber += 1
 
         for event in pygame.event.get():
             if event.type == pygame.locals.QUIT or (event.type == pygame.locals.KEYDOWN and event.key == pygame.locals.K_ESCAPE):
                 slugsProcess.stdin.write("QUIT\n")
                 slugsProcess.stdin.flush()
                 return
+            if (event.type == pygame.locals.KEYDOWN and event.key == pygame.locals.K_SPACE):
+                isPaused = not isPaused
 
         # Obtain robot information for drawing
         robotX = 0
@@ -339,20 +346,42 @@ def actionLoop():
                         nextInput = nextInput[0:i]+"0"+nextInput[i+1:]
 
         # Make the transition
-        slugsProcess.stdin.write("XMAKETRANS\n"+nextInput)
-        slugsProcess.stdin.flush()
-        slugsProcess.stdout.readline() # Skip the prompt
-        nextLine = slugsProcess.stdout.readline().strip()
-        if nextLine.startswith("ERROR"):
-            screenBuffer.fill((192, 64, 64)) # Red!
-            # Keep the state the same
-        else:
-            currentState = nextLine
-            print >>sys.stderr, currentState
-            screenBuffer.fill((64, 64, 64)) # Gray, as usual
+        if not isPaused:
+            slugsProcess.stdin.write("XMAKETRANS\n"+nextInput)
+            slugsProcess.stdin.flush()
+            slugsProcess.stdout.readline() # Skip the prompt
+            nextLine = slugsProcess.stdout.readline().strip()
+            if nextLine.startswith("ERROR"):
+                screenBuffer.fill((192, 64, 64)) # Red!
+                # Keep the state the same
+            else:
+                currentState = nextLine
 
-        # Done
-        clock.tick(10)
+                # Print a state header
+                if (loopNumber % 20)==1:
+                    print "-"*(len(currentState)+2)
+                    apNames = inputAPs+outputAPs
+                    maxLenAPNames = 0
+                    for a in apNames:
+                        maxLenAPNames = max(maxLenAPNames,len(a))
+                    apNamesEqualized = [(" "*(maxLenAPNames-len(a)))+a for a in apNames]
+                    for i in xrange(0,maxLenAPNames):
+                        for a in apNamesEqualized:
+                            sys.stderr.write(a[i])
+                        sys.stderr.write("\n")
+                    print "-"*(len(currentState)+2)
+                    
+                # Print the state
+                print >>sys.stderr, currentState
+                screenBuffer.fill((64, 64, 64)) # Gray, as usual
+
+                # Tick
+                clock.tick(10)
+        else:
+            # Paused
+            screenBuffer.fill((64, 64, 64)) # Gray, as usual
+            # Tick
+            clock.tick(3)
 
 
 # ==================================

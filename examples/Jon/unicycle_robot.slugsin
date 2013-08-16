@@ -1,25 +1,36 @@
 [INPUT]
 
 [MOTION STATE OUTPUT]
-xbit0
-xbit1
-xbit2
-xbit3
-xbit4
-xbit5
-xbit6
+yspeedbit0
+yspeedbit1
+yspeedbit2
+yspeedbit3
+
 ybit0
 ybit1
 ybit2
 ybit3
 ybit4
-ybit5
-ybit6
+
+xspeedbit0
+xspeedbit1
+xspeedbit2
+xspeedbit3
+
+xbit0
+xbit1
+xbit2
+xbit3
+xbit4
 
 [MOTION CONTROLLER OUTPUT]
-wbit0
-wbit1
-wbit2
+uybit0
+uybit1
+uybit2
+
+uxbit0
+uxbit1
+uxbit2
 
 [OTHER OUTPUT]
 
@@ -40,13 +51,5 @@ wbit2
 1
 
 [SYS_LIVENESS]
-# & & & & & & & & & ! xbit2' ! xbit3' ! xbit4' ! xbit5' ! xbit6' ! ybit2' ! ybit3' ! ybit4' ! ybit5' ! ybit6'
-# & & & & & & & & & xbit2' ! xbit3' ! xbit4' ! xbit5' xbit6' ybit2' ! ybit3' ! ybit4' ! ybit5' ybit6'
 
-& xbit4' xbit2' ybit4
-
-# & xbit3' ybit2'
-# & ! xbit3' ybit2'
-# & xbit3' ! ybit2'
-# & & & & ! xbit6' ! xbit5' ! xbit4' ! xbit3' ! xbit2'  
 
