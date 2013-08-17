@@ -138,6 +138,7 @@ def actionLoop():
                 if name=="door"+str(a) or name=="deliveryrequest"+str(a)  :
                     doorAndDeliveryInputBitPositions[a] = pos
 
+    isPaused = False
     while 1:
 
         for event in pygame.event.get():
@@ -145,6 +146,8 @@ def actionLoop():
                 slugsProcess.stdin.write("QUIT\n")
                 slugsProcess.stdin.flush()
                 return
+            if (event.type == pygame.locals.KEYDOWN and event.key == pygame.locals.K_SPACE):
+                isPaused = not isPaused
 
         # Obtain robot information for drawing
         robotX = 0
@@ -317,19 +320,23 @@ def actionLoop():
                         nextInput = nextInput[0:i]+"0"+nextInput[i+1:]
 
         # Make the transition
-        slugsProcess.stdin.write("XMAKETRANS\n"+nextInput)
-        slugsProcess.stdin.flush()
-        slugsProcess.stdout.readline() # Skip the prompt
-        nextLine = slugsProcess.stdout.readline().strip()
-        if nextLine=="ERROR":
-            screenBuffer.fill((192, 64, 64)) # Red!
-            # Keep the state the same
-        else:
-            currentState = nextLine
-            screenBuffer.fill((64, 64, 64)) # Gray, as usual
+        if not isPaused:
+            slugsProcess.stdin.write("XMAKETRANS\n"+nextInput)
+            slugsProcess.stdin.flush()
+            slugsProcess.stdout.readline() # Skip the prompt
+            nextLine = slugsProcess.stdout.readline().strip()
+            if nextLine=="ERROR":
+                screenBuffer.fill((192, 64, 64)) # Red!
+                # Keep the state the same
+            else:
+                currentState = nextLine
+                screenBuffer.fill((64, 64, 64)) # Gray, as usual
 
-        # Done
-        clock.tick(10)
+            # Done
+            clock.tick(10)
+        else:
+            screenBuffer.fill((64, 64, 64)) # Gray, as usual
+            clock.tick(3)
 
 
 # ==================================
