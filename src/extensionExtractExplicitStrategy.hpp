@@ -16,6 +16,7 @@ protected:
     using T::mgr;
     using T::winningPositions;
     using T::initSys;
+    using T::initEnv;
     using T::preVars;
     using T::livenessGuarantees;
     using T::strategyDumpingData;
@@ -87,7 +88,7 @@ public:
         std::list<std::pair<size_t, unsigned int> > todoList;
 
         // Prepare initial to-do list from the allowed initial states
-        BF todoInit = (winningPositions & initSys);
+        BF todoInit = (oneStepRecovery)?(winningPositions & initSys):(winningPositions & initSys & initEnv);
         while (!(todoInit.isFalse())) {
             BF concreteState = determinize(todoInit,preVars);
             std::pair<size_t, unsigned int> lookup = std::pair<size_t, unsigned int>(concreteState.getHashCode(),0);
