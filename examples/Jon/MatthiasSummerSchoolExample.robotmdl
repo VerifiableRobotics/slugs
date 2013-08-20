@@ -1,0 +1,30 @@
+[PARAMETERS]
+tau = 0.4
+eta = 0.2
+mu = 0.2
+
+xmax = 4
+xmin = 0
+ymax = 4
+ymin = 0
+thetamax = 3.14
+thetamin = -3.14
+
+vmax = 1
+vmin = 0
+wmax = 1
+wmin = -1
+
+[MOTION STATE OUTPUT]
+x
+y
+theta
+
+[MOTION CONTROLLER OUTPUT]
+v
+w
+
+[SYSTEM MODEL]
+x_dot = v*sin(theta)
+y_dot = v*cos(theta)
+theta_dot = w
