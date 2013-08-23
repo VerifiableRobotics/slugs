@@ -1,0 +1,45 @@
+--- util/cpu_stats.c	2013-08-23 12:53:01.000000000 -0400
++++ util/cpu_stats.c	2013-08-23 12:55:46.000000000 -0400
+@@ -8,13 +8,20 @@
+ #include <sys/time.h>
+ #include <sys/resource.h>
+ 
+-#if defined(_IBMR2)
+-#define etext _etext
+-#define edata _edata
+-#define end _end
++#ifdef __APPLE__
++    #include <mach-o/getsect.h>
++    #define end get_end()
++    #define etext get_etext()
++    #define edata get_edata()
++#elif defined(_IBMR2)
++    #define etext _etext
++    #define edata _edata
++    #define end _end
+ #endif
+ 
++#ifndef __APPLE__
+ extern int end, etext, edata;
++#endif
+ 
+ #endif
+ 
+@@ -34,10 +41,17 @@
+     hostname[256] = '\0';		/* just in case */
+ 
+     /* Get the virtual memory sizes */
++    #ifdef __APPLE__
++    vm_text = (long) (((long) etext) / 1024.0 + 0.5);
++    vm_init_data = (long) (((long) (edata) - (long) (etext)) / 1024.0 + 0.5);
++    vm_uninit_data = (long) (((long) (end) - (long) (edata)) / 1024.0 + 0.5);
++    vm_sbrk_data = (long) (((long) sbrk(0) - (long) (end)) / 1024.0 + 0.5);
++    #else
+     vm_text = (long) (((long) (&etext)) / 1024.0 + 0.5);
+     vm_init_data = (long) (((long) (&edata) - (long) (&etext)) / 1024.0 + 0.5);
+     vm_uninit_data = (long) (((long) (&end) - (long) (&edata)) / 1024.0 + 0.5);
+     vm_sbrk_data = (long) (((long) sbrk(0) - (long) (&end)) / 1024.0 + 0.5);
++    #endif
+ 
+     /* Get virtual memory limits */
+     (void) getrlimit(RLIMIT_DATA, &rlp);
