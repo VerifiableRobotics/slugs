@@ -2,12 +2,12 @@
 door8
 
 [MOTION STATE OUTPUT]
-headingBit0
-headingBit1
-headingBit2
-headingBit3
-headingBit4
-headingBit5
+thetaBit0
+thetaBit1
+thetaBit2
+thetaBit3
+thetaBit4
+thetaBit5
 
 ybit0
 ybit1
@@ -48,9 +48,11 @@ vbit2
 1
 
 [SYS_TRANS]
-| | vbit0' vbit1' vbit2'
+# | | vbit0' vbit1' vbit2'
 
 [SYS_LIVENESS]
-| & xbit4 ybit4 ! door8
+# | & xbit4 ybit4 ! door8
+& xbit4 ybit4
 & & & ! xbit3 ! xbit4 ! ybit3 ! ybit4  
+
 
