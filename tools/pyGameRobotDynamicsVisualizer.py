@@ -103,9 +103,16 @@ for line in robotModel.readlines():
         systemModelState = True
     elif systemModelState and len(line)>0 and not line.startswith("#"):
         systemModel.append(line)
+
+if len(set(['x','y']).intersection(motionStateVars)) < 2:
+    print >> sys.stderr, "x and y must be included as motion state variables in the robot model file"
+print motionStateVars
+if not all([any([systemModel[j].startswith(motionStateVars[i]) for j in range(len(systemModel))]) for i in range(len(motionStateVars))]):
+    print >> sys.stderr, "states and state derivatives don't match in the robot model file"
+
 robotModel = open(robotmdlfile,"r")
-motionStateParams = [[]]*len(motionStateVars)
-motionControlParams = [[]]*len(motionControlVars)
+motionStateParams = [[[]]*2 for i in range(len(motionStateVars))]
+motionControlParams = [[[]]*2 for i in range(len(motionControlVars))]
 for line in robotModel.readlines():
     line = line.strip()
     if line.startswith("["):
@@ -115,24 +122,24 @@ for line in robotModel.readlines():
     elif paramsState and len(line)>0 and not line.startswith("#"):
         if line.startswith(('tau','eta','mu')) or line.startswith(tuple(motionStateVars)) or line.startswith(tuple(motionControlVars)):
             modelParams.append(line)
-            #TODO: some params saved twice?!?
             for i,varName in enumerate(motionStateVars):
-                if line.startswith(varName):
-                    if len(motionStateParams[i])==0:
-                        tmp = []
-                    tmp.append(eval(line[line.rfind("=")+1:]))
-                    motionStateParams[i] = tmp
+                if line.startswith(varName):                  
+                    if line.rfind("max") > 0:
+                        motionStateParams[i][0] = eval(line[line.rfind("=")+1:])
+                    elif line.rfind("min") > 0:
+                        motionStateParams[i][1] = eval(line[line.rfind("=")+1:])
+                    else:
+                        print >> sys.stderr, "min or max state parameter value missing in robot model file"
             for i,varName in enumerate(motionControlVars):
                 if line.startswith(varName):
-                    if len(motionControlParams[i])==0:
-                        tmp = []
-                    tmp.append(eval(line[line.rfind("=")+1:]))
-                    motionControlParams[i] = tmp
+                    if line.rfind("max") > 0:
+                        motionControlParams[i][0] = eval(line[line.rfind("=")+1:])
+                    elif line.rfind("min") > 0:
+                        motionControlParams[i][1] = eval(line[line.rfind("=")+1:])
+                    else:
+                        print >> sys.stderr, "min or max control parameter value missing in robot model file"
         else:
             print >> sys.stderr, "motion state/control variables don't match parameters in the robot model file"
-
-if len(set(['x','y']).intersection(motionStateVars)) < 2:
-    print >> sys.stderr, "x and y must be included as motion state variables in the robot model file"
 
 # evaluate the strings in modelParams
 for i in xrange(0,len(modelParams)):
@@ -144,7 +151,6 @@ for i,varName in enumerate(motionStateVars):
         systemModel[i] = systemModel[i][0:systemModel[i].rfind('cos(')]+'np.'+systemModel[i][systemModel[i].rfind('cos('):]
     while systemModel[i].rfind('tan(') >= 0 and systemModel[i][systemModel[i].rfind('tan(')-3:systemModel[i].rfind('tan(')] != 'np.':
         systemModel[i] = systemModel[i][0:systemModel[i].rfind('tan(')]+'np.'+systemModel[i][systemModel[i].rfind('tan('):]
-print motionStateParams
 tmp = [[motionStateParams[i][0]+eta/2-1e-4,motionStateParams[i][1]-eta/2+1e-4] for i in range(len(motionStateParams))]
 minMaxState = map(list,zip(*tmp))  # bounds on the continuous states
 minMaxStateCent = map(list,zip(*motionStateParams))  # bounds on the continuous state centroid
@@ -481,6 +487,8 @@ def actionLoop():
         print eval(varName+'b')
         print bin(int(round(eval(varName+'b'))))[2:]
         print preMotionState
+        # preMotionState = preMotionState[::-1] # try reversing the order
+        # print preMotionState
 
         # Make the transition
         slugsProcess.stdin.write("XMAKECONTROLTRANS\n"+nextInput+preMotionState)

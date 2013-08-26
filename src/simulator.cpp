@@ -330,7 +330,7 @@ void GR1Context::runSimulator() {
                 } else {
 
                     // Switching goals
-                    BF newCombination = randomDeterminize(trans,postControllerOutputVars);
+                    BF newCombination = determinize(trans,postControllerOutputVars);
                     newCombination &= robotBDD;
                     if (trans.isFalse()) {
                         std::cout << "ERROR (3)\n";
@@ -373,6 +373,113 @@ void GR1Context::runSimulator() {
                         }
                         for (unsigned int i=0; i<variables.size(); i++) {
                             if (variableTypes[i]==PreOtherOutput) {
+                                if ((variables[i] & currentPosition).isFalse()) {
+                                    std::cout << "0";
+                                } else {
+                                    std::cout << "1";
+                                }
+                            }
+                        }
+                        std::cout << "," << currentLivenessGuarantee << std::endl; // Flushes, too.
+                    }
+                }
+            }
+            std::cout.flush();
+        }
+
+        else if (command=="XMAKECONTROLTRANS") {
+            std::cout << "\n"; // Get rid of the prompt
+            BF postInput = mgr.constantTrue();
+            BF preMotionState = mgr.constantTrue();
+            for (unsigned int i=0; i<variables.size(); i++) {
+                if (variableTypes[i]==PostInput) {
+                    char c;
+                    std::cin >> c;
+                    if (c=='0') {
+                        postInput &= !variables[i];
+                    } else if (c=='1') {
+                        postInput &= variables[i];
+                    } else {
+                        std::cerr << "Error: Illegal XMAKETRANS string given.\n";
+                    }
+                }
+                if (variableTypes[i]==PreMotionState) {
+                    char c;
+                    std::cin >> c;
+                    if (c=='0') {
+                        preMotionState &= !variables[i];
+                    } else if (c=='1') {
+                        preMotionState &= variables[i];
+                    } else {
+                        std::cerr << "Error: Illegal XMAKETRANS string given.\n";
+                    }
+                }
+            }
+            BF trans = currentPosition & postInput & safetyEnv;
+            if (trans.isFalse()) {
+                std::cout << "ERROR\n";
+                if (currentPosition.isFalse()) {
+                }
+            } else {
+                trans &= positionalStrategiesForTheIndividualGoals[currentLivenessGuarantee];
+                if (trans.isFalse()) {
+                    std::cout << "ERROR (2)\n";
+                } else {
+
+                    // Switching goals
+                    BF newCombination = determinize(trans,postControllerOutputVars);
+                    newCombination &= robotBDD;
+                    if (trans.isFalse()) {
+                        std::cout << "ERROR (3)\n";
+                    } else {
+                        BF_newDumpDot(*this,newCombination,NULL,"/tmp/newCombinationPossibilities.dot");
+                        newCombination &= preMotionState;
+                        //newCombination = randomDeterminize(newCombination,postMotionStateVars);
+
+                        // Jump as much forward  in the liveness guarantee list as possible ("stuttering avoidance")
+                        unsigned int nextLivenessGuarantee = currentLivenessGuarantee;
+                        bool firstTry = true;
+                        while (((nextLivenessGuarantee != currentLivenessGuarantee) || firstTry) && !((livenessGuarantees[nextLivenessGuarantee] & newCombination).isFalse())) {
+                            nextLivenessGuarantee = (nextLivenessGuarantee + 1) % livenessGuarantees.size();
+                            firstTry = false;
+                        }
+
+                        BF_newDumpDot(*this,newCombination,NULL,"/tmp/newCombination.dot");
+                        //sleep(30);
+
+                        currentLivenessGuarantee = nextLivenessGuarantee;
+                        currentPosition = newCombination.ExistAbstract(varCubePre).SwapVariables(varVectorPre,varVectorPost);
+
+                        // Print position
+                        for (unsigned int i=0; i<variables.size(); i++) {
+                            if (variableTypes[i]==PreInput) {
+                                if ((variables[i] & currentPosition).isFalse()) {
+                                    std::cout << "0";
+                                } else {
+                                    std::cout << "1";
+                                }
+                            }
+                        }
+                        for (unsigned int i=0; i<variables.size(); i++) {
+                            if (variableTypes[i]==PreMotionState) {
+                                if ((variables[i] & currentPosition).isFalse()) {
+                                    std::cout << "0";
+                                } else {
+                                    std::cout << "1";
+                                }
+                            }
+                        }
+                        for (unsigned int i=0; i<variables.size(); i++) {
+                            if (variableTypes[i]==PreOtherOutput) {
+                                if ((variables[i] & currentPosition).isFalse()) {
+                                    std::cout << "0";
+                                } else {
+                                    std::cout << "1";
+                                }
+                            }
+                        }
+                        for (unsigned int i=0; i<variables.size(); i++) {
+                            if (variableTypes[i]==PreMotionControlOutput) {
                                 if ((variables[i] & currentPosition).isFalse()) {
                                     std::cout << "0";
                                 } else {
@@ -439,6 +546,15 @@ void GR1Context::runSimulator() {
             }
             for (unsigned int i=0; i<variables.size(); i++) {
                 if (variableTypes[i]==PreOtherOutput) {
+                    if ((variables[i] & initialPosition).isFalse()) {
+                        std::cout << "0";
+                    } else {
+                        std::cout << "1";
+                    }
+                }
+            }
+            for (unsigned int i=0; i<variables.size(); i++) {
+                if (variableTypes[i]==PreMotionControlOutput) {
                     if ((variables[i] & initialPosition).isFalse()) {
                         std::cout << "0";
                     } else {
