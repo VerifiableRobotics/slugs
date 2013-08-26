@@ -70,5 +70,5 @@ vbit2
 [SYS_LIVENESS]
 # Visit the marked regions
 | & xbit4 ybit4 ! door8
-& & & ! xbit3 ! xbit4 ! ybit3 ! ybit4  
+| & & & ! xbit3 ! xbit4 ! ybit3 ! ybit4 door8
 

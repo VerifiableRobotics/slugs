@@ -332,7 +332,7 @@ void GR1Context::runSimulator() {
                     // Switching goals
                     BF newCombination = determinize(trans,postControllerOutputVars);
                     newCombination &= robotBDD;
-                    if (trans.isFalse()) {
+                    if (newCombination.isFalse()) {
                         std::cout << "ERROR (3)\n";
                     } else {
                         BF_newDumpDot(*this,newCombination,NULL,"/tmp/newCombinationPossibilities.dot");
@@ -415,7 +415,8 @@ void GR1Context::runSimulator() {
                     }
                 }
             }
-            BF trans = currentPosition & postInput & safetyEnv;
+            // BF trans = currentPosition & postInput & safetyEnv;
+            BF trans = currentPosition.ExistAbstract(varCubePreMotionState) & postInput & preMotionState & safetyEnv;
             if (trans.isFalse()) {
                 std::cout << "ERROR\n";
                 if (currentPosition.isFalse()) {
@@ -429,11 +430,11 @@ void GR1Context::runSimulator() {
                     // Switching goals
                     BF newCombination = determinize(trans,postControllerOutputVars);
                     newCombination &= robotBDD;
-                    if (trans.isFalse()) {
+                    if (newCombination.isFalse()) {
                         std::cout << "ERROR (3)\n";
                     } else {
                         BF_newDumpDot(*this,newCombination,NULL,"/tmp/newCombinationPossibilities.dot");
-                        newCombination &= preMotionState;
+                        //newCombination &= preMotionState;
                         //newCombination = randomDeterminize(newCombination,postMotionStateVars);
 
                         // Jump as much forward  in the liveness guarantee list as possible ("stuttering avoidance")
@@ -444,7 +445,6 @@ void GR1Context::runSimulator() {
                             firstTry = false;
                         }
 
-                        BF_newDumpDot(*this,newCombination,NULL,"/tmp/newCombination.dot");
                         //sleep(30);
 
                         currentLivenessGuarantee = nextLivenessGuarantee;

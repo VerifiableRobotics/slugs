@@ -208,6 +208,7 @@ GR1Context::GR1Context(const char *inFileName, const char *robotFileName) {
     varCubePostOutput = mgr.computeCube(postOutputVars);
     varCubePostControllerOutput = mgr.computeCube(postControllerOutputVars);
     varCubePostMotionState = mgr.computeCube(postMotionStateVars);
+    varCubePreMotionState = mgr.computeCube(preMotionStateVars);
     varCubePreInput = mgr.computeCube(preInputVars);
     varCubePreOutput = mgr.computeCube(preOutputVars);
     varCubePre = mgr.computeCube(preVars);

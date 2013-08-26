@@ -42,6 +42,7 @@ protected:
     BFVarCube varCubePostMotionState;
     BFVarCube varCubePreInput;
     BFVarCube varCubePreOutput;
+    BFVarCube varCubePreMotionState;
     BFVarCube varCubePre;
     std::vector<BF> postOutputVars;
     std::vector<BF> postInputVars;
