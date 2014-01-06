@@ -225,43 +225,43 @@ slugsFile.write("1\n")
 
 # Moving where we should be moving (X and Y separate)
 slugsFile.write("# We go exactly where we want to go.\n")
-# for i in xrange(0,3*xsize):
-#     slugsFile.write("& ")
+for i in xrange(0,3*xsize):
+    slugsFile.write("& ")
 
 for i in xrange(0,xsize):
     slugsFile.write("| | ! left ! "+encodeXValue(i)+" ")
     slugsFile.write(encodeXPrimeValue(max(i-1,0)))
-    slugsFile.write("\n")
+    slugsFile.write(" ")
 
 for i in xrange(0,xsize):
     slugsFile.write("| | ! right ! "+encodeXValue(i)+" ")
     slugsFile.write(encodeXPrimeValue(min(i+1,xsize-1)))
-    slugsFile.write("\n")
+    slugsFile.write(" ")
 
 for i in xrange(0,xsize):
     slugsFile.write("| | | right left ! "+encodeXValue(i)+" ")
     slugsFile.write(encodeXPrimeValue(i))
-    slugsFile.write("\n")
+    slugsFile.write(" ")
 
 slugsFile.write("1\n")
 
-# for i in xrange(0,3*ysize):
-#     slugsFile.write("& ")
+for i in xrange(0,3*ysize):
+    slugsFile.write("& ")
 
 for i in xrange(0,ysize):
     slugsFile.write("| | ! up ! "+encodeYValue(i)+" ")
     slugsFile.write(encodeYPrimeValue(max(i-1,0)))
-    slugsFile.write("\n")
+    slugsFile.write(" ")
 
 for i in xrange(0,ysize):
     slugsFile.write("| | ! down ! "+encodeYValue(i)+" ")
     slugsFile.write(encodeYPrimeValue(min(i+1,ysize-1)))
-    slugsFile.write("\n")
+    slugsFile.write(" ")
 
 for i in xrange(0,ysize):
     slugsFile.write("| | | up down ! "+encodeYValue(i)+" ")
     slugsFile.write(encodeYPrimeValue(i))
-    slugsFile.write("\n")
+    slugsFile.write(" ")
 
 slugsFile.write("1\n")
 
@@ -496,12 +496,14 @@ for activeColor in xrange(2,256,2):
             slugsFile.write("| MOSpeederMonitor"+str(activeColor)+" MOSpeederMonitor"+str(activeColor)+"'\n")
             slugsFile.write("[ENV_TRANS]\n")
             # Prepare constraints
+            slugsFile.write("& "*(2*nofXCoordinateBits+2*nofYCoordinateBits)+"1")
             for i in xrange(0,nofXCoordinateBits):
-                slugsFile.write("| | MOSpeederMonitor"+str(activeColor)+" ! mox"+str(activeColor)+"_"+str(i)+" mox"+str(activeColor)+"_"+str(i)+"'\n")
-                slugsFile.write("| | MOSpeederMonitor"+str(activeColor)+" mox"+str(activeColor)+"_"+str(i)+" ! mox"+str(activeColor)+"_"+str(i)+"'\n")
+                slugsFile.write(" | | MOSpeederMonitor"+str(activeColor)+" ! mox"+str(activeColor)+"_"+str(i)+" mox"+str(activeColor)+"_"+str(i)+"'")
+                slugsFile.write(" | | MOSpeederMonitor"+str(activeColor)+" mox"+str(activeColor)+"_"+str(i)+" ! mox"+str(activeColor)+"_"+str(i)+"'")
             for i in xrange(0,nofYCoordinateBits):
-                slugsFile.write("| | MOSpeederMonitor"+str(activeColor)+" ! moy"+str(activeColor)+"_"+str(i)+" moy"+str(activeColor)+"_"+str(i)+"'\n")
-                slugsFile.write("| | MOSpeederMonitor"+str(activeColor)+" moy"+str(activeColor)+"_"+str(i)+" ! moy"+str(activeColor)+"_"+str(i)+"'\n")
+                slugsFile.write(" | | MOSpeederMonitor"+str(activeColor)+" ! moy"+str(activeColor)+"_"+str(i)+" moy"+str(activeColor)+"_"+str(i)+"'")
+                slugsFile.write(" | | MOSpeederMonitor"+str(activeColor)+" moy"+str(activeColor)+"_"+str(i)+" ! moy"+str(activeColor)+"_"+str(i)+"'")
+            slugsFile.write("\n")
 
         # Correct motion by the moving obstacle!
         slugsFile.write("\n[ENV_TRANS]\n")
@@ -524,7 +526,7 @@ for activeColor in xrange(2,256,2):
                         if not conflict:
                             toCases.append("& "+encodeMOXPrimeValue(newX)+" "+encodeMOYPrimeValue(newY))
                 fromConstraints.append("| "+fromCase+" "+"| "*(len(toCases)-1)+" ".join(toCases))
-        slugsFile.write(""*(len(fromConstraints)-1)+"\n".join(fromConstraints)+"\n")
+        slugsFile.write("& "*(len(fromConstraints)-1)+" ".join(fromConstraints)+"\n")
                        
         # No collision
         slugsFile.write("\n[SYS_TRANS]\n")
