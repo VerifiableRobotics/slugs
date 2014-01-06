@@ -69,9 +69,11 @@ public:
                 // The prompt
                 std::cout << "> ";
                 std::cout.flush();
-                std::string command;
-                std::getline(std::cin,command);
-                if (std::cin.eof()) return;
+                std::string command = "";
+                while (command=="") {
+                    std::getline(std::cin,command);
+                    if (std::cin.eof()) return;
+                }
 
                 // Check the command
                 boost::trim(command);
@@ -206,99 +208,110 @@ public:
                     currentPosition = from;
                 } else if (command=="MOVE") {
 
-                    std::cout << "Guarantee No.: ";
-                    std::cout.flush();
-                    unsigned int guarantee;
-                    std::cin >> guarantee;
-                    if (std::cin.fail()) {
-                        std::cout << "    -> Error reading value. Aborting \n";
-                    } else if (guarantee>=livenessGuarantees.size()) {
-                        std::cout << "    -> Number too large. Aborting \n";
+                    if (currentPosition == mgr.constantFalse()) {
+                        std::cout << "Error: The current position is undefined. Use SETPOS prior to calling MOVE." << std::endl;
                     } else {
 
-                        BF allowedInputs = (currentPosition & safetyEnv);
-                        BF_newDumpDot(*this,allowedInputs,NULL,"/tmp/allowedInputs.dot");
-
-                        std::cout << "To: \n";
-                        BF to = mgr.constantTrue();
-                        for (unsigned int i=0;i<variables.size();i++) {
-                            if (variableTypes[i]==PostInput) {
-                                std::cout << " - " << variableNames[i] << ": ";
-                                std::cout.flush();
-                                int value;
-                                std::cin >> value;
-                                if (std::cin.fail()) {
-                                    std::cout << "    -> Error reading value. Assuming 0.\n";
-                                    value = 0;
-                                }
-                                if (value==0) {
-                                    to &= !variables[i];
-                                } else if (value==1) {
-                                    to &= variables[i];
-                                } else {
-                                    std::cout << "    -> Value != 0 or 1. Assuming 1.\n";
-                                    to &= variables[i];
-                                }
-                            }
-                        }
-
-                        BF transition = currentPosition & to & positionalStrategiesForTheIndividualGoals[guarantee];
-
-                        if (transition.isFalse()) {
-                            std::cout << "    -> Error: Input not allowed here.\n";
-                            if (!(currentPosition & to & safetyEnv).isFalse()) {
-                                std::cout << "       -> Actually, that's an internal error!\n";
-                            }
+                        std::cout << "Guarantee No.: ";
+                        std::cout.flush();
+                        unsigned int guarantee;
+                        std::cin >> guarantee;
+                        if (std::cin.fail()) {
+                            std::cout << "    -> Error reading value. Aborting \n";
+                        } else if (guarantee>=livenessGuarantees.size()) {
+                            std::cout << "    -> Number too large. Aborting \n";
                         } else {
 
-                            transition = determinize(transition,postOutputVars);
+                            BF allowedInputs = (currentPosition & safetyEnv);
+                            BF_newDumpDot(*this,allowedInputs,NULL,"/tmp/allowedInputs.dot");
 
+                            std::cout << "To: \n";
+                            BF to = mgr.constantTrue();
+                            BF nextPosition = mgr.constantTrue();
                             for (unsigned int i=0;i<variables.size();i++) {
-                                if (variableTypes[i]==PostOutput) {
-                                    if ((variables[i] & transition).isFalse()) {
-                                        std::cout << " - " << variableNames[i] << " = 0\n";
+                                if (variableTypes[i]==PostInput) {
+                                    std::cout << " - " << variableNames[i] << ": ";
+                                    std::cout.flush();
+                                    int value;
+                                    std::cin >> value;
+                                    if (std::cin.fail()) {
+                                        std::cout << "    -> Error reading value. Assuming 0.\n";
+                                        value = 0;
+                                    }
+                                    if (value==0) {
+                                        to &= !variables[i];
+                                        nextPosition &= !variables[i];
+                                    } else if (value==1) {
+                                        to &= variables[i];
+                                        nextPosition &= variables[i];
                                     } else {
-                                        std::cout << " - " << variableNames[i] << " = 1\n";
+                                        std::cout << "    -> Value != 0 or 1. Assuming 1.\n";
+                                        to &= variables[i];
                                     }
                                 }
                             }
 
-                            std::cout << "- The transition is a goal transition for the following liveness assumptions: ";
-                            bool foundOne = false;
-                            for (unsigned int i=0;i<livenessAssumptions.size();i++) {
-                                if (!(livenessAssumptions[i] & transition).isFalse()) {
-                                    if (foundOne) std::cout << ", ";
-                                    foundOne = true;
-                                    std::cout << i;
-                                }
-                            }
-                            if (!foundOne) std::cout << "none";
-                            std::cout << std::endl;
-                            std::cout << "- The transition is a goal transition for the following liveness guarantees: ";
-                            foundOne = false;
-                            for (unsigned int i=0;i<livenessGuarantees.size();i++) {
-                                if (!(livenessGuarantees[i] & transition).isFalse()) {
-                                    if (foundOne) std::cout << ", ";
-                                    foundOne = true;
-                                    std::cout << i;
-                                }
-                            }
-                            if (!foundOne) std::cout << "none";
-                            std::cout << std::endl;
+                            BF transition = currentPosition & to & positionalStrategiesForTheIndividualGoals[guarantee];
 
-                            // Analyse if it is part of a possible strategy
-                            std::cout << "- The transition is a possible transition in a strategy for the following goals: ";
-                            foundOne = false;
-                            for (unsigned int i=0;i<livenessGuarantees.size();i++) {
-                                if (!(positionalStrategiesForTheIndividualGoals[i] & transition).isFalse()) {
-                                    if (foundOne) std::cout << ", ";
-                                    foundOne = true;
-                                    std::cout << i;
+                            if (transition.isFalse()) {
+                                std::cout << "    -> Error: Input not allowed here.\n";
+                                if (!(currentPosition & to & safetyEnv).isFalse()) {
+                                    std::cout << "       -> Actually, that's an internal error!\n";
                                 }
-                            }
-                            if (!foundOne) std::cout << "none";
-                            std::cout << std::endl;
+                            } else {
 
+                                transition = determinize(transition,postOutputVars);
+
+                                for (unsigned int i=0;i<variables.size();i++) {
+                                    if (variableTypes[i]==PostOutput) {
+                                        if ((variables[i] & transition).isFalse()) {
+                                            std::cout << " - " << variableNames[i] << " = 0\n";
+                                            nextPosition &= !variables[i];
+                                        } else {
+                                            std::cout << " - " << variableNames[i] << " = 1\n";
+                                            nextPosition &= variables[i];
+                                        }
+                                    }
+                                }
+
+                                std::cout << "- The transition is a goal transition for the following liveness assumptions: ";
+                                bool foundOne = false;
+                                for (unsigned int i=0;i<livenessAssumptions.size();i++) {
+                                    if (!(livenessAssumptions[i] & transition).isFalse()) {
+                                        if (foundOne) std::cout << ", ";
+                                        foundOne = true;
+                                        std::cout << i;
+                                    }
+                                }
+                                if (!foundOne) std::cout << "none";
+                                std::cout << std::endl;
+                                std::cout << "- The transition is a goal transition for the following liveness guarantees: ";
+                                foundOne = false;
+                                for (unsigned int i=0;i<livenessGuarantees.size();i++) {
+                                    if (!(livenessGuarantees[i] & transition).isFalse()) {
+                                        if (foundOne) std::cout << ", ";
+                                        foundOne = true;
+                                        std::cout << i;
+                                    }
+                                }
+                                if (!foundOne) std::cout << "none";
+                                std::cout << std::endl;
+
+                                // Analyse if it is part of a possible strategy
+                                std::cout << "- The transition is a possible transition in a strategy for the following goals: ";
+                                foundOne = false;
+                                for (unsigned int i=0;i<livenessGuarantees.size();i++) {
+                                    if (!(positionalStrategiesForTheIndividualGoals[i] & transition).isFalse()) {
+                                        if (foundOne) std::cout << ", ";
+                                        foundOne = true;
+                                        std::cout << i;
+                                    }
+                                }
+                                if (!foundOne) std::cout << "none";
+                                std::cout << std::endl;
+
+                                currentPosition = nextPosition.SwapVariables(varVectorPre,varVectorPost);
+                            }
                         }
                     }
                 }
@@ -405,6 +418,8 @@ public:
                     }
                     std::cout << ",0" << std::endl; // Flushes, too.
                     currentPosition = initialPosition;
+                } else {
+                    std::cout << "Error: Did not understand command '" << command << "'" << std::endl;
                 }
 
             }
