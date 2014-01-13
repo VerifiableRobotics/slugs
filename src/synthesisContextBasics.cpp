@@ -9,8 +9,75 @@
  * @brief Constructor that reads the problem instance from file and prepares the BFManager, the BFVarCubes, and the BFVarVectors
  * @param inFile the input filename
  */
-GR1Context::GR1Context(std::list<std::string> &filenames) {
+GR1Context::GR1Context(std::list<std::string> &filenames) {}
 
+/**
+ * @brief Recurse internal function to parse a Boolean formula from a line in the input file
+ * @param is the input stream from which the tokens in the line are read
+ * @param allowedTypes a list of allowed variable types - this allows to check that assumptions do not refer to 'next' output values.
+ * @return a BF that represents the transition constraint read from the line
+ */
+BF GR1Context::parseBooleanFormulaRecurse(std::istringstream &is,std::set<VariableType> &allowedTypes) {
+    std::string operation = "";
+    is >> operation;
+    if (operation=="") {
+        SlugsException e(false);
+        e << "Error reading line " << lineNumberCurrentlyRead << ". Premature end of line.";
+        throw e;
+    }
+    if (operation=="|") return parseBooleanFormulaRecurse(is,allowedTypes) | parseBooleanFormulaRecurse(is,allowedTypes);
+    if (operation=="&") return parseBooleanFormulaRecurse(is,allowedTypes) & parseBooleanFormulaRecurse(is,allowedTypes);
+    if (operation=="!") return !parseBooleanFormulaRecurse(is,allowedTypes);
+    if (operation=="1") return mgr.constantTrue();
+    if (operation=="0") return mgr.constantFalse();
+
+    // Has to be a variable!
+    for (unsigned int i=0;i<variableNames.size();i++) {
+        if (variableNames[i]==operation) {
+            if (allowedTypes.count(variableTypes[i])==0) {
+                SlugsException e(false);
+                e << "Error reading line " << lineNumberCurrentlyRead << ". The variable " << operation << " is not allowed for this type of expression.";
+                throw e;
+            }
+            return variables[i];
+        }
+    }
+    SlugsException e(false);
+    e << "Error reading line " << lineNumberCurrentlyRead << ". The variable " << operation << " has not been found.";
+    throw e;
+}
+
+/**
+ * @brief Internal function for parsing a Boolean formula from a line in the input file - calls the recursive function to do all the work.
+ * @param currentLine the line to parse
+ * @param allowedTypes a list of allowed variable types - this allows to check that assumptions do not refer to 'next' output values.
+ * @return a BF that represents the transition constraint read from the line
+ */
+BF GR1Context::parseBooleanFormula(std::string currentLine,std::set<VariableType> &allowedTypes) {
+
+    std::istringstream is(currentLine);
+
+    BF result = parseBooleanFormulaRecurse(is,allowedTypes);
+    std::string nextPart = "";
+    is >> nextPart;
+    if (nextPart=="") return result;
+
+    SlugsException e(false);
+    e << "Error reading line " << lineNumberCurrentlyRead << ". There are stray characters: '" << nextPart << "'";
+    throw e;
+}
+
+
+void GR1Context::execute() {
+    checkRealizability();
+    if (realizable) {
+        std::cerr << "RESULT: Specification is realizable.\n";
+    } else {
+        std::cerr << "RESULT: Specification is unrealizable.\n";
+    }
+}
+
+void GR1Context::init(std::list<std::string> &filenames) {
     if (filenames.size()==0) {
         throw "Error: Cannot load SLUGS input file - there has been no input file name given!";
     }
@@ -26,7 +93,7 @@ GR1Context::GR1Context(std::list<std::string> &filenames) {
     initSys = mgr.constantTrue();
     safetyEnv = mgr.constantTrue();
     safetySys = mgr.constantTrue();
-
+    
     // The readmode variable stores in which chapter of the input file we are
     int readMode = -1;
     std::string currentLine;
@@ -97,6 +164,7 @@ GR1Context::GR1Context(std::list<std::string> &filenames) {
                     std::set<VariableType> allowedTypes;
                     allowedTypes.insert(PreInput);
                     allowedTypes.insert(PreOutput);
+                    allowedTypes.insert(PostOutput);
                     allowedTypes.insert(PostInput);
                     livenessAssumptions.push_back(parseBooleanFormula(currentLine,allowedTypes));
                 } else if (readMode==7) {
@@ -156,72 +224,5 @@ GR1Context::GR1Context(std::list<std::string> &filenames) {
     // The synthesis algorithm might be unsound otherwise
     if (livenessAssumptions.size()==0) livenessAssumptions.push_back(mgr.constantTrue());
     if (livenessGuarantees.size()==0) livenessGuarantees.push_back(mgr.constantTrue());
-
-
 }
 
-/**
- * @brief Recurse internal function to parse a Boolean formula from a line in the input file
- * @param is the input stream from which the tokens in the line are read
- * @param allowedTypes a list of allowed variable types - this allows to check that assumptions do not refer to 'next' output values.
- * @return a BF that represents the transition constraint read from the line
- */
-BF GR1Context::parseBooleanFormulaRecurse(std::istringstream &is,std::set<VariableType> &allowedTypes) {
-    std::string operation = "";
-    is >> operation;
-    if (operation=="") {
-        SlugsException e(false);
-        e << "Error reading line " << lineNumberCurrentlyRead << ". Premature end of line.";
-        throw e;
-    }
-    if (operation=="|") return parseBooleanFormulaRecurse(is,allowedTypes) | parseBooleanFormulaRecurse(is,allowedTypes);
-    if (operation=="&") return parseBooleanFormulaRecurse(is,allowedTypes) & parseBooleanFormulaRecurse(is,allowedTypes);
-    if (operation=="!") return !parseBooleanFormulaRecurse(is,allowedTypes);
-    if (operation=="1") return mgr.constantTrue();
-    if (operation=="0") return mgr.constantFalse();
-
-    // Has to be a variable!
-    for (unsigned int i=0;i<variableNames.size();i++) {
-        if (variableNames[i]==operation) {
-            if (allowedTypes.count(variableTypes[i])==0) {
-                SlugsException e(false);
-                e << "Error reading line " << lineNumberCurrentlyRead << ". The variable " << operation << " is not allowed for this type of expression.";
-                throw e;
-            }
-            return variables[i];
-        }
-    }
-    SlugsException e(false);
-    e << "Error reading line " << lineNumberCurrentlyRead << ". The variable " << operation << " has not been found.";
-    throw e;
-}
-
-/**
- * @brief Internal function for parsing a Boolean formula from a line in the input file - calls the recursive function to do all the work.
- * @param currentLine the line to parse
- * @param allowedTypes a list of allowed variable types - this allows to check that assumptions do not refer to 'next' output values.
- * @return a BF that represents the transition constraint read from the line
- */
-BF GR1Context::parseBooleanFormula(std::string currentLine,std::set<VariableType> &allowedTypes) {
-
-    std::istringstream is(currentLine);
-
-    BF result = parseBooleanFormulaRecurse(is,allowedTypes);
-    std::string nextPart = "";
-    is >> nextPart;
-    if (nextPart=="") return result;
-
-    SlugsException e(false);
-    e << "Error reading line " << lineNumberCurrentlyRead << ". There are stray characters: '" << nextPart << "'";
-    throw e;
-}
-
-
-void GR1Context::execute() {
-    checkRealizability();
-    if (realizable) {
-        std::cerr << "RESULT: Specification is realizable.\n";
-    } else {
-        std::cerr << "RESULT: Specification is unrealizable.\n";
-    }
-}

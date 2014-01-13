@@ -9,8 +9,7 @@
 #include <list>
 #include <vector>
 #include "bddDump.h"
-
-typedef enum { PreInput, PreOutput, PostInput,PostOutput } VariableType;
+typedef enum { PreInput, PreOutput, PostInput,PostOutput , PreInputFS, PreOutputF, PreOutputS, PostInputFS, PostOutputF, PostOutputS } VariableType;
 
 /**
  * @brief Container class for all GR(1) synthesis related activities
@@ -84,6 +83,9 @@ public:
     virtual void checkRealizability();
     virtual void execute();
     static BF determinize(BF in, std::vector<BF> vars);
+    virtual void init(std::list<std::string> &filenames);
+    
+    
 
     //@{
     /**
