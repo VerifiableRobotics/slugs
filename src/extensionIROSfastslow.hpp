@@ -264,24 +264,24 @@ public:
     // The greatest fixed point - called "Z" in the GR(1) synthesis paper
     BFFixedPoint nu2(mgr.constantTrue());
     
-    BF safeStates = safetySys.ExistAbstract(varCubePostInputFS).ExistAbstract(varCubePostOutputF).ExistAbstract(varCubePostOutputF);
-    BF safeNext = (safetySys.ExistAbstract(varCubePreInputFS).ExistAbstract(varCubePreOutputF).ExistAbstract(varCubePreOutputF)).SwapVariables(varVectorPost,varVectorPre);
+    BF safeStates = safetySys.ExistAbstract(varCubePostInputFS).ExistAbstract(varCubePostOutputS).ExistAbstract(varCubePostOutputF);
+    BF safeNext = (safetySys.ExistAbstract(varCubePreInputFS).ExistAbstract(varCubePreOutputS).ExistAbstract(varCubePreOutputF)).SwapVariables(varVectorPost,varVectorPre);
     
     
-    //BF sameVarS = mgr.constantTrue();
+    BF sameVarS = mgr.constantTrue();
     //BF sameVarF = mgr.constantTrue();
     
     
-    //for (unsigned int i1=0;i1<postOutputSVars.size();i1++)
-    //{
-    //    sameVarS = sameVarS & postOutputSVars[i1].Implies(preOutputSVars[i1]) & !postOutputSVars[i1].Implies(!preOutputSVars[i1]);
-    //}
+    for (unsigned int i1=0;i1<postOutputSVars.size();i1++)
+    {
+        sameVarS = sameVarS & postOutputSVars[i1].Implies(preOutputSVars[i1]) & !postOutputSVars[i1].Implies(!preOutputSVars[i1]);
+    }
     //for (unsigned int i2=0;i2<postOutputFVars.size();i2++)
     //{
     //    sameVarF = sameVarF & postOutputFVars[i2].Implies(preOutputFVars[i2]) & !postOutputFVars[i2].Implies(!preOutputFVars[i2]);
     //}
                         
-    BF newSafetySys = safetySys & safeStates & safeNext;       
+    BF newSafetySys = safetySys & (sameVarS.Implies((safeStates & safeNext).SwapVariables(varVectorPre,varVectorPost))).UnivAbstract(varCubePostOutputF);       
 
     // Iterate until we have found a fixed point
     for (;!nu2.isFixedPointReached();) {
@@ -350,7 +350,7 @@ public:
                         BF fs2 = (foundPaths).SwapVariables(varVectorPre,varVectorPost) & (safetySys & (sameVarS)).ExistAbstract(varCubePostOutputF).ExistAbstract(varCubePostOutputF);
         
                         
-                        ///***For all environment moves, there is either a move that changes only slow or only fast, 
+                        ////For all environment moves, there is either a move that changes only slow or only fast, 
                         //or one that changes both actions but has a safe intermediate state
                         nu0.update(safetyEnv.Implies(fs1 | (fs2)).UnivAbstract(varCubePostInputFS));
                         */
