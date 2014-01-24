@@ -263,6 +263,25 @@ public:
 
     // The greatest fixed point - called "Z" in the GR(1) synthesis paper
     BFFixedPoint nu2(mgr.constantTrue());
+    
+    BF safeStates = safetySys.ExistAbstract(varCubePostInputFS).ExistAbstract(varCubePostOutputF).ExistAbstract(varCubePostOutputF);
+    BF safeNext = (safetySys.ExistAbstract(varCubePreInputFS).ExistAbstract(varCubePreOutputF).ExistAbstract(varCubePreOutputF)).SwapVariables(varVectorPost,varVectorPre);
+    
+    
+    //BF sameVarS = mgr.constantTrue();
+    //BF sameVarF = mgr.constantTrue();
+    
+    
+    //for (unsigned int i1=0;i1<postOutputSVars.size();i1++)
+    //{
+    //    sameVarS = sameVarS & postOutputSVars[i1].Implies(preOutputSVars[i1]) & !postOutputSVars[i1].Implies(!preOutputSVars[i1]);
+    //}
+    //for (unsigned int i2=0;i2<postOutputFVars.size();i2++)
+    //{
+    //    sameVarF = sameVarF & postOutputFVars[i2].Implies(preOutputFVars[i2]) & !postOutputFVars[i2].Implies(!preOutputFVars[i2]);
+    //}
+                        
+    BF newSafetySys = safetySys & safeStates & safeNext;       
 
     // Iterate until we have found a fixed point
     for (;!nu2.isFixedPointReached();) {
@@ -306,27 +325,11 @@ public:
 
                         // Compute a set of paths that are safe to take - used for the enforceable predecessor operator ('cox')
                         foundPaths = livetransitions | (nu0.getValue().SwapVariables(varVectorPre,varVectorPost) & !(livenessAssumptions[i]));
-                        foundPaths &= safetySys;
+                        foundPaths &= newSafetySys;
 
                         // Update the inner-most fixed point with the result of applying the enforcable *FS* predecessor operator
-
-                        
-                        BF sameVarS = mgr.constantTrue();
-                        BF sameVarF = mgr.constantTrue();
-                        
-                        
-                        for (unsigned int i1=0;i1<postOutputSVars.size();i1++)
-                        {
-                            sameVarS = sameVarS & postOutputSVars[i1].Implies(preOutputSVars[i1]) & !postOutputSVars[i1].Implies(!preOutputSVars[i1]);
-                        }
-                        //for (unsigned int i2=0;i2<postOutputFVars.size();i2++)
-                        //{
-                        //    sameVarF = sameVarF & postOutputFVars[i2].Implies(preOutputFVars[i2]) & !postOutputFVars[i2].Implies(!preOutputFVars[i2]);
-                        //}
-                       
-                        BF safeStates = safetySys.ExistAbstract(varCubePostInputFS).ExistAbstract(varCubePostOutputF).ExistAbstract(varCubePostOutputF);
-                        BF safeNext = (safetySys.ExistAbstract(varCubePreInputFS).ExistAbstract(varCubePreOutputF).ExistAbstract(varCubePreOutputF)).SwapVariables(varVectorPost,varVectorPre);
-                
+                         
+                        /*
                         //Read the new enforceable predecessor operator starting at the update statement***
                         
                         //And there is a transition to the "to" (foundPaths) set, i.e. a slow move as well as the (pre-determined) fast move
@@ -350,8 +353,9 @@ public:
                         ///***For all environment moves, there is either a move that changes only slow or only fast, 
                         //or one that changes both actions but has a safe intermediate state
                         nu0.update(safetyEnv.Implies(fs1 | (fs2)).UnivAbstract(varCubePostInputFS));
+                        */
                         
-                        //nu0.update(safetyEnv.Implies(foundPaths).ExistAbstract(varCubePostOutputF).ExistAbstract(varCubePostOutputS).UnivAbstract(varCubePostInputFS));
+                        nu0.update(safetyEnv.Implies(foundPaths).ExistAbstract(varCubePostOutputF).ExistAbstract(varCubePostOutputS).UnivAbstract(varCubePostInputFS));
                     }
                 
                     // Update the set of positions that are winning for some liveness assumption
