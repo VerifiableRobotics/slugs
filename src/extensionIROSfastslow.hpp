@@ -57,6 +57,8 @@ protected:
     std::vector<BF> preOutputFVars;
     std::vector<BF> preOutputSVars;
     std::vector<BF> preInputVars;
+    BFBddVarVector varVectorPostOutputS;;
+    BFBddVarVector varVectorPreOutputS;
     
     
     // Constructor
@@ -223,6 +225,8 @@ void init(std::list<std::string> &filenames) {
     }
     varVectorPre = mgr.computeVarVector(preVars);
     varVectorPost = mgr.computeVarVector(postVars);
+    varVectorPostOutputS = mgr.computeVarVector(postOutputSVars);
+    varVectorPreOutputS = mgr.computeVarVector(preOutputSVars);
     varCubePostInputFS = mgr.computeCube(postInputVars);
     varCubePostOutputF = mgr.computeCube(postOutputFVars);
     varCubePostOutputS = mgr.computeCube(postOutputSVars);
@@ -231,6 +235,7 @@ void init(std::list<std::string> &filenames) {
     varCubePreOutputS = mgr.computeCube(preOutputSVars);
     varCubePre = mgr.computeCube(preVars);
     varCubePost = mgr.computeCube(postVars);
+    
 
     // Check if variable names have been used twice
     std::set<std::string> variableNameSet(variableNames.begin(),variableNames.end());
@@ -267,21 +272,22 @@ public:
     BF safeStates = safetySys.ExistAbstract(varCubePostInputFS).ExistAbstract(varCubePostOutputS).ExistAbstract(varCubePostOutputF);
     BF safeNext = (safetySys.ExistAbstract(varCubePreInputFS).ExistAbstract(varCubePreOutputS).ExistAbstract(varCubePreOutputF)).SwapVariables(varVectorPost,varVectorPre);
     
+    BF newSafetySys = safetySys & (safeStates & safeNext).SwapVariables(varVectorPre,varVectorPost).SwapVariables(varVectorPostOutputS,varVectorPreOutputS);
     
-    BF sameVarS = mgr.constantTrue();
+    //BF sameVarS = mgr.constantTrue();
     //BF sameVarF = mgr.constantTrue();
     
     
-    for (unsigned int i1=0;i1<postOutputSVars.size();i1++)
-    {
-        sameVarS = sameVarS & postOutputSVars[i1].Implies(preOutputSVars[i1]) & !postOutputSVars[i1].Implies(!preOutputSVars[i1]);
-    }
+    //for (unsigned int i1=0;i1<postOutputSVars.size();i1++)
+    //{
+    //    sameVarS = sameVarS & postOutputSVars[i1].Implies(preOutputSVars[i1]) & !postOutputSVars[i1].Implies(!preOutputSVars[i1]);
+    //}
     //for (unsigned int i2=0;i2<postOutputFVars.size();i2++)
     //{
     //    sameVarF = sameVarF & postOutputFVars[i2].Implies(preOutputFVars[i2]) & !postOutputFVars[i2].Implies(!preOutputFVars[i2]);
     //}
                         
-    BF newSafetySys = safetySys & (sameVarS.Implies((safeStates & safeNext).SwapVariables(varVectorPre,varVectorPost))).UnivAbstract(varCubePostOutputF);       
+    //BF newSafetySys = safetySys & (sameVarS.Implies((safeStates & safeNext).SwapVariables(varVectorPre,varVectorPost))).UnivAbstract(varCubePostOutputF);       
 
     // Iterate until we have found a fixed point
     for (;!nu2.isFixedPointReached();) {
