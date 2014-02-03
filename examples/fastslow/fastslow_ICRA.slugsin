@@ -1,0 +1,191 @@
+#======================================
+# Fast/slow example from LTLMoP
+#======================================
+
+[INPUT]
+person
+stop_r1
+stop_r2
+stop_r4
+stop_r5
+stop_r7
+stop_r8
+c_r1
+c_r2
+c_r3
+c_r4
+c_r5
+c_r6
+c_r7
+c_r8
+c_start
+c_goal
+#c_wave
+c_camera
+
+[OUTPUT]
+r1
+r2
+r3
+r4
+r5
+r6
+r7
+r8
+start
+goal
+wave
+camera
+
+
+[ENV_TRANS]
+
+# ad hoc
+
+| c_start' ! person'
+| ! goal & & & & & ! stop_r1' ! stop_r2' ! stop_r4' ! stop_r5' ! stop_r7' ! stop_r8'
+& & & ! stop_r2' ! stop_r4' ! stop_r5' ! stop_r7'
+| c_start ! stop_r1'
+| c_r6 ! stop_r8'
+
+
+# reasonable completion
+| ! & c_start start c_start'
+| ! & c_r1 r1 c_r1'
+| ! & c_r2 r2 c_r2'
+| ! & c_r3 r3 c_r3'
+| ! & c_r4 r4 c_r4'
+| ! & c_r5 r5 c_r5'
+| ! & c_r6 r6 c_r6'
+| ! & c_r7 r7 c_r7'
+| ! & c_r8 r8 c_r8'
+| ! & c_goal goal c_goal'
+
+#| ! & c_wave wave c_wave'
+| ! & c_camera camera c_camera'
+#| ! & ! c_wave ! wave ! c_wave'
+| ! & ! c_camera ! camera ! c_camera'
+
+
+| ! & c_start r1 | c_start' c_r1'
+| ! & c_start r2 | c_start' c_r2'
+| ! & c_r1 start | c_r1' c_start' 
+| ! & c_r2 start | c_r2' c_start' 
+| ! & c_r1 r3 | c_r1' c_r3' 
+| ! & c_r2 r3 | c_r2' c_r3' 
+| ! & c_r3 r1 | c_r3' c_r1' 
+| ! & c_r3 r2 | c_r3' c_r2' 
+| ! & c_r1 r2 | c_r1' c_r2' 
+| ! & c_r2 r1 | c_r2' c_r1' 
+
+| ! & c_r3 r4 | c_r3' c_r4' 
+| ! & c_r3 r5 | c_r3' c_r5' 
+| ! & c_r4 r3 | c_r4' c_r3' 
+| ! & c_r5 r3 | c_r5' c_r3' 
+| ! & c_r4 r6 | c_r4' c_r6' 
+| ! & c_r5 r6 | c_r5' c_r5' 
+| ! & c_r6 r4 | c_r6' c_r6' 
+| ! & c_r6 r5 | c_r6' c_r6' 
+| ! & c_r4 r5 | c_r4' c_r4' 
+| ! & c_r5 r4 | c_r5' c_r5' 
+
+| ! & c_r6 r7 | c_r6' c_r7' 
+| ! & c_r6 r8 | c_r6' c_r8' 
+| ! & c_r7 r6 | c_r7' c_r6' 
+| ! & c_r8 r6 | c_r8' c_r6' 
+| ! & c_r7 goal | c_r7' c_goal' 
+| ! & c_r8 goal | c_r8' c_goal' 
+| ! & c_goal r7 | c_goal' c_r7' 
+| ! & c_goal r8 | c_goal' c_r8' 
+| ! & c_r7 r8 | c_r7' c_r8' 
+| ! & c_r8 r7 | c_r8' c_r7' 
+
+
+# mutex on completion
+| ! c_start' & & & & & & & & ! c_r1' ! c_r2' ! c_r3' ! c_r4' ! c_r5' ! c_r6' ! c_r7' ! c_r8' ! c_goal'
+| ! c_r1' & & & & & & & & ! c_start' ! c_r2' ! c_r3' ! c_r4' ! c_r5' ! c_r6' ! c_r7' ! c_r8' ! c_goal'
+| ! c_r2' & & & & & & & & ! c_start' ! c_r1' ! c_r3' ! c_r4' ! c_r5' ! c_r6' ! c_r7' ! c_r8' ! c_goal'
+| ! c_r3' & & & & & & & & ! c_start' ! c_r1' ! c_r2' ! c_r4' ! c_r5' ! c_r6' ! c_r7' ! c_r8' ! c_goal'
+| ! c_r4' & & & & & & & & ! c_start' ! c_r1' ! c_r2' ! c_r3' ! c_r5' ! c_r6' ! c_r7' ! c_r8' ! c_goal'
+| ! c_r5' & & & & & & & & ! c_start' ! c_r1' ! c_r2' ! c_r3' ! c_r4' ! c_r6' ! c_r7' ! c_r8' ! c_goal'
+| ! c_r6' & & & & & & & & ! c_start' ! c_r1' ! c_r2' ! c_r3' ! c_r4' ! c_r5' ! c_r7' ! c_r8' ! c_goal'
+| ! c_r7' & & & & & & & & ! c_start' ! c_r1' ! c_r2' ! c_r3' ! c_r4' ! c_r5' ! c_r6' ! c_r8' ! c_goal'
+| ! c_r8' & & & & & & & & ! c_start' ! c_r1' ! c_r2' ! c_r3' ! c_r4' ! c_r5' ! c_r6' ! c_r7' ! c_goal'
+| ! c_goal' & & & & & & & & ! c_start' ! c_r1' ! c_r2' ! c_r3' ! c_r4' ! c_r5' ! c_r6' ! c_r7' ! c_r8'
+
+# mutex on stop signs
+| ! stop_r1' & & & & ! stop_r2' ! stop_r4' ! stop_r5' ! stop_r7' ! stop_r8'
+| ! stop_r2' & & & & ! stop_r1' ! stop_r4' ! stop_r5' ! stop_r7' ! stop_r8'
+| ! stop_r4' & & & & ! stop_r1' ! stop_r2' ! stop_r5' ! stop_r7' ! stop_r8'
+| ! stop_r5' & & & & ! stop_r1' ! stop_r2' ! stop_r4' ! stop_r7' ! stop_r8'
+| ! stop_r7' & & & & ! stop_r1'  ! stop_r2' ! stop_r4' ! stop_r5' ! stop_r8'
+| ! stop_r8' & & & & ! stop_r1'  ! stop_r2' ! stop_r4' ! stop_r5' ! stop_r7'
+
+
+[ENV_LIVENESS]
+| | | | | | | | | | & start c_start' & start ! start' | & r1 c_r1' & r1 ! r1' | & r2 c_r2' & r2 ! r2' | & r3 c_r3' & r3 ! r3' | & r4 c_r4' & r4 ! r4' | & r5 c_r5' & r5 ! r5' | & r6 c_r6' & r6 ! r6' | & r7 c_r7' & r7 ! r7' | & r8 c_r8' & r8 ! r8' | & goal c_goal' & goal ! goal'
+#| | | & wave c_wave' & wave ! wave' & ! wave ! c_wave' & ! wave wave'
+| | | & camera c_camera' & camera ! camera' & ! camera ! c_camera' & ! camera camera'
+
+[ENV_INIT]
+! person
+! stop_r1
+! stop_r2
+! stop_r4
+! stop_r5
+! stop_r7
+! stop_r8
+& & & & & & & & & c_start ! c_r1 ! c_r2 ! c_r3 ! c_r4 ! c_r5 ! c_r6 ! c_r7 ! c_r8 ! c_goal
+#! c_wave
+! c_camera
+
+[SYS_TRANS]
+
+# topology
+| ! c_start' | | start' r1' r2'
+| ! c_r1' | | | r1' start' r2' r3'
+| ! c_r2' | | | r2' start' r1' r3'
+| ! c_r3' | | | | r3' r1' r2' r4' r5'
+| ! c_r4' | | | r4' r3' r5' r6'
+| ! c_r5' | | | r5' r3' r4' r6'
+| ! c_r6' | | | | r6' r4' r5' r7' r8'
+| ! c_r7' | | | r7' r6' r8' goal'
+| ! c_r8' | | | r8' r6' r7' goal'
+| ! c_goal' | | goal' r7' r8'
+
+# mutex
+| ! start' & & & & & & & & ! r1' ! r2' ! r3' ! r4' ! r5' ! r6' ! r7' ! r8' ! goal'
+| ! r1' & & & & & & & & ! start' ! r2' ! r3' ! r4' ! r5' ! r6' ! r7' ! r8' ! goal'
+| ! r2' & & & & & & & & ! start' ! r1' ! r3' ! r4' ! r5' ! r6' ! r7' ! r8' ! goal'
+| ! r3' & & & & & & & & ! start' ! r1' ! r2' ! r4' ! r5' ! r6' ! r7' ! r8' ! goal'
+| ! r4' & & & & & & & & ! start' ! r1' ! r2' ! r3' ! r5' ! r6' ! r7' ! r8' ! goal'
+| ! r5' & & & & & & & & ! start' ! r1' ! r2' ! r3' ! r4' ! r6' ! r7' ! r8' ! goal'
+| ! r6' & & & & & & & & ! start' ! r1' ! r2' ! r3' ! r4' ! r5' ! r7' ! r8' ! goal'
+| ! r7' & & & & & & & & ! start' ! r1' ! r2' ! r3' ! r4' ! r5' ! r6' ! r8' ! goal'
+| ! r8' & & & & & & & & ! start' ! r1' ! r2' ! r3' ! r4' ! r5' ! r6' ! r7' ! goal'
+| ! goal' & & & & & & & & ! start' ! r1' ! r2' ! r3' ! r4' ! r5' ! r6' ! r7' ! r8'
+
+# response to stop signs
+| ! stop_r1' ! r1'
+| ! stop_r2' ! r2'
+| ! stop_r4' ! r4'
+| ! stop_r5' ! r5'
+| ! stop_r7' ! r7'
+| ! stop_r8' ! r8'
+
+# response to person with camera
+| ! & person' ! c_r3 camera'
+| ! c_r3 ! camera'
+| ! c_camera | c_r3' camera'
+
+# waving
+| ! c_r6 wave'
+
+[SYS_LIVENESS]
+| | | | | | & stop_r1 ! stop_r1' & stop_r2 ! stop_r2' & stop_r4 ! stop_r4' & stop_r5 ! stop_r5' & stop_r7 ! stop_r7' & stop_r8 ! stop_r8' c_goal'
+
+[SYS_INIT]
+& & & & & & & & & start ! r1 ! r2 ! r3 ! r4 ! r5 ! r6 ! r7 ! r8 ! goal
+! camera
+! wave
+

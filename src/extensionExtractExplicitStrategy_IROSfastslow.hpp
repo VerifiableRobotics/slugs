@@ -1,5 +1,5 @@
-#ifndef __EXTENSION_EXTRACT_STRATEGY_HPP
-#define __EXTENSION_EXTRACT_STRATEGY_HPP
+#ifndef __EXTENSION_EXTRACT_STRATEGY_IROS_FS_HPP
+#define __EXTENSION_EXTRACT_STRATEGY_IROS_FS_HPP
 
 #include "gr1context.hpp"
 #include <string>
@@ -7,7 +7,7 @@
 /**
  * An extension that triggers that a strategy is actually extracted.
  */
-template<class T, bool oneStepRecovery> class XExtractExplicitStrategy : public T {
+template<class T, bool oneStepRecovery> class XExtractExplicitStrategy_IROSfastslow : public T {
 protected:
     // New variables
     std::string outputFilename;
@@ -29,10 +29,11 @@ protected:
     using T::variableNames;
     using T::varVectorPre;
     using T::varVectorPost;
-    using T::varCubePostOutput;
+    using T::varCubePostOutputF;
+    using T::varCubePostOutputS;
     using T::determinize;
 
-    XExtractExplicitStrategy<T,oneStepRecovery>(std::list<std::string> &filenames) : T(filenames) {
+    XExtractExplicitStrategy_IROSfastslow<T,oneStepRecovery>(std::list<std::string> &filenames) : T(filenames) {
         if (filenames.size()==1) {
             outputFilename = "";
         } else {
@@ -105,7 +106,7 @@ public:
             BF strategy = mgr.constantFalse();
             for (auto it = strategyDumpingData.begin();it!=strategyDumpingData.end();it++) {
                 if (it->first == i) {
-                    BF newCases = it->second.ExistAbstract(varCubePostOutput) & !casesCovered;
+                    BF newCases = it->second.ExistAbstract(varCubePostOutputF).ExistAbstract(varCubePostOutputS) & !casesCovered;
                     strategy |= newCases & it->second;
                     casesCovered |= newCases;
                 }
@@ -165,7 +166,7 @@ public:
                 }
 
                 // Mark which input has been captured by this case
-                BF inputCaptured = newCombination.ExistAbstract(varCubePostOutput);
+                BF inputCaptured = newCombination.ExistAbstract(varCubePostOutputF).ExistAbstract(varCubePostOutputS);
                 newCombination = newCombination.ExistAbstract(varCubePre).SwapVariables(varVectorPre,varVectorPost);
                 remainingTransitions &= !inputCaptured;
 
@@ -194,7 +195,7 @@ public:
     }
 
     static GR1Context* makeInstance(std::list<std::string> &filenames) {
-        return new XExtractExplicitStrategy<T,oneStepRecovery>(filenames);
+        return new XExtractExplicitStrategy_IROSfastslow<T,oneStepRecovery>(filenames);
     }
 };
 
