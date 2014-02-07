@@ -119,67 +119,67 @@ void init(std::list<std::string> &filenames) {
                 if (readMode==0) {
                     variables.push_back(mgr.newVariable());
                     variableNames.push_back(currentLine);
-                    variableTypes.push_back(PreInput);
+                    variableTypes.push_back(PreInputFS);
                     variables.push_back(mgr.newVariable());
                     variableNames.push_back(currentLine+"'");
-                    variableTypes.push_back(PostInput);
+                    variableTypes.push_back(PostInputFS);
                 } else if (readMode==1) {
                     variables.push_back(mgr.newVariable());
                     variableNames.push_back(currentLine);
-                    variableTypes.push_back(PreOutputFast);
+                    variableTypes.push_back(PreOutputF);
                     variables.push_back(mgr.newVariable());
                     variableNames.push_back(currentLine+"'");
-                    variableTypes.push_back(PostOutputFast);
+                    variableTypes.push_back(PostOutputF);
                 } else if (readMode==8) {
                     variables.push_back(mgr.newVariable());
                     variableNames.push_back(currentLine);
-                    variableTypes.push_back(PreOutputSlow);
+                    variableTypes.push_back(PreOutputS);
                     variables.push_back(mgr.newVariable());
                     variableNames.push_back(currentLine+"'");
-                    variableTypes.push_back(PostOutputSlow);
+                    variableTypes.push_back(PostOutputS);
                 } else if (readMode==2) {
                     std::set<VariableType> allowedTypes;
-                    allowedTypes.insert(PreInput);
+                    allowedTypes.insert(PreInputFS);
                     initEnv &= parseBooleanFormula(currentLine,allowedTypes);
                 } else if (readMode==3) {
                     std::set<VariableType> allowedTypes;
-                    allowedTypes.insert(PreInput);
-                    allowedTypes.insert(PreOutputFast);
-                    allowedTypes.insert(PreOutputSlow);
+                    allowedTypes.insert(PreInputFS);
+                    allowedTypes.insert(PreOutputF);
+                    allowedTypes.insert(PreOutputS);
                     initSys &= parseBooleanFormula(currentLine,allowedTypes);
                 } else if (readMode==4) {
                     std::set<VariableType> allowedTypes;
-                    allowedTypes.insert(PreInput);
-                    allowedTypes.insert(PreOutputFast);
-                    allowedTypes.insert(PreOutputSlow);
-                    allowedTypes.insert(PostInput);
+                    allowedTypes.insert(PreInputFS);
+                    allowedTypes.insert(PreOutputF);
+                    allowedTypes.insert(PreOutputS);
+                    allowedTypes.insert(PostInputFS);
                     safetyEnv &= parseBooleanFormula(currentLine,allowedTypes);
                 } else if (readMode==5) {
                     std::set<VariableType> allowedTypes;
-                    allowedTypes.insert(PreInput);
-                    allowedTypes.insert(PreOutputFast);
-                    allowedTypes.insert(PreOutputSlow);
-                    allowedTypes.insert(PostInput);
-                    allowedTypes.insert(PostOutputFast);
-                    allowedTypes.insert(PostOutputSlow);
+                    allowedTypes.insert(PreInputFS);
+                    allowedTypes.insert(PreOutputF);
+                    allowedTypes.insert(PreOutputS);
+                    allowedTypes.insert(PostInputFS);
+                    allowedTypes.insert(PostOutputF);
+                    allowedTypes.insert(PostOutputS);
                     safetySys &= parseBooleanFormula(currentLine,allowedTypes);
                 } else if (readMode==6) {
                     std::set<VariableType> allowedTypes;
-                    allowedTypes.insert(PreInput);
-                    allowedTypes.insert(PreOutputFast);
-                    allowedTypes.insert(PreOutputSlow);
-                    allowedTypes.insert(PostOutputFast);
-                    allowedTypes.insert(PostOutputSlow);
-                    allowedTypes.insert(PostInput);
+                    allowedTypes.insert(PreInputFS);
+                    allowedTypes.insert(PreOutputF);
+                    allowedTypes.insert(PreOutputS);
+                    allowedTypes.insert(PostOutputF);
+                    allowedTypes.insert(PostOutputS);
+                    allowedTypes.insert(PostInputFS);
                     livenessAssumptions.push_back(parseBooleanFormula(currentLine,allowedTypes));
                 } else if (readMode==7) {
                     std::set<VariableType> allowedTypes;
-                    allowedTypes.insert(PreInput);
-                    allowedTypes.insert(PreOutputFast);
-                    allowedTypes.insert(PreOutputSlow);
-                    allowedTypes.insert(PostInput);
-                    allowedTypes.insert(PostOutputFast);
-                    allowedTypes.insert(PostOutputSlow);
+                    allowedTypes.insert(PreInputFS);
+                    allowedTypes.insert(PreOutputF);
+                    allowedTypes.insert(PreOutputS);
+                    allowedTypes.insert(PostInputFS);
+                    allowedTypes.insert(PostOutputF);
+                    allowedTypes.insert(PostOutputS);
                     livenessGuarantees.push_back(parseBooleanFormula(currentLine,allowedTypes));
                 } else {
                     std::cerr << "Error with line " << lineNumberCurrentlyRead << "!";
@@ -195,27 +195,27 @@ void init(std::list<std::string> &filenames) {
     std::vector<BF> preInputVars;
     for (unsigned int i=0;i<variables.size();i++) {
         switch (variableTypes[i]) {
-        case PreInput:
+        case PreInputFS:
             preVars.push_back(variables[i]);
             preInputVars.push_back(variables[i]);
             break;
-        case PreOutputFast:
+        case PreOutputF:
             preVars.push_back(variables[i]);
             preOutputFVars.push_back(variables[i]);
             break;
-        case PreOutputSlow:
+        case PreOutputS:
             preVars.push_back(variables[i]);
             preOutputSVars.push_back(variables[i]);
             break;
-        case PostInput:
+        case PostInputFS:
             postVars.push_back(variables[i]);
             postInputVars.push_back(variables[i]);
             break;
-        case PostOutputFast:
+        case PostOutputF:
             postVars.push_back(variables[i]);
             postOutputFVars.push_back(variables[i]);
             break;
-        case PostOutputSlow:
+        case PostOutputS:
             postVars.push_back(variables[i]);
             postOutputSVars.push_back(variables[i]);
             break;
@@ -223,6 +223,8 @@ void init(std::list<std::string> &filenames) {
             throw "Error: Found a variable of unknown type";
         }
     }
+    varVectorPre = mgr.computeVarVector(preVars);
+    varVectorPost = mgr.computeVarVector(postVars);
     varVectorPostOutputS = mgr.computeVarVector(postOutputSVars);
     varVectorPreOutputS = mgr.computeVarVector(preOutputSVars);
     varCubePostInputFS = mgr.computeCube(postInputVars);
@@ -409,22 +411,22 @@ void checkRealizability() {
 
 
 void getVariableTypes(std::vector<std::string> &types) const {
-        types.push_back("PreInput");
-        types.push_back("PreOutputFast");
-        types.push_back("PreOutputSlow");
-        types.push_back("PostInput");
-        types.push_back("PostOutputFast");
-        types.push_back("PostOutputSlow");
+        types.push_back("PreInputFS");
+        types.push_back("PreOutputF");
+        types.push_back("PreOutputS");
+        types.push_back("PostInputFS");
+        types.push_back("PostOutputF");
+        types.push_back("PostOutputS");
     }
 
 void getVariableNumbersOfType(std::string typeString, std::vector<unsigned int> &nums) const {
         VariableType type;
-        if (typeString=="PreInput") type = PreInput;
-        else if (typeString=="PreOutputFast") type = PreOutputFast;
-        else if (typeString=="PreOutputSlow") type = PreOutputSlow;
-        else if (typeString=="PostInput") type = PostInput;
-        else if (typeString=="PostOutputFast") type = PostOutputFast;
-        else if (typeString=="PostOutputSlow") type = PostOutputSlow;
+        if (typeString=="PreInputFS") type = PreInputFS;
+        else if (typeString=="PreOutputF") type = PreOutputF;
+        else if (typeString=="PreOutputS") type = PreOutputS;
+        else if (typeString=="PostInputFS") type = PostInputFS;
+        else if (typeString=="PostOutputF") type = PostOutputF;
+        else if (typeString=="PostOutputS") type = PostOutputS;
         else throw "Cannot detect variable type for BDD dumping";
         for (unsigned int i=0;i<variables.size();i++) {
             if (variableTypes[i] == type) nums.push_back(i);

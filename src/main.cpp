@@ -201,7 +201,6 @@ int main(int argc, const char **args) {
                     std::cerr << "Error: You provided too many file names!\n";
                     return 1;
                 }
-                context->computeVariableInformation();
                 context->execute();
                 delete context;
                 return 0;

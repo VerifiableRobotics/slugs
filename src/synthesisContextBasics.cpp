@@ -125,11 +125,19 @@ void GR1Context::init(std::list<std::string> &filenames) {
                 }
             } else {
                 if (readMode==0) {
-                    addVariable(PreInput,currentLine);
-                    addVariable(PostInput,currentLine+"'");
+                    variables.push_back(mgr.newVariable());
+                    variableNames.push_back(currentLine);
+                    variableTypes.push_back(PreInput);
+                    variables.push_back(mgr.newVariable());
+                    variableNames.push_back(currentLine+"'");
+                    variableTypes.push_back(PostInput);
                 } else if (readMode==1) {
-                    addVariable(PreOutput,currentLine);
-                    addVariable(PostOutput,currentLine+"'");
+                    variables.push_back(mgr.newVariable());
+                    variableNames.push_back(currentLine);
+                    variableTypes.push_back(PreOutput);
+                    variables.push_back(mgr.newVariable());
+                    variableNames.push_back(currentLine+"'");
+                    variableTypes.push_back(PostOutput);
                 } else if (readMode==2) {
                     std::set<VariableType> allowedTypes;
                     allowedTypes.insert(PreInput);
