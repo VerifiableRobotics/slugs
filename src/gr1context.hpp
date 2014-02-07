@@ -8,8 +8,8 @@
 #include <set>
 #include <list>
 #include <vector>
-#include "bddDump.h"
-typedef enum { PreInput, PreOutput, PreInputFS, PreOutputF, PreOutputS,  PostInput, PostOutput, PostInputFS, PostOutputF, PostOutputS} VariableType;
+#include "variableTypes.hpp"
+#include "variableManager.hpp"
 
 /**
  * @brief Container class for all GR(1) synthesis related activities
@@ -17,22 +17,20 @@ typedef enum { PreInput, PreOutput, PreInputFS, PreOutputF, PreOutputS,  PostInp
  *        (or strategy extraction) should derive from this class, as it
  *        provides input parsing and BF/BDD book-keeping.
  */
-class GR1Context : public VariableInfoContainer {
+class GR1Context : public VariableManager {
 protected:
 
     //@{
     /** @name BF-related stuff that is computed in the constructor, i.e., with loading the input specification
      */
-    BFManager mgr;
-    std::vector<BF> variables;
-    std::vector<std::string> variableNames;
-    std::vector<VariableType> variableTypes;
     std::vector<BF> livenessAssumptions;
     std::vector<BF> livenessGuarantees;
     BF initEnv;
     BF initSys;
     BF safetyEnv;
     BF safetySys;
+    //SlugsVarVector varVectorPre = SlugsVarVector(PreInput, PreOutput, this);
+    //SlugsVarVector varVectorPost = SlugsVarVector(PostInput, PostOutput, this);
     BFVarVector varVectorPre;
     BFVarVector varVectorPost;
     BFVarCube varCubePostInput;
@@ -85,41 +83,6 @@ public:
     static BF determinize(BF in, std::vector<BF> vars);
     virtual void init(std::list<std::string> &filenames);
     
-    
-
-    //@{
-    /**
-     * @name The following functions are inherited from the VariableInfo container.
-     * They allow us to the the BF_dumpDot function for debugging new variants of the synthesis algorithm
-     */
-    void getVariableTypes(std::vector<std::string> &types) const {
-        types.push_back("PreInput");
-        types.push_back("PreOutput");
-        types.push_back("PostInput");
-        types.push_back("PostOutput");
-    }
-
-    void getVariableNumbersOfType(std::string typeString, std::vector<unsigned int> &nums) const {
-        VariableType type;
-        if (typeString=="PreInput") type = PreInput;
-        else if (typeString=="PreOutput") type = PreOutput;
-        else if (typeString=="PostInput") type = PostInput;
-        else if (typeString=="PostOutput") type = PostOutput;
-        else throw "Cannot detect variable type for BDD dumping";
-        for (unsigned int i=0;i<variables.size();i++) {
-            if (variableTypes[i] == type) nums.push_back(i);
-        }
-    }
-
-    virtual BF getVariableBF(unsigned int number) const {
-        return variables[number];
-    }
-
-    virtual std::string getVariableName(unsigned int number) const {
-        return variableNames[number];
-    }
-    //@}
-
     static GR1Context* makeInstance(std::list<std::string> &filenames) {
         return new GR1Context(filenames);
     }
