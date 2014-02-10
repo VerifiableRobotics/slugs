@@ -9,7 +9,7 @@
 #include <list>
 #include <vector>
 #include "bddDump.h"
-typedef enum { PreInput, PreOutput, PreInputFS, PreOutputF, PreOutputS,  PostInput, PostOutput, PostInputFS, PostOutputF, PostOutputS} VariableType;
+typedef enum { PreInput, PreOutput, PreOutputF, PreOutputS,  PostInput, PostOutput, PostOutputF, PostOutputS} VariableType;
 
 /**
  * @brief Container class for all GR(1) synthesis related activities
