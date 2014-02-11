@@ -176,7 +176,7 @@ camera
 # response to person with camera
 | ! & person' ! c_r3 camera'
 | ! c_r3 ! camera'
-| ! c_camera | c_r3' camera'
+#| ! c_camera | c_r3' camera'
 
 # waving
 | ! c_r6 wave'

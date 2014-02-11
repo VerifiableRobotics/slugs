@@ -97,7 +97,7 @@ camera
 # response to person with camera
 | ! & person' ! r3 camera'
 | ! r3 ! camera'
-| ! camera | r3' camera'
+#| ! camera | r3' camera'
 
 # waving
 | ! r6 wave'

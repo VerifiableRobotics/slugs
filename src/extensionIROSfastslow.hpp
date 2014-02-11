@@ -16,7 +16,7 @@
  */
 
 
-//typedef enum { PreInputFS, PreOutputF, PreOutputS, PostInputFS, PostOutputF, PostOutputS } VariableTypeFS;
+//typedef enum { PreInput, PreOutputF, PreOutputS, PostInput, PostOutputF, PostOutputS } VariableTypeFS;
 
 template<class T> class XIROSFS : public T {
 protected:
@@ -44,20 +44,24 @@ protected:
     using T:: postInputVars;
     using T:: varCubePre;
     using T:: varCubePost;
-
+    using T:: varCubePostOutput;
+    using T:: varCubePreOutput;
+    using T:: varCubePreInput;
+    using T:: varCubePostInput;
+    
+    
     std::vector<std::pair<unsigned int,BF> > strategyDumpingData;
-    BFVarCube varCubePostOutputF;
-    BFVarCube varCubePostOutputS;
+    SlugsVarCube varCubePostOutputF{PostOutputFast,this};
+    SlugsVarCube varCubePostOutputS{PostOutputSlow,this};
     BFVarCube varCubePreOutputF;
     BFVarCube varCubePreOutputS;
-    BFVarCube varCubePostInputFS;
-    BFVarCube varCubePreInputFS;
+
     std::vector<BF> postOutputFVars;
     std::vector<BF> postOutputSVars;
     std::vector<BF> preOutputFVars;
     std::vector<BF> preOutputSVars;
     std::vector<BF> preInputVars;
-    BFBddVarVector varVectorPostOutputS;;
+    BFBddVarVector varVectorPostOutputS;
     BFBddVarVector varVectorPreOutputS;
     
     
@@ -192,6 +196,8 @@ void init(std::list<std::string> &filenames) {
     // Compute VarVectors and VarCubes
     std::vector<BF> preOutputFVars;
     std::vector<BF> preOutpuSVars;
+    std::vector<BF> preOutputVars;  
+    std::vector<BF> postOutputVars;
     std::vector<BF> preInputVars;
     for (unsigned int i=0;i<variables.size();i++) {
         switch (variableTypes[i]) {
@@ -225,15 +231,17 @@ void init(std::list<std::string> &filenames) {
     }
     varVectorPostOutputS = mgr.computeVarVector(postOutputSVars);
     varVectorPreOutputS = mgr.computeVarVector(preOutputSVars);
-    varCubePostInputFS = mgr.computeCube(postInputVars);
-    varCubePostOutputF = mgr.computeCube(postOutputFVars);
-    varCubePostOutputS = mgr.computeCube(postOutputSVars);
-    varCubePreInputFS = mgr.computeCube(preInputVars);
+
+    //varCubePostOutputF = mgr.computeCube(postOutputFVars);
+    //varCubePostOutputS = mgr.computeCube(postOutputSVars);
+    postOutputVars.insert(postOutputVars.end(),postOutputFVars.begin(),postOutputFVars.end());
+    postOutputVars.insert(postOutputVars.end(),postOutputSVars.begin(),postOutputSVars.end());
     varCubePreOutputF = mgr.computeCube(preOutputFVars);
     varCubePreOutputS = mgr.computeCube(preOutputSVars);
     //varCubePre = mgr.computeCube(preVars);
     //varCubePost = mgr.computeCube(postVars);
-    
+    preOutputVars.insert(preOutputVars.end(),preOutputFVars.begin(),preOutputFVars.end());
+    preOutputVars.insert(preOutputVars.end(),preOutputSVars.begin(),preOutputSVars.end());
 
     // Check if variable names have been used twice
     std::set<std::string> variableNameSet(variableNames.begin(),variableNames.end());
@@ -267,8 +275,8 @@ public:
     // The greatest fixed point - called "Z" in the GR(1) synthesis paper
     BFFixedPoint nu2(mgr.constantTrue());
     
-    BF safeStates = safetySys.ExistAbstract(varCubePostInputFS).ExistAbstract(varCubePostOutputS).ExistAbstract(varCubePostOutputF);
-    BF safeNext = (safetySys.ExistAbstract(varCubePreInputFS).ExistAbstract(varCubePreOutputS).ExistAbstract(varCubePreOutputF)).SwapVariables(varVectorPost,varVectorPre);
+    BF safeStates = safetySys.ExistAbstract(varCubePostInput).ExistAbstract(varCubePostOutputS).ExistAbstract(varCubePostOutputF);
+    BF safeNext = (safetySys.ExistAbstract(varCubePreInput).ExistAbstract(varCubePreOutputS).ExistAbstract(varCubePreOutputF)).SwapVariables(varVectorPost,varVectorPre);
     
     BF newSafetySys = safetySys & (safeStates & safeNext).SwapVariables(varVectorPre,varVectorPost).SwapVariables(varVectorPostOutputS,varVectorPreOutputS);
     
@@ -356,10 +364,10 @@ public:
                         
                         ////For all environment moves, there is either a move that changes only slow or only fast, 
                         //or one that changes both actions but has a safe intermediate state
-                        nu0.update(safetyEnv.Implies(fs1 | (fs2)).UnivAbstract(varCubePostInputFS));
+                        nu0.update(safetyEnv.Implies(fs1 | (fs2)).UnivAbstract(varCubePostInput));
                         */
                         
-                        nu0.update(safetyEnv.Implies(foundPaths).ExistAbstract(varCubePostOutputF).ExistAbstract(varCubePostOutputS).UnivAbstract(varCubePostInputFS));
+                        nu0.update(safetyEnv.Implies(foundPaths).ExistAbstract(varCubePostOutputF).ExistAbstract(varCubePostOutputS).UnivAbstract(varCubePostInput));
                     }
                 
                     // Update the set of positions that are winning for some liveness assumption
@@ -394,7 +402,7 @@ void checkRealizability() {
 
     // Check if for every possible environment initial position the system has a good system initial position
     BF result;
-    result = initEnv.Implies((winningPositions & initSys).ExistAbstract(varCubePreOutputF).ExistAbstract(varCubePreOutputS)).UnivAbstract(varCubePreInputFS);
+    result = initEnv.Implies((winningPositions & initSys).ExistAbstract(varCubePreOutputF).ExistAbstract(varCubePreOutputS)).UnivAbstract(varCubePreInput);
 
     // Check if the result is well-defind. Might fail after an incorrect modification of the above algorithm
     if (!result.isConstant()) {
@@ -406,30 +414,6 @@ void checkRealizability() {
     // Return the result in Boolean form.
     realizable = result.isTrue();
 }
-
-
-void getVariableTypes(std::vector<std::string> &types) const {
-        types.push_back("PreInput");
-        types.push_back("PreOutputFast");
-        types.push_back("PreOutputSlow");
-        types.push_back("PostInput");
-        types.push_back("PostOutputFast");
-        types.push_back("PostOutputSlow");
-    }
-
-void getVariableNumbersOfType(std::string typeString, std::vector<unsigned int> &nums) const {
-        VariableType type;
-        if (typeString=="PreInput") type = PreInput;
-        else if (typeString=="PreOutputFast") type = PreOutputFast;
-        else if (typeString=="PreOutputSlow") type = PreOutputSlow;
-        else if (typeString=="PostInput") type = PostInput;
-        else if (typeString=="PostOutputFast") type = PostOutputFast;
-        else if (typeString=="PostOutputSlow") type = PostOutputSlow;
-        else throw "Cannot detect variable type for BDD dumping";
-        for (unsigned int i=0;i<variables.size();i++) {
-            if (variableTypes[i] == type) nums.push_back(i);
-        }
-    }
     
     static GR1Context* makeInstance(std::list<std::string> &filenames) {
         return new XIROSFS(filenames);

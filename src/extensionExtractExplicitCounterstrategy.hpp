@@ -41,7 +41,7 @@ protected:
     using T::postOutputVars;
 
     XExtractExplicitCounterStrategy<T>(std::list<std::string> &filenames) : T(filenames) {
-        if (filenames.size()==0) {
+        if (filenames.size()==1) {
             outputFilename = "";
         } else {
             outputFilename = filenames.front();
