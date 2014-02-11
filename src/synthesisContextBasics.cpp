@@ -9,7 +9,9 @@
  * @brief Constructor that reads the problem instance from file and prepares the BFManager, the BFVarCubes, and the BFVarVectors
  * @param inFile the input filename
  */
-GR1Context::GR1Context(std::list<std::string> &filenames) {}
+GR1Context::GR1Context(std::list<std::string> &filenames) {
+    (void)filenames;
+}
 
 /**
  * @brief Recurse internal function to parse a Boolean formula from a line in the input file

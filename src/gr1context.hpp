@@ -31,10 +31,7 @@ protected:
     BF safetySys;
     SlugsVarVector varVectorPre{PreInput, PreOutput, this};
     SlugsVarVector varVectorPost{PostInput, PostOutput, this};
-    //BFVarVector varVectorPre;
-    //BFVarVector varVectorPost;
     SlugsVarCube varCubePostInput{PostInput,this};
-    //BFVarCube varCubePostInput;
     SlugsVarCube varCubePostOutput{PostOutput,this};
     SlugsVarCube varCubePreInput{PreInput,this};
     SlugsVarCube varCubePreOutput{PreOutput,this};

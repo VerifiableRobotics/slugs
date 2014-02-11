@@ -39,32 +39,29 @@ protected:
     using T::variableTypes;
     using T::parseBooleanFormulaRecurse;
     using T::parseBooleanFormula;
-    using T:: preVars;
-    using T:: postVars;
-    using T:: postInputVars;
-    using T:: varCubePre;
-    using T:: varCubePost;
-    using T:: varCubePostOutput;
-    using T:: varCubePreOutput;
-    using T:: varCubePreInput;
-    using T:: varCubePostInput;
+    using T::preVars;
+    using T::postVars;
+    using T::postInputVars;
+    using T::varCubePre;
+    using T::varCubePost;
+    using T::varCubePostOutput;
+    using T::varCubePreOutput;
+    using T::varCubePreInput;
+    using T::varCubePostInput;
     
     
     std::vector<std::pair<unsigned int,BF> > strategyDumpingData;
     SlugsVarCube varCubePostOutputF{PostOutputFast,this};
     SlugsVarCube varCubePostOutputS{PostOutputSlow,this};
-    BFVarCube varCubePreOutputF;
-    BFVarCube varCubePreOutputS;
-
-    std::vector<BF> postOutputFVars;
-    std::vector<BF> postOutputSVars;
-    std::vector<BF> preOutputFVars;
-    std::vector<BF> preOutputSVars;
-    std::vector<BF> preInputVars;
-    BFBddVarVector varVectorPostOutputS;
-    BFBddVarVector varVectorPreOutputS;
-    
-    
+    SlugsVarCube varCubePreOutputF{PreOutputFast,this};
+    SlugsVarCube varCubePreOutputS{PreOutputSlow,this};
+    SlugsVectorOfVarBFs postOutputFVars{PostOutputFast,this};
+    SlugsVectorOfVarBFs postOutputSVars{PostOutputSlow,this};
+    SlugsVectorOfVarBFs preOutputFVars{PreOutputFast,this};
+    SlugsVectorOfVarBFs preOutputSVars{PreOutputSlow,this};
+    SlugsVarVector varVectorPostOutputS{PostOutputSlow,this};
+    SlugsVarVector varVectorPreOutputS{PreOutputSlow,this};
+     
     // Constructor
     XIROSFS<T>(std::list<std::string> &filenames) : T(filenames) {}
     /**
@@ -192,56 +189,6 @@ void init(std::list<std::string> &filenames) {
             }
         }
     }
-
-    // Compute VarVectors and VarCubes
-    std::vector<BF> preOutputFVars;
-    std::vector<BF> preOutpuSVars;
-    std::vector<BF> preOutputVars;  
-    std::vector<BF> postOutputVars;
-    std::vector<BF> preInputVars;
-    for (unsigned int i=0;i<variables.size();i++) {
-        switch (variableTypes[i]) {
-        case PreInput:
-            //preVars.push_back(variables[i]);
-            preInputVars.push_back(variables[i]);
-            break;
-        case PreOutputFast:
-            //preVars.push_back(variables[i]);
-            preOutputFVars.push_back(variables[i]);
-            break;
-        case PreOutputSlow:
-            //preVars.push_back(variables[i]);
-            preOutputSVars.push_back(variables[i]);
-            break;
-        case PostInput:
-            //postVars.push_back(variables[i]);
-            //postInputVars.push_back(variables[i]);
-            break;
-        case PostOutputFast:
-            //postVars.push_back(variables[i]);
-            postOutputFVars.push_back(variables[i]);
-            break;
-        case PostOutputSlow:
-            //postVars.push_back(variables[i]);
-            postOutputSVars.push_back(variables[i]);
-            break;
-        default:
-            throw "Error: Found a variable of unknown type";
-        }
-    }
-    varVectorPostOutputS = mgr.computeVarVector(postOutputSVars);
-    varVectorPreOutputS = mgr.computeVarVector(preOutputSVars);
-
-    //varCubePostOutputF = mgr.computeCube(postOutputFVars);
-    //varCubePostOutputS = mgr.computeCube(postOutputSVars);
-    postOutputVars.insert(postOutputVars.end(),postOutputFVars.begin(),postOutputFVars.end());
-    postOutputVars.insert(postOutputVars.end(),postOutputSVars.begin(),postOutputSVars.end());
-    varCubePreOutputF = mgr.computeCube(preOutputFVars);
-    varCubePreOutputS = mgr.computeCube(preOutputSVars);
-    //varCubePre = mgr.computeCube(preVars);
-    //varCubePost = mgr.computeCube(postVars);
-    preOutputVars.insert(preOutputVars.end(),preOutputFVars.begin(),preOutputFVars.end());
-    preOutputVars.insert(preOutputVars.end(),preOutputSVars.begin(),preOutputSVars.end());
 
     // Check if variable names have been used twice
     std::set<std::string> variableNameSet(variableNames.begin(),variableNames.end());
