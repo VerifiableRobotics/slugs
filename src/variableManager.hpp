@@ -39,14 +39,14 @@
 #define __VARIABLE_MANAGER_HPP__
 
 #include "bddDump.h"
-#include <list>
+#include <map>
 #include <vector>
 #include <utility>
-
+#include <boost/noncopyable.hpp>
 
 //! The Variable manager class. Used as basis for the GR(1) context and keeps track of all
 //! variables.
-class VariableManager : public VariableInfoContainer {
+class SlugsVariableManager : public VariableInfoContainer {
 protected:
 
     //@{
@@ -60,7 +60,9 @@ protected:
 
 
 public: // To be changed later
-    std::list<std::pair<std::vector<int>,BFVarVector*> >  varVectorsToConstruct;
+    std::map<BFVarVector*,std::vector<int> >  varVectorsToConstruct;
+    std::map<BFVarCube*,std::set<int> >  varCubesToConstruct;
+    std::map<std::vector<BF>*,std::vector<int> >  varVectorOfBFsToConstruct;
 
 public:
 
@@ -83,22 +85,64 @@ public:
     //@}
 };
 
-// Template class to simplify building variable Vectors
-class SlugsVarVector {
+// Template class to simplify building variable vectors
+// Note that the class is non-copyable as it reports an address to the
+// slugs variable manager
+class SlugsVarVector : public boost::noncopyable {
     BFVarVector vector;
 public:
-    SlugsVarVector(VariableType t1, VariableManager *varMgr) {
+    SlugsVarVector(VariableType t1, SlugsVariableManager *varMgr) {
         std::vector<int> types;
         types.push_back(t1);
-        varMgr->varVectorsToConstruct.push_back(std::pair<std::vector<int>,BFVarVector*>(types,&vector));
+        varMgr->varVectorsToConstruct[&vector] = types;
     }
-    SlugsVarVector(VariableType t1, VariableType t2, VariableManager *varMgr) {
+    SlugsVarVector(VariableType t1, VariableType t2, SlugsVariableManager *varMgr) {
         std::vector<int> types;
         types.push_back(t1);
         types.push_back(t2);
-        varMgr->varVectorsToConstruct.push_back(std::pair<std::vector<int>,BFVarVector*>(types,&vector));
+        varMgr->varVectorsToConstruct[&vector] = types;
     }
     operator BFVarVector& () {return vector;}
+};
+
+// Template class to simplify building variable cube
+// Note that the class is non-copyable as it reports an address to the
+// slugs variable manager
+class SlugsVarCube : public boost::noncopyable {
+    BFVarCube cube;
+public:
+    SlugsVarCube(VariableType t1, SlugsVariableManager *varMgr) {
+        std::set<int> types;
+        types.insert(t1);
+        varMgr->varCubesToConstruct[&cube] = types;
+    }
+    SlugsVarCube(VariableType t1, VariableType t2, SlugsVariableManager *varMgr) {
+        std::set<int> types;
+        types.insert(t1);
+        types.insert(t2);
+        varMgr->varCubesToConstruct[&cube] = types;
+    }
+    operator BFVarCube& () {return cube;}
+};
+
+// Template class to simplify building variable vectors
+// Note that the class is non-copyable as it reports an address to the
+// slugs variable manager
+class SlugsVectorOfVarBFs : public boost::noncopyable {
+    std::vector<BF> vector;
+public:
+    SlugsVectorOfVarBFs(VariableType t1, SlugsVariableManager *varMgr) {
+        std::vector<int> types;
+        types.push_back(t1);
+        varMgr->varVectorOfBFsToConstruct[&vector] = types;
+    }
+    SlugsVectorOfVarBFs(VariableType t1, VariableType t2, SlugsVariableManager *varMgr) {
+        std::vector<int> types;
+        types.push_back(t1);
+        types.push_back(t2);
+        varMgr->varVectorOfBFsToConstruct[&vector] = types;
+    }
+    operator const std::vector<BF>& () {return vector;}
 };
 
 #endif

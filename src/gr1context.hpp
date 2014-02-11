@@ -17,7 +17,7 @@
  *        (or strategy extraction) should derive from this class, as it
  *        provides input parsing and BF/BDD book-keeping.
  */
-class GR1Context : public VariableManager {
+class GR1Context : public SlugsVariableManager {
 protected:
 
     //@{
@@ -29,20 +29,21 @@ protected:
     BF initSys;
     BF safetyEnv;
     BF safetySys;
-    //SlugsVarVector varVectorPre = SlugsVarVector(PreInput, PreOutput, this);
-    //SlugsVarVector varVectorPost = SlugsVarVector(PostInput, PostOutput, this);
-    BFVarVector varVectorPre;
-    BFVarVector varVectorPost;
-    BFVarCube varCubePostInput;
-    BFVarCube varCubePostOutput;
-    BFVarCube varCubePreInput;
-    BFVarCube varCubePreOutput;
-    BFVarCube varCubePre;
-    BFVarCube varCubePost;
-    std::vector<BF> preVars;
-    std::vector<BF> postVars;
-    std::vector<BF> postInputVars;
-    std::vector<BF> postOutputVars;
+    SlugsVarVector varVectorPre{PreInput, PreOutput, this};
+    SlugsVarVector varVectorPost{PostInput, PostOutput, this};
+    //BFVarVector varVectorPre;
+    //BFVarVector varVectorPost;
+    SlugsVarCube varCubePostInput{PostInput,this};
+    //BFVarCube varCubePostInput;
+    SlugsVarCube varCubePostOutput{PostOutput,this};
+    SlugsVarCube varCubePreInput{PreInput,this};
+    SlugsVarCube varCubePreOutput{PreOutput,this};
+    SlugsVarCube varCubePre{PreOutput,PreInput,this};
+    SlugsVarCube varCubePost{PostOutput,PostInput,this};
+    SlugsVectorOfVarBFs preVars{PreInput, PreOutput, this};
+    SlugsVectorOfVarBFs postVars{PostInput, PostOutput, this};
+    SlugsVectorOfVarBFs postInputVars{PostInput, this};
+    SlugsVectorOfVarBFs postOutputVars{PostInput, this};
     //@}
 
     //@{

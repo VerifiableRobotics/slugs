@@ -32,8 +32,11 @@ protected:
     using T::varCubePostOutput;
     using T::determinize;
 
-    XExtractExplicitStrategy<T,oneStepRecovery>(std::list<std::string> &filenames) : T(filenames) {
-        if (filenames.size()==1) {
+    XExtractExplicitStrategy<T,oneStepRecovery>(std::list<std::string> &filenames): T(filenames) {}
+
+    void init(std::list<std::string> &filenames) {
+        T::init(filenames);
+        if (filenames.size()==0) {
             outputFilename = "";
         } else {
             outputFilename = filenames.front();

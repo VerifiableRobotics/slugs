@@ -93,13 +93,13 @@ public:
 // Variable manager functions
 // =================================================
 
-void VariableManager::getVariableTypes(std::vector<std::string> &types) const {
+void SlugsVariableManager::getVariableTypes(std::vector<std::string> &types) const {
     for (auto it = allPossibleVariableTypes->begin();it!=allPossibleVariableTypes->end();it++) {
         types.push_back(it->first);
     }
 }
 
-void VariableManager::getVariableNumbersOfType(std::string typeString, std::vector<unsigned int> &nums) const {
+void SlugsVariableManager::getVariableNumbersOfType(std::string typeString, std::vector<unsigned int> &nums) const {
     assert(allPossibleVariableTypes->count(typeString)>0);
     int typeNumber = allPossibleVariableTypes->at(typeString);
     for (unsigned int i=0;i<variables.size();i++) {
@@ -109,7 +109,7 @@ void VariableManager::getVariableNumbersOfType(std::string typeString, std::vect
     }
 }
 
-int VariableManager::addVariable(VariableType type, std::string name) {
+int SlugsVariableManager::addVariable(VariableType type, std::string name) {
     int varNumber = variables.size();
     variables.push_back(mgr.newVariable());
     variableNames.push_back(name);
@@ -122,7 +122,10 @@ int VariableManager::addVariable(VariableType type, std::string name) {
  *        Obtains the information which variables and cubes to compute from the instantions of the "SlugsVarVector"
  *        and "SlugsVarCube" classes, which registered their instantiation with the VariableManager.
  */
-void VariableManager::computeVariableInformation() {
+void SlugsVariableManager::computeVariableInformation() {
+
+    // In extensions in which the set of BDD variables is changed dynamically,
+    // this function is safe to call multiple times.
 
     // Compute a type hierarchy closure of all variables
     std::set<int> variableTypesAll[variables.size()];
@@ -137,15 +140,66 @@ void VariableManager::computeVariableInformation() {
     // Compute Variable Vectors
     for (auto it = varVectorsToConstruct.begin();it!=varVectorsToConstruct.end();it++) {
         std::vector<BF> varsInThisVector;
-        for (auto it2 = it->first.begin();it2!=it->first.end();it2++) {
+        for (auto it2 = it->second.begin();it2!=it->second.end();it2++) {
             for (unsigned int i=0;i<variables.size();i++) {
                 if (variableTypesAll[i].count(*it2)>0) {
-                    std::cerr << "Adding to var vector:" << i << std::endl;
                     varsInThisVector.push_back(variables[i]);
                 }
             }
         }
-        *(it->second) = mgr.computeVarVector(varsInThisVector);
+
+        // Debug check: No variable occurring twice?
+#ifndef NDEBUG
+        std::set<size_t> vars;
+        for (auto it2 = varsInThisVector.begin();it2!=varsInThisVector.end();it2++) {
+            vars.insert(it2->getHashCode());
+        }
+        assert(vars.size()==varsInThisVector.size());
+#endif
+        *(it->first) = mgr.computeVarVector(varsInThisVector);
+    }
+
+    // Compute BFVarVectors
+    for (auto it = varVectorOfBFsToConstruct.begin();it!=varVectorOfBFsToConstruct.end();it++) {
+        it->first->clear();
+        for (auto it2 = it->second.begin();it2!=it->second.end();it2++) {
+            for (unsigned int i=0;i<variables.size();i++) {
+                if (variableTypesAll[i].count(*it2)>0) {
+                    it->first->push_back(variables[i]);
+                }
+            }
+        }
+    }
+
+    // Compute VarCubes
+    for (auto it = varCubesToConstruct.begin();it!=varCubesToConstruct.end();it++) {
+
+        // Compute closure of the variable types contained in the variable type list
+        std::set<VariableType> allAllowedVariableTypes;
+        for (auto it2 = it->second.begin();it2!=it->second.end();it2++) {
+            int type = *it2;
+            while (type!=NoneVariableType) {
+                allAllowedVariableTypes.insert(static_cast<VariableType>(type));
+                type = (*variableHierarchy).at(type);
+            }
+        }
+
+        std::vector<BF> varsInThisCube;
+        for (unsigned int i=0;i<variables.size();i++) {
+            if (allAllowedVariableTypes.count(variableTypes[i])>0) {
+                varsInThisCube.push_back(variables[i]);
+            }
+        }
+
+        // Debug check: No variable occurring twice?
+#ifndef NDEBUG
+        std::set<size_t> vars;
+        for (auto it2 = varsInThisCube.begin();it2!=varsInThisCube.end();it2++) {
+            vars.insert(it2->getHashCode());
+        }
+        assert(vars.size()==varsInThisCube.size());
+#endif
+        *(it->first) = mgr.computeCube(varsInThisCube);
     }
 
 }

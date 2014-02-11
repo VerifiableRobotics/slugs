@@ -196,27 +196,27 @@ void init(std::list<std::string> &filenames) {
     for (unsigned int i=0;i<variables.size();i++) {
         switch (variableTypes[i]) {
         case PreInput:
-            preVars.push_back(variables[i]);
+            //preVars.push_back(variables[i]);
             preInputVars.push_back(variables[i]);
             break;
         case PreOutputFast:
-            preVars.push_back(variables[i]);
+            //preVars.push_back(variables[i]);
             preOutputFVars.push_back(variables[i]);
             break;
         case PreOutputSlow:
-            preVars.push_back(variables[i]);
+            //preVars.push_back(variables[i]);
             preOutputSVars.push_back(variables[i]);
             break;
         case PostInput:
-            postVars.push_back(variables[i]);
-            postInputVars.push_back(variables[i]);
+            //postVars.push_back(variables[i]);
+            //postInputVars.push_back(variables[i]);
             break;
         case PostOutputFast:
-            postVars.push_back(variables[i]);
+            //postVars.push_back(variables[i]);
             postOutputFVars.push_back(variables[i]);
             break;
         case PostOutputSlow:
-            postVars.push_back(variables[i]);
+            //postVars.push_back(variables[i]);
             postOutputSVars.push_back(variables[i]);
             break;
         default:
@@ -231,8 +231,8 @@ void init(std::list<std::string> &filenames) {
     varCubePreInputFS = mgr.computeCube(preInputVars);
     varCubePreOutputF = mgr.computeCube(preOutputFVars);
     varCubePreOutputS = mgr.computeCube(preOutputSVars);
-    varCubePre = mgr.computeCube(preVars);
-    varCubePost = mgr.computeCube(postVars);
+    //varCubePre = mgr.computeCube(preVars);
+    //varCubePost = mgr.computeCube(postVars);
     
 
     // Check if variable names have been used twice

@@ -174,40 +174,6 @@ void GR1Context::init(std::list<std::string> &filenames) {
         }
     }
 
-    // Compute VarVectors and VarCubes
-    std::vector<BF> preOutputVars;
-    std::vector<BF> preInputVars;
-    for (unsigned int i=0;i<variables.size();i++) {
-        switch (variableTypes[i]) {
-        case PreInput:
-            preVars.push_back(variables[i]);
-            preInputVars.push_back(variables[i]);
-            break;
-        case PreOutput:
-            preVars.push_back(variables[i]);
-            preOutputVars.push_back(variables[i]);
-            break;
-        case PostInput:
-            postVars.push_back(variables[i]);
-            postInputVars.push_back(variables[i]);
-            break;
-        case PostOutput:
-            postVars.push_back(variables[i]);
-            postOutputVars.push_back(variables[i]);
-            break;
-        default:
-            throw "Error: Found a variable of unknown type";
-        }
-    }
-    varVectorPre = mgr.computeVarVector(preVars);
-    varVectorPost = mgr.computeVarVector(postVars);
-    varCubePostInput = mgr.computeCube(postInputVars);
-    varCubePostOutput = mgr.computeCube(postOutputVars);
-    varCubePreInput = mgr.computeCube(preInputVars);
-    varCubePreOutput = mgr.computeCube(preOutputVars);
-    varCubePre = mgr.computeCube(preVars);
-    varCubePost = mgr.computeCube(postVars);
-
     // Check if variable names have been used twice
     std::set<std::string> variableNameSet(variableNames.begin(),variableNames.end());
     if (variableNameSet.size()!=variableNames.size()) throw SlugsException(false,"Error in input file: some variable name has been used twice!\nPlease keep in mind that for every variable used, a second one with the same name but with a \"'\" appended to it is automacically created.");
