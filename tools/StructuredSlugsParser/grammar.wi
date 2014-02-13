@@ -1,0 +1,60 @@
+# This LTL grammar uses the following operator precedence
+# (taken from the GOAL sytems):
+# High
+#  Unary operators (~, X, F, G)
+#  Temporal Binary Operators (U, W)
+#  /\
+#  \/
+#  XOR
+#  ->
+#  <->
+# Low
+#
+# Slight reinterpretation: The unary operators have the same precedence
+
+Formula: Biimplication;
+Biimplication: Implication | Biimplication BiimplicationOperator Implication;
+Implication: Xor | Implication ImplicationOperator Xor;
+Xor: Disjunction | Xor XorOperator Disjunction;
+Disjunction: Conjunction | Disjunction DisjunctionOperator Conjunction;
+Conjunction: BinaryTemporalFormula | Conjunction ConjunctionOperator BinaryTemporalFormula;
+BinaryTemporalFormula: UnaryFormula | BinaryTemporalFormula BinaryTemporalOperator UnaryFormula;
+UnaryFormula: AtomicFormula | UnaryTemporalOperator UnaryFormula;
+AtomicFormula: "FALSE" | "TRUE" | Brackets | BooleanAtomicFormula;
+Brackets: '(' Biimplication ')' | '[' Biimplication ']';
+BooleanAtomicFormula: Assignment | CalculationSubformula;
+Assignment: boolID;
+
+CalculationSubformula: NumberExpression NumberComparisonOperator NumberExpression;
+NumberExpression: MultiplicativeNumber | MultiplicativeNumber AdditionOperator NumberExpression | MultiplicativeNumber SubtractionOperator NumberExpression;
+MultiplicativeNumber: AtomicNumberExpression | AtomicNumberExpression MultiplicationOperator AtomicNumberExpression;
+AtomicNumberExpression: numID | numeral | NumberBrackets;
+NumberBrackets: '(' NumberExpression ')';
+
+BinaryTemporalOperator: UntilOperator | WeakUntilOperator;
+UntilOperator: 'U';
+WeakUntilOperator: 'W';
+ImplicationOperator: '-' '-' '>' | '-' '>';
+BiimplicationOperator: '<' '-' '-' '>' | '<' '-' '>';
+DisjunctionOperator: '\\' '/' | '|' | '|' '|' ;
+ConjunctionOperator: '/' '\\' | '&' | '&' '&' ;
+NumberComparisonOperator: GreaterOperator | SmallerOperator | EqualOperator | UnequalOperator | GreaterEqualOperator | SmallerEqualOperator ;
+GreaterOpeartor: '>';
+SmallerOperator: '<';
+EqualOperator: '=';
+UnequalOperator: '!' '=';
+SmallerEqualOperator: '<' '=';
+GreaterEqualOperator: '>' '=';
+AdditionOperator: '+';
+MultiplicationOperator: '*';
+NegationOperator: '-';
+
+
+XorOperator: '^';
+UnaryTemporalOperator: FinallyOperator | NextOperator | GloballyOperator | NotOperator;
+FinallyOperator: '<' '>' | 'F';
+NextOperator: '(' ')' | 'next' | 'X';
+GloballyOperator: '[' ']' | 'G';
+NotOperator: '!' | '~';
+
+

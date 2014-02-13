@@ -64,7 +64,7 @@ protected:
     /**
      * @name Internal functions - these are used during parsing an input instance
      */
-    BF parseBooleanFormulaRecurse(std::istringstream &is,std::set<VariableType> &allowedTypes);
+    BF parseBooleanFormulaRecurse(std::istringstream &is,std::set<VariableType> &allowedTypes, std::vector<BF> &memory);
     BF parseBooleanFormula(std::string currentLine,std::set<VariableType> &allowedTypes);
     //@}
 

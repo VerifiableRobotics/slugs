@@ -19,7 +19,7 @@ GR1Context::GR1Context(std::list<std::string> &filenames) {
  * @param allowedTypes a list of allowed variable types - this allows to check that assumptions do not refer to 'next' output values.
  * @return a BF that represents the transition constraint read from the line
  */
-BF GR1Context::parseBooleanFormulaRecurse(std::istringstream &is,std::set<VariableType> &allowedTypes) {
+BF GR1Context::parseBooleanFormulaRecurse(std::istringstream &is,std::set<VariableType> &allowedTypes, std::vector<BF> &memory) {
     std::string operation = "";
     is >> operation;
     if (operation=="") {
@@ -27,11 +27,45 @@ BF GR1Context::parseBooleanFormulaRecurse(std::istringstream &is,std::set<Variab
         e << "Error reading line " << lineNumberCurrentlyRead << ". Premature end of line.";
         throw e;
     }
-    if (operation=="|") return parseBooleanFormulaRecurse(is,allowedTypes) | parseBooleanFormulaRecurse(is,allowedTypes);
-    if (operation=="&") return parseBooleanFormulaRecurse(is,allowedTypes) & parseBooleanFormulaRecurse(is,allowedTypes);
-    if (operation=="!") return !parseBooleanFormulaRecurse(is,allowedTypes);
+    if (operation=="|") return parseBooleanFormulaRecurse(is,allowedTypes,memory) | parseBooleanFormulaRecurse(is,allowedTypes,memory);
+    if (operation=="^") return parseBooleanFormulaRecurse(is,allowedTypes,memory) ^ parseBooleanFormulaRecurse(is,allowedTypes,memory);
+    if (operation=="&") return parseBooleanFormulaRecurse(is,allowedTypes,memory) & parseBooleanFormulaRecurse(is,allowedTypes,memory);
+    if (operation=="!") return !parseBooleanFormulaRecurse(is,allowedTypes,memory);
     if (operation=="1") return mgr.constantTrue();
     if (operation=="0") return mgr.constantFalse();
+
+    // Memory Functionality - Create Buffer
+    if (operation=="$") {
+        unsigned nofElements;
+        is >> nofElements;
+        if (is.fail()) {
+            SlugsException e(false);
+            e << "Error reading line " << lineNumberCurrentlyRead << ". Expected number of memory elements.";
+            throw e;
+        }
+        std::vector<BF> memoryNew(nofElements);
+        for (unsigned int i=0;i<nofElements;i++) {
+            memoryNew[i] = parseBooleanFormulaRecurse(is,allowedTypes,memoryNew);
+        }
+        return memoryNew[nofElements-1];
+    }
+
+    // Memory Functionality - Recall from Buffer
+    if (operation=="?") {
+        unsigned int element;
+        is >> element;
+        if (is.fail()) {
+            SlugsException e(false);
+            e << "Error reading line " << lineNumberCurrentlyRead << ". Expected number after memory recall operator '?'.";
+            throw e;
+        }
+        if (element>=memory.size()) {
+            SlugsException e(false);
+            e << "Error reading line " << lineNumberCurrentlyRead << ". Trying to recall a memory element that has not been stored (yet).";
+            throw e;
+        }
+        return memory[element];
+    }
 
     // Has to be a variable!
     for (unsigned int i=0;i<variableNames.size();i++) {
@@ -55,11 +89,13 @@ BF GR1Context::parseBooleanFormulaRecurse(std::istringstream &is,std::set<Variab
  * @param allowedTypes a list of allowed variable types - this allows to check that assumptions do not refer to 'next' output values.
  * @return a BF that represents the transition constraint read from the line
  */
-BF GR1Context::parseBooleanFormula(std::string currentLine,std::set<VariableType> &allowedTypes) {
+BF GR1Context::parseBooleanFormula(std::string currentLine, std::set<VariableType> &allowedTypes) {
 
     std::istringstream is(currentLine);
 
-    BF result = parseBooleanFormulaRecurse(is,allowedTypes);
+    std::vector<BF> memory;
+    BF result = parseBooleanFormulaRecurse(is,allowedTypes,memory);
+    assert(memory.size()==0);
     std::string nextPart = "";
     is >> nextPart;
     if (nextPart=="") return result;

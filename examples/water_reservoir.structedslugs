@@ -1,0 +1,33 @@
+[INPUT]
+inflow1
+inflow2
+
+[OUTPUT]
+level: 3...107
+outflow
+
+[SYS_TRANS]
+(inflow1 & inflow2 & outflow) -> (level' = level+1)
+(inflow1 & inflow2 & !outflow) -> (level' = level+4)
+(inflow1 & ! inflow2 & outflow) -> (level'+1 = level)
+(inflow1 & ! inflow2 & !outflow) -> (level' = level+2)
+(!inflow1 & inflow2 & outflow) -> (level'+1 = level)
+(!inflow1 & inflow2 & !outflow) -> (level' = level+2)
+(!inflow1 & ! inflow2 & outflow) -> (level'+3 = level)
+(!inflow1 & ! inflow2 & !outflow) -> (level' = level)
+
+(level'<=100)
+(level'>=10)
+
+[SYS_INIT]
+! outflow
+level = 10
+
+[ENV_INIT]
+! inflow1
+! inflow2
+
+[ENV_TRANS]
+| ! inflow1 ! inflow1'
+| ! inflow2 ! inflow2'
+
