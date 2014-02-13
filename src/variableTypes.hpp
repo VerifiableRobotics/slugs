@@ -59,11 +59,16 @@
 //! The enumeration of all variable types
 typedef enum {
 
+    //PRE
     // Standard set of variables - present already in the standard GR(1) context
-    PreInput, PreOutput, PostInput, PostOutput,
+    PreInput, PreOutput,
 
     // Variables used in "extensionIROSfastslow.hpp"
-    PreOutputFast, PreOutputSlow, PostOutputFast, PostOutputSlow,
+    PreOutputFast, PreOutputSlow,
+    
+    //POST
+    PostInput, PostOutput,
+    PostOutputFast, PostOutputSlow,
 
     // Dummy parameters used for internal reasons. Must be last in the enum
     NoneVariableType
