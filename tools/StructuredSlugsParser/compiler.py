@@ -237,11 +237,11 @@ def parseLTL(ltlTxt,reasonForNotBeingASlugsFormula):
 # Computation Recursion function
 # Assumes that every variable starts from 0
 #------------------------------------------
-def recurseCalculationSubformula(tree,memoryStructureParts):
+def recurseCalculationSubformula(tree,memoryStructureParts, isPrimed):
     if (tree[0]=="NumberExpression"):
         assert len(tree)==4 # Everything else would have been filtered out already
-        part1MemoryStructurePointers = recurseCalculationSubformula(tree[1],memoryStructureParts)        
-        part2MemoryStructurePointers = recurseCalculationSubformula(tree[3],memoryStructureParts)  
+        part1MemoryStructurePointers = recurseCalculationSubformula(tree[1],memoryStructureParts, isPrimed)        
+        part2MemoryStructurePointers = recurseCalculationSubformula(tree[3],memoryStructureParts, isPrimed)  
 
         # Addition? 
         if tree[2][0]=="AdditionOperator":
@@ -287,10 +287,12 @@ def recurseCalculationSubformula(tree,memoryStructureParts):
     # Work on NumID
     elif (tree[0]=="numID"):
         apName = tree[1]
-        primed = apName[len(apName)-1]=="'"        
-        if primed:
+        primedLocally = apName[len(apName)-1]=="'"        
+        if primedLocally and isPrimed:
+            raise Exception("Variable is used primed in the scope of a next-operator, which is not supported: "+apName)
+        if primedLocally:
             apName = apName[0:len(apName)-1]
-        if not primed:
+        if (not primedLocally) and (not isPrimed):
             return translatedNames[apName]
         else:
             return [a+"'" for a in translatedNames[apName]]
@@ -325,8 +327,8 @@ def addMinimumValueToAllVariables(tree):
 #-----------------------------------------------
 def computeCalculationSubformula(tree, isPrimed):
     memoryStructureParts = []
-    part1MemoryStructurePointers = recurseCalculationSubformula(addMinimumValueToAllVariables(tree[1]),memoryStructureParts)
-    part2MemoryStructurePointers = recurseCalculationSubformula(addMinimumValueToAllVariables(tree[3]),memoryStructureParts)
+    part1MemoryStructurePointers = recurseCalculationSubformula(addMinimumValueToAllVariables(tree[1]),memoryStructureParts, isPrimed)
+    part2MemoryStructurePointers = recurseCalculationSubformula(addMinimumValueToAllVariables(tree[3]),memoryStructureParts, isPrimed)
     print >>sys.stderr,"P1: "+str(part1MemoryStructurePointers)
     print >>sys.stderr,"P2: "+str(part2MemoryStructurePointers)
     print >>sys.stderr,"MSPatComp: "+str(memoryStructureParts)
@@ -459,8 +461,7 @@ def isValidRecursiveSlugsProperty(tokens):
             elif currentToken=="0" or currentToken=="1":
                 stacksize += 1
             else:
-                print >>sys.stderr, "Rejected part: "+currentToken
-                return (False,"Rejected part ")
+                return (False,"Rejected part "+currentToken)
     return (stacksize==1,"Stack size at end: "+str(stacksize))
 
 # ============================================
