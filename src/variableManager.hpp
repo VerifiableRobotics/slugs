@@ -56,6 +56,7 @@ protected:
     std::vector<BF> variables;
     std::vector<std::string> variableNames;
     std::vector<VariableType> variableTypes;
+    std::vector<std::set<int> > variableTypesAll; //! Is computed when calling computeVariableInformation()
     //@}
 
 
@@ -67,6 +68,10 @@ public: // To be changed later
 public:
 
     void computeVariableInformation();
+    bool doesVariableInheritType(int variableNumber, VariableType type) const {
+        assert(variableTypesAll.size()>0); // computeVariableInformation must have been called already
+        return variableTypesAll[variableNumber].count(type)>0;
+    }
 
     //@{
     /**

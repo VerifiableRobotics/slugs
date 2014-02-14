@@ -59,16 +59,14 @@
 //! The enumeration of all variable types
 typedef enum {
 
-    //PRE
+    // Abstract types - Pre or Post?
+    Pre, Post,
+
     // Standard set of variables - present already in the standard GR(1) context
-    PreInput, PreOutput,
+    PreInput, PreOutput, PostInput, PostOutput,
 
     // Variables used in "extensionIROSfastslow.hpp"
-    PreOutputFast, PreOutputSlow,
-    
-    //POST
-    PostInput, PostOutput,
-    PostOutputFast, PostOutputSlow,
+    PreOutputFast, PreOutputSlow, PostOutputFast, PostOutputSlow,
 
     // Dummy parameters used for internal reasons. Must be last in the enum
     NoneVariableType
@@ -76,6 +74,8 @@ typedef enum {
 } VariableType;
 
 //! Variable class names. Used, for example, when printing debugging BDDs
+REGISTER_VARIABLE_TYPE_STRING(Pre,"Pre")
+REGISTER_VARIABLE_TYPE_STRING(Post,"Post")
 REGISTER_VARIABLE_TYPE_STRING(PreInput,"PreInput")
 REGISTER_VARIABLE_TYPE_STRING(PostInput,"PostInput")
 REGISTER_VARIABLE_TYPE_STRING(PreOutput,"PreOutput")
@@ -87,10 +87,12 @@ REGISTER_VARIABLE_TYPE_STRING(PostOutputSlow,"PostInputSlow")
 
 //! Variable hierarchy. Allows to include subgrouped variablen when computing variable
 //! vectors and cubes
-REGISTER_VARIABLE_TYPE_HIERARCHY(PreInput,NoneVariableType)
-REGISTER_VARIABLE_TYPE_HIERARCHY(PostInput,NoneVariableType)
-REGISTER_VARIABLE_TYPE_HIERARCHY(PreOutput,NoneVariableType)
-REGISTER_VARIABLE_TYPE_HIERARCHY(PostOutput,NoneVariableType)
+REGISTER_VARIABLE_TYPE_HIERARCHY(Pre,NoneVariableType)
+REGISTER_VARIABLE_TYPE_HIERARCHY(Post,NoneVariableType)
+REGISTER_VARIABLE_TYPE_HIERARCHY(PreInput,Pre)
+REGISTER_VARIABLE_TYPE_HIERARCHY(PostInput,Post)
+REGISTER_VARIABLE_TYPE_HIERARCHY(PreOutput,Pre)
+REGISTER_VARIABLE_TYPE_HIERARCHY(PostOutput,Post)
 REGISTER_VARIABLE_TYPE_HIERARCHY(PreOutputFast,PreOutput)
 REGISTER_VARIABLE_TYPE_HIERARCHY(PreOutputSlow,PreOutput)
 REGISTER_VARIABLE_TYPE_HIERARCHY(PostOutputFast,PostOutput)

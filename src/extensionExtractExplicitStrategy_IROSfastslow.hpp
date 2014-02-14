@@ -32,6 +32,7 @@ protected:
     using T::varCubePostOutputF;
     using T::varCubePostOutputS;
     using T::determinize;
+    using T::doesVariableInheritType;
 
     XExtractExplicitStrategy_IROSfastslow<T,oneStepRecovery>(std::list<std::string> &filenames) : T(filenames) {
         if (filenames.size()==1) {
@@ -132,7 +133,7 @@ public:
             outputStream << "State " << stateNum << " with rank " << current.second << " -> <";
             bool first = true;
             for (unsigned int i=0;i<variables.size();i++) {
-                if (variableTypes[i] < PostInput) {
+                if (doesVariableInheritType(i,Pre)) {
                     if (first) {
                         first = false;
                     } else {

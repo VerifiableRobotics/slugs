@@ -128,13 +128,15 @@ void SlugsVariableManager::computeVariableInformation() {
     // this function is safe to call multiple times.
 
     // Compute a type hierarchy closure of all variables
-    std::set<int> variableTypesAll[variables.size()];
+    variableTypesAll.clear();
+    variableTypesAll.resize(variables.size());
     for (unsigned int i=0;i < variables.size();i++) {
         VariableType type = variableTypes[i];
         while (type!=NoneVariableType) {
             variableTypesAll[i].insert(type);
             type = static_cast<VariableType>((*variableHierarchy).at(type));
         }
+        // std::cerr << "Variable " << i << " is in " << variableTypesAll[i].size() << " groups!\n";
     }
 
     // Compute Variable Vectors
@@ -175,21 +177,16 @@ void SlugsVariableManager::computeVariableInformation() {
     for (auto it = varCubesToConstruct.begin();it!=varCubesToConstruct.end();it++) {
 
         // Compute closure of the variable types contained in the variable type list
-        std::set<VariableType> allAllowedVariableTypes;
+        std::vector<BF> varsInThisCube;
         for (auto it2 = it->second.begin();it2!=it->second.end();it2++) {
-            int type = *it2;
-            while (type!=NoneVariableType) {
-                allAllowedVariableTypes.insert(static_cast<VariableType>(type));
-                type = (*variableHierarchy).at(type);
+            for (unsigned int i=0;i<variables.size();i++) {
+                if (variableTypesAll[i].count(*it2)>0) {
+                    varsInThisCube.push_back(variables[i]);
+                }
             }
         }
 
-        std::vector<BF> varsInThisCube;
-        for (unsigned int i=0;i<variables.size();i++) {
-            if (allAllowedVariableTypes.count(variableTypes[i])>0) {
-                varsInThisCube.push_back(variables[i]);
-            }
-        }
+        // std::cerr << "Computed cube with " << varsInThisCube.size() << " variables!\n";
 
         // Debug check: No variable occurring twice?
 #ifndef NDEBUG

@@ -31,6 +31,7 @@ protected:
     using T::varVectorPost;
     using T::varCubePostOutput;
     using T::determinize;
+    using T::doesVariableInheritType;
 
     XExtractExplicitStrategy<T,oneStepRecovery>(std::list<std::string> &filenames): T(filenames) {}
 
@@ -134,7 +135,7 @@ public:
             outputStream << "State " << stateNum << " with rank " << current.second << " -> <";
             bool first = true;
             for (unsigned int i=0;i<variables.size();i++) {
-                if (variableTypes[i] < PostInput) {
+                if (doesVariableInheritType(i,Pre)) {
                     if (first) {
                         first = false;
                     } else {

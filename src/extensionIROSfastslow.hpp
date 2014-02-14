@@ -227,9 +227,7 @@ public:
     
     BF newSafetySys = safetySys & (safeStates & safeNext).SwapVariables(varVectorPre,varVectorPost).SwapVariables(varVectorPostOutputS,varVectorPreOutputS);
     
-    //BF sameVarS = mgr.constantTrue();
-    //BF sameVarF = mgr.constantTrue();
-    
+    assert(((const BFVarCube&)varCubePostOutputS).size()+((const BFVarCube&)varCubePostOutputF).size()==((const BFVarCube&)varCubePostOutput).size());
     
     //for (unsigned int i1=0;i1<postOutputSVars.size();i1++)
     //{
