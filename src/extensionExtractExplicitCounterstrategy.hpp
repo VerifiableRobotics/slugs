@@ -39,6 +39,7 @@ protected:
     using T::determinize;
     using T::postInputVars;
     using T::postOutputVars;
+    using T::doesVariableInheritType;
 
     XExtractExplicitCounterStrategy<T>(std::list<std::string> &filenames) : T(filenames) {
         if (filenames.size()==1) {
@@ -151,7 +152,7 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
         outputStream << "State " << stateNum << " with rank (" << current.second.first << "," << current.second.second << ") -> <";
         bool first = true;
         for (unsigned int i=0;i<variables.size();i++) {
-            if (variableTypes[i] < PostInput) {
+            if (doesVariableInheritType(i,Pre)) {
                 if (first) {
                     first = false;
                 } else {
@@ -255,7 +256,7 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
         outputStream << "State " << tn << " with rank (" << current.second.first << "," << current.second.second << ") -> <";
         bool first = true;
         for (unsigned int i=0;i<variables.size();i++) {
-            if (variableTypes[i] == PreInput) {
+            if (doesVariableInheritType(i,PreInput)) {
                 if (first) {
                     first = false;
                 } else {

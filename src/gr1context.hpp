@@ -40,7 +40,7 @@ protected:
     SlugsVectorOfVarBFs preVars{PreInput, PreOutput, this};
     SlugsVectorOfVarBFs postVars{PostInput, PostOutput, this};
     SlugsVectorOfVarBFs postInputVars{PostInput, this};
-    SlugsVectorOfVarBFs postOutputVars{PostInput, this};
+    SlugsVectorOfVarBFs postOutputVars{PostOutput, this};
     //@}
 
     //@{

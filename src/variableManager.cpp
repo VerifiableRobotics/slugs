@@ -102,8 +102,9 @@ void SlugsVariableManager::getVariableTypes(std::vector<std::string> &types) con
 void SlugsVariableManager::getVariableNumbersOfType(std::string typeString, std::vector<unsigned int> &nums) const {
     assert(allPossibleVariableTypes->count(typeString)>0);
     int typeNumber = allPossibleVariableTypes->at(typeString);
+    VariableType type = (VariableType)typeNumber;
     for (unsigned int i=0;i<variables.size();i++) {
-        if (variableTypes[i]==typeNumber) {
+        if (doesVariableInheritType(i,type)) {
             nums.push_back(i);
         }
     }
