@@ -45,7 +45,6 @@
 #include "extensionFixedPointRecycling.hpp"
 #include "extensionInteractiveStrategy.hpp"
 #include "extensionIROSfastslow.hpp"
-#include "extensionExtractExplicitStrategy_IROSfastslow.hpp"
 
 //===================================================================================
 // List of command line arguments
@@ -106,9 +105,9 @@ OptionCombination optionCombinations[] = {
     OptionCombination("--computeWeakenedSafetyAssumptions --fixedPointRecycling --onlyRealizability --sysInitRoboticsSemantics",XComputeWeakenedSafetyAssumptions<XRoboticsSemantics<XFixedPointRecycling<GR1Context> > >::makeInstance),
     OptionCombination("--computeCNFFormOfTheSpecification --fixedPointRecycling --sysInitRoboticsSemantics",XComputeCNFFormOfTheSpecification<XFixedPointRecycling<GR1Context> >::makeInstance),
     OptionCombination("--interactiveStrategy",XInteractiveStrategy<GR1Context>::makeInstance),
-    OptionCombination("--IROSfastslow",XExtractExplicitStrategy_IROSfastslow<XIROSFS<GR1Context>,false>::makeInstance),
+    OptionCombination("--IROSfastslow",XExtractExplicitStrategy<XIROSFS<GR1Context>,false>::makeInstance),
     OptionCombination("--IROSfastslow --onlyRealizability",XIROSFS<GR1Context>::makeInstance),
-    OptionCombination("--IROSfastslow --sysInitRoboticsSemantics",XExtractExplicitStrategy_IROSfastslow<XRoboticsSemantics<XIROSFS<GR1Context> >,false>::makeInstance),
+    OptionCombination("--IROSfastslow --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<XIROSFS<GR1Context> >,false>::makeInstance),
     OptionCombination("--IROSfastslow --onlyRealizability --sysInitRoboticsSemantics",XRoboticsSemantics<XIROSFS<GR1Context> >::makeInstance)
     
 
