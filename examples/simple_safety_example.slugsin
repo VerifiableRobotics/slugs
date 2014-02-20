@@ -1,0 +1,19 @@
+[INPUT]
+a
+b
+
+[OUTPUT]
+c
+
+[ENV_INIT]
+| ! a ! b
+
+[SYS_INIT]
+c
+
+[ENV_TRANS]
+| a' b'
+
+[SYS_TRANS]
+^ c' a'
+
