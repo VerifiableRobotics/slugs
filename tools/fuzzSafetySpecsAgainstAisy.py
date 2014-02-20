@@ -14,7 +14,7 @@ import subprocess, md5, time
 # Difficulty Options
 # =====================================================
 nofAPsPerType = 5
-probabilityPerProperty = 0.95
+probabilityPerProperty = 0.5
 
 # =====================================================
 # Execution Options
@@ -37,23 +37,28 @@ aisyExecutableAndBasicOptions = "aisy.py"
 def fuzzOnce():
 
     # Recursive specification generator
-    def makeAProperty(apsUsableWithoutNext,apsUsableWithNext):
-        ops = ["!","next","&","|","AP","AP","TRUE"]
+    def makeAProperty(apsUsable):
+        ops = ["!","&","|","AP","$","AP","TRUE"]
         op = random.choice(ops)
         while ((op=="next") and (len(apsUsableWithNext)==0)):
             op = random.choice(ops)
 
         if (op=="!"):
-            return "! "+makeAProperty(apsUsableWithoutNext,apsUsableWithNext)
-        elif (op=="next"):
-            return makeAProperty(apsUsableWithNext,[])
+            return "! "+makeAProperty(apsUsable)
         elif (op=="&"):
-            return "& "+makeAProperty(apsUsableWithoutNext,apsUsableWithNext)+" "+makeAProperty(apsUsableWithoutNext,apsUsableWithNext)
+            return "& "+makeAProperty(apsUsable)+" "+makeAProperty(apsUsable)
         elif (op=="|"):
-            return "| "+makeAProperty(apsUsableWithoutNext,apsUsableWithNext)+" "+makeAProperty(apsUsableWithoutNext,apsUsableWithNext)
+            return "| "+makeAProperty(apsUsable)+" "+makeAProperty(apsUsable)
         elif (op=="AP"):
-            if len(apsUsableWithoutNext)>0:
-                return random.choice(apsUsableWithoutNext)
+            return random.choice(apsUsable)
+        elif (op=="$") and not "? 0" in apsUsable:
+            nofElements = random.randint(1,5)
+            allParts = "$ "+str(nofElements)
+            aps = [a for a in apsUsable]
+            for i in xrange(0,nofElements):
+                allParts = allParts + " "+makeAProperty(aps)
+                aps.append("? "+str(i))
+            return allParts
 
         # Nothing else? Then it shall be "TRUE"
         return "1"
@@ -67,13 +72,13 @@ def fuzzOnce():
     # Init assumptions
     properties =  {"[INPUT]":apsInput,"[OUTPUT]":apsOutput,"[ENV_INIT]":[],"[ENV_TRANS]":[],"[SYS_INIT]":[],"[SYS_TRANS]":[]} 
     while random.random() < probabilityPerProperty:
-        properties["[ENV_TRANS]"].append(makeAProperty(apsInput+apsOutput,apsInputPost))
+        properties["[ENV_TRANS]"].append(makeAProperty(apsInput+apsOutput+apsInputPost))
     while random.random() < probabilityPerProperty:
-        properties["[ENV_INIT]"].append(makeAProperty(apsInput,[]))
+        properties["[ENV_INIT]"].append(makeAProperty(apsInput))
     while random.random() < probabilityPerProperty:
-        properties["[SYS_INIT]"].append(makeAProperty(apsOutput,[]))
+        properties["[SYS_INIT]"].append(makeAProperty(apsOutput))
     while random.random() < probabilityPerProperty:
-        properties["[SYS_TRANS]"].append(makeAProperty(apsInput+apsOutput,apsInputPost+apsOutputPost))
+        properties["[SYS_TRANS]"].append(makeAProperty(apsInput+apsOutput+apsInputPost+apsOutputPost))
 
     # Write input file
     out = open(slugsFile,"w")

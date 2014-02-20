@@ -16,7 +16,7 @@ slugsReturnFile = "/tmp/check_"+str(os.getpid())+".slugsreturn"
 # =====================================================
 # Slugs -> AIG Encoder, used by the main function
 # =====================================================
-def recurseMakeAIGEncodingOfBooleanFormula(formula,variables,varNumbersUsedSoFar,nofGates,lines):
+def recurseMakeAIGEncodingOfBooleanFormula(formula,variables,varNumbersUsedSoFar,nofGates,memoryTable,lines):
     
     # Cut off next token    
     posSpace = formula.find(" ")
@@ -33,18 +33,18 @@ def recurseMakeAIGEncodingOfBooleanFormula(formula,variables,varNumbersUsedSoFar
     elif firstToken=="0":
         return (restOfFormula,0,varNumbersUsedSoFar,nofGates)
     if firstToken=="!":
-        (restOfFormula,resultingGateNumber,varNumbersUsedSoFar,nofGates) = recurseMakeAIGEncodingOfBooleanFormula(restOfFormula,variables,varNumbersUsedSoFar,nofGates,lines)
+        (restOfFormula,resultingGateNumber,varNumbersUsedSoFar,nofGates) = recurseMakeAIGEncodingOfBooleanFormula(restOfFormula,variables,varNumbersUsedSoFar,nofGates,memoryTable,lines)
         return (restOfFormula,resultingGateNumber ^ 1,varNumbersUsedSoFar,nofGates)
     elif firstToken=="|":
-        (restOfFormula,resultingGateNumber,varNumbersUsedSoFar,nofGates) = recurseMakeAIGEncodingOfBooleanFormula(restOfFormula,variables,varNumbersUsedSoFar,nofGates,lines)
-        (restOfFormula,resultingGateNumber2,varNumbersUsedSoFar,nofGates) = recurseMakeAIGEncodingOfBooleanFormula(restOfFormula,variables,varNumbersUsedSoFar,nofGates,lines)
+        (restOfFormula,resultingGateNumber,varNumbersUsedSoFar,nofGates) = recurseMakeAIGEncodingOfBooleanFormula(restOfFormula,variables,varNumbersUsedSoFar,nofGates,memoryTable,lines)
+        (restOfFormula,resultingGateNumber2,varNumbersUsedSoFar,nofGates) = recurseMakeAIGEncodingOfBooleanFormula(restOfFormula,variables,varNumbersUsedSoFar,nofGates,memoryTable,lines)
         varNumbersUsedSoFar += 1
         nofGates += 1
         lines.append(str(varNumbersUsedSoFar*2)+" "+str(resultingGateNumber ^ 1)+" "+str(resultingGateNumber2 ^ 1))
         return (restOfFormula,varNumbersUsedSoFar*2 ^ 1,varNumbersUsedSoFar,nofGates)
     elif firstToken=="^":
-        (restOfFormula,resultingGateNumber,varNumbersUsedSoFar,nofGates) = recurseMakeAIGEncodingOfBooleanFormula(restOfFormula,variables,varNumbersUsedSoFar,nofGates,lines)
-        (restOfFormula,resultingGateNumber2,varNumbersUsedSoFar,nofGates) = recurseMakeAIGEncodingOfBooleanFormula(restOfFormula,variables,varNumbersUsedSoFar,nofGates,lines)
+        (restOfFormula,resultingGateNumber,varNumbersUsedSoFar,nofGates) = recurseMakeAIGEncodingOfBooleanFormula(restOfFormula,variables,varNumbersUsedSoFar,nofGates,memoryTable,lines)
+        (restOfFormula,resultingGateNumber2,varNumbersUsedSoFar,nofGates) = recurseMakeAIGEncodingOfBooleanFormula(restOfFormula,variables,varNumbersUsedSoFar,nofGates,memoryTable,lines)
         lines.append(str(varNumbersUsedSoFar*2+2)+" "+str(resultingGateNumber ^ 1)+" "+str(resultingGateNumber2 ^ 1))
         lines.append(str(varNumbersUsedSoFar*2+4)+" "+str(resultingGateNumber)+" "+str(resultingGateNumber2))
         lines.append(str(varNumbersUsedSoFar*2+6)+" "+str(varNumbersUsedSoFar*2+3)+" "+str(varNumbersUsedSoFar*2+5))
@@ -52,12 +52,30 @@ def recurseMakeAIGEncodingOfBooleanFormula(formula,variables,varNumbersUsedSoFar
         nofGates += 3
         return (restOfFormula,varNumbersUsedSoFar*2,varNumbersUsedSoFar,nofGates)
     elif firstToken=="&":
-        (restOfFormula,resultingGateNumber,varNumbersUsedSoFar,nofGates) = recurseMakeAIGEncodingOfBooleanFormula(restOfFormula,variables,varNumbersUsedSoFar,nofGates,lines)
-        (restOfFormula,resultingGateNumber2,varNumbersUsedSoFar,nofGates) = recurseMakeAIGEncodingOfBooleanFormula(restOfFormula,variables,varNumbersUsedSoFar,nofGates,lines)
+        (restOfFormula,resultingGateNumber,varNumbersUsedSoFar,nofGates) = recurseMakeAIGEncodingOfBooleanFormula(restOfFormula,variables,varNumbersUsedSoFar,nofGates,memoryTable,lines)
+        (restOfFormula,resultingGateNumber2,varNumbersUsedSoFar,nofGates) = recurseMakeAIGEncodingOfBooleanFormula(restOfFormula,variables,varNumbersUsedSoFar,nofGates,memoryTable,lines)
         varNumbersUsedSoFar += 1
         nofGates += 1
         lines.append(str(varNumbersUsedSoFar*2)+" "+str(resultingGateNumber)+" "+str(resultingGateNumber2))
         return (restOfFormula,varNumbersUsedSoFar*2,varNumbersUsedSoFar,nofGates)
+    elif firstToken=="$":
+        posSpace = restOfFormula.find(" ")
+        nofParts = int(restOfFormula[0:posSpace])
+        restOfFormula = restOfFormula[posSpace+1:]
+        memoryTable = []
+        for i in xrange(0,nofParts):
+            (restOfFormula,resultingGate,varNumbersUsedSoFar,nofGates) = recurseMakeAIGEncodingOfBooleanFormula(restOfFormula,variables,varNumbersUsedSoFar,nofGates,memoryTable,lines)
+            memoryTable.append(resultingGate)
+        return (restOfFormula,memoryTable[len(memoryTable)-1],varNumbersUsedSoFar,nofGates)
+    elif firstToken=="?":
+        posSpace = restOfFormula.find(" ")
+        if posSpace>-1:
+            part = int(restOfFormula[0:posSpace])
+            restOfFormula = restOfFormula[posSpace+1:]
+        else:
+            part = int(restOfFormula)
+            restOfFormula = ""
+        return (restOfFormula,memoryTable[part],varNumbersUsedSoFar,nofGates)
     else:
         # Again, an AP
         return (restOfFormula,variables[firstToken],varNumbersUsedSoFar,nofGates)
@@ -139,12 +157,12 @@ def produceAIGFileFromSlugsFile(filename):
 
     # Compute the safety init assumptions
     initAssuptions = "& "*(len(categories["[ENV_INIT]"])-1)+" ".join(categories["[ENV_INIT]"])
-    (restOfFormula,resultingGateNumberEnvInit,varNumbersUsedSoFar,nofGates) = recurseMakeAIGEncodingOfBooleanFormula(initAssuptions,variables,varNumbersUsedSoFar,nofGates,lines)
+    (restOfFormula,resultingGateNumberEnvInit,varNumbersUsedSoFar,nofGates) = recurseMakeAIGEncodingOfBooleanFormula(initAssuptions,variables,varNumbersUsedSoFar,nofGates,[],lines)
     assert len(restOfFormula)==0
 
     # Compute the safety trans assumptions
     transAssuptions = "& "*(len(categories["[ENV_TRANS]"])-1)+" ".join(categories["[ENV_TRANS]"])
-    (restOfFormula,resultingGateNumberEnvTrans,varNumbersUsedSoFar,nofGates) = recurseMakeAIGEncodingOfBooleanFormula(transAssuptions,variablesInTrans,varNumbersUsedSoFar,nofGates,lines)
+    (restOfFormula,resultingGateNumberEnvTrans,varNumbersUsedSoFar,nofGates) = recurseMakeAIGEncodingOfBooleanFormula(transAssuptions,variablesInTrans,varNumbersUsedSoFar,nofGates,[],lines)
     assert len(restOfFormula)==0
 
     # Update assumption violations - note that "gateNumberAssumptionFailure" should get the negation
@@ -157,12 +175,12 @@ def produceAIGFileFromSlugsFile(filename):
 
     # Compute the safety init guarantees
     initGuarantees = "& "*(len(categories["[SYS_INIT]"])-1)+" ".join(categories["[SYS_INIT]"])
-    (restOfFormula,resultingGateNumberSysInit,varNumbersUsedSoFar,nofGates) = recurseMakeAIGEncodingOfBooleanFormula(initGuarantees,variables,varNumbersUsedSoFar,nofGates,lines)
+    (restOfFormula,resultingGateNumberSysInit,varNumbersUsedSoFar,nofGates) = recurseMakeAIGEncodingOfBooleanFormula(initGuarantees,variables,varNumbersUsedSoFar,nofGates,[],lines)
     assert len(restOfFormula)==0
 
     # Compute the safety trans guarantees
     transGuarantees = "& "*(len(categories["[SYS_TRANS]"])-1)+" ".join(categories["[SYS_TRANS]"])
-    (restOfFormula,resultingGateNumberSysTrans,varNumbersUsedSoFar,nofGates) = recurseMakeAIGEncodingOfBooleanFormula(transGuarantees,variablesInTrans,varNumbersUsedSoFar,nofGates,lines)
+    (restOfFormula,resultingGateNumberSysTrans,varNumbersUsedSoFar,nofGates) = recurseMakeAIGEncodingOfBooleanFormula(transGuarantees,variablesInTrans,varNumbersUsedSoFar,nofGates,[],lines)
     assert len(restOfFormula)==0
 
     # Detect guarantee violations - exclude cases in which an assumption has already been violated
