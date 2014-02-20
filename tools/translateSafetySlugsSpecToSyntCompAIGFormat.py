@@ -166,7 +166,7 @@ def produceAIGFileFromSlugsFile(filename):
     assert len(restOfFormula)==0
 
     # Detect guarantee violations - exclude cases in which an assumption has already been violated
-    lines.append(str(gateNumberGuaranteeFailure)+" "+str(gateNumberAssumptionFailure ^ 1)+" "+str(varNumbersUsedSoFar*2+3))
+    lines.append(str(gateNumberGuaranteeFailure)+" "+str(gateNumberAssumptionFailure)+" "+str(varNumbersUsedSoFar*2+3))
     lines.append(str(varNumbersUsedSoFar*2+2)+" "+str(varNumbersUsedSoFar*2+5)+" "+str(varNumbersUsedSoFar*2+7))
     lines.append(str(varNumbersUsedSoFar*2+4)+" "+str(resultingGateNumberSysInit ^ 1)+" "+str(latchOutputIsNotFirstRound ^ 1))
     lines.append(str(varNumbersUsedSoFar*2+6)+" "+str(resultingGateNumberSysTrans ^ 1)+" "+str(latchOutputIsNotFirstRound))
