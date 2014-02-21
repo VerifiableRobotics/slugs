@@ -220,6 +220,9 @@ int main(int argc, const char **args) {
             printToolUsageHelp();
         }
         return 1;
+    } catch (BFDumpDotException e) {
+        std::cerr << "Error: " << e.getMessage() << std::endl;
+        return 1;
     }
 
 }

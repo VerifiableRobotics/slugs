@@ -34,6 +34,7 @@ protected:
     using T::postVars;
     using T::varVectorPre;
     using T::varVectorPost;
+    using T::doesVariableInheritType;
 
 
 public:
@@ -81,6 +82,21 @@ public:
 
                 if ((command=="QUIT") || (command=="EXIT")) {
                     return;
+                } else if (command=="STARTPOS") {
+                    BF initialPosition = winningPositions & initEnv & initSys;
+                    assert(!(initialPosition.isFalse()));
+                    initialPosition = determinize(initialPosition,preVars);
+                    for (unsigned int i=0;i<variables.size();i++) {
+                        if (doesVariableInheritType(i, Pre)) {
+                            std::cout << " - " << variableNames[i] << ": ";
+                            if ((variables[i] & initialPosition).isFalse()) {
+                                std::cout << "0\n";
+                            } else {
+                                std::cout << "1\n";
+                            }
+                        }
+                    }
+                    currentPosition = initialPosition;
                 } else if (command=="CHECKTRANS") {
 
                     std::cout << "From: \n";
@@ -223,94 +239,105 @@ public:
                         } else {
 
                             BF allowedInputs = (currentPosition & safetyEnv);
-                            BF_newDumpDot(*this,allowedInputs,NULL,"/tmp/allowedInputs.dot");
-
-                            std::cout << "To: \n";
-                            BF to = mgr.constantTrue();
-                            BF nextPosition = mgr.constantTrue();
-                            for (unsigned int i=0;i<variables.size();i++) {
-                                if (variableTypes[i]==PostInput) {
-                                    std::cout << " - " << variableNames[i] << ": ";
-                                    std::cout.flush();
-                                    int value;
-                                    std::cin >> value;
-                                    if (std::cin.fail()) {
-                                        std::cout << "    -> Error reading value. Assuming 0.\n";
-                                        value = 0;
-                                    }
-                                    if (value==0) {
-                                        to &= !variables[i];
-                                        nextPosition &= !variables[i];
-                                    } else if (value==1) {
-                                        to &= variables[i];
-                                        nextPosition &= variables[i];
-                                    } else {
-                                        std::cout << "    -> Value != 0 or 1. Assuming 1.\n";
-                                        to &= variables[i];
-                                    }
-                                }
-                            }
-
-                            BF transition = currentPosition & to & positionalStrategiesForTheIndividualGoals[guarantee];
-
-                            if (transition.isFalse()) {
-                                std::cout << "    -> Error: Input not allowed here.\n";
-                                if (!(currentPosition & to & safetyEnv).isFalse()) {
-                                    std::cout << "       -> Actually, that's an internal error!\n";
-                                }
+                            if (allowedInputs.isFalse()) {
+                                std::cout << "No move possible. There is no allowed next input!\n";
                             } else {
+                                BF_newDumpDot(*this,allowedInputs,"Pre Post","/tmp/allowedInputs.dot");
 
-                                transition = determinize(transition,postOutputVars);
-
+                                std::cout << "To: \n";
+                                BF to = mgr.constantTrue();
+                                BF nextPosition = mgr.constantTrue();
                                 for (unsigned int i=0;i<variables.size();i++) {
-                                    if (variableTypes[i]==PostOutput) {
-                                        if ((variables[i] & transition).isFalse()) {
-                                            std::cout << " - " << variableNames[i] << " = 0\n";
+                                    if (variableTypes[i]==PostInput) {
+                                        std::cout << " - " << variableNames[i] << ": ";
+                                        std::cout.flush();
+                                        int value;
+                                        std::cin >> value;
+                                        if (std::cin.fail()) {
+                                            std::cout << "    -> Error reading value. Assuming 0.\n";
+                                            value = 0;
+                                        }
+                                        if (value==0) {
+                                            to &= !variables[i];
                                             nextPosition &= !variables[i];
-                                        } else {
-                                            std::cout << " - " << variableNames[i] << " = 1\n";
+                                        } else if (value==1) {
+                                            to &= variables[i];
                                             nextPosition &= variables[i];
+                                        } else {
+                                            std::cout << "    -> Value != 0 or 1. Assuming 1.\n";
+                                            to &= variables[i];
                                         }
                                     }
                                 }
 
-                                std::cout << "- The transition is a goal transition for the following liveness assumptions: ";
-                                bool foundOne = false;
-                                for (unsigned int i=0;i<livenessAssumptions.size();i++) {
-                                    if (!(livenessAssumptions[i] & transition).isFalse()) {
-                                        if (foundOne) std::cout << ", ";
-                                        foundOne = true;
-                                        std::cout << i;
-                                    }
+                                // Simple check for sanity
+                                if ((currentPosition & to & safetyEnv).isFalse()) {
+                                    std::cout << "Warning: that is an illegal next input!\n";
                                 }
-                                if (!foundOne) std::cout << "none";
-                                std::cout << std::endl;
-                                std::cout << "- The transition is a goal transition for the following liveness guarantees: ";
-                                foundOne = false;
-                                for (unsigned int i=0;i<livenessGuarantees.size();i++) {
-                                    if (!(livenessGuarantees[i] & transition).isFalse()) {
-                                        if (foundOne) std::cout << ", ";
-                                        foundOne = true;
-                                        std::cout << i;
-                                    }
-                                }
-                                if (!foundOne) std::cout << "none";
-                                std::cout << std::endl;
 
-                                // Analyse if it is part of a possible strategy
-                                std::cout << "- The transition is a possible transition in a strategy for the following goals: ";
-                                foundOne = false;
-                                for (unsigned int i=0;i<livenessGuarantees.size();i++) {
-                                    if (!(positionalStrategiesForTheIndividualGoals[i] & transition).isFalse()) {
-                                        if (foundOne) std::cout << ", ";
-                                        foundOne = true;
-                                        std::cout << i;
-                                    }
-                                }
-                                if (!foundOne) std::cout << "none";
-                                std::cout << std::endl;
+                                // Compute which transition to takes
+                                BF transition = currentPosition & to & positionalStrategiesForTheIndividualGoals[guarantee];
 
-                                currentPosition = nextPosition.SwapVariables(varVectorPre,varVectorPost);
+
+                                if (transition.isFalse()) {
+                                    std::cout << "    -> Error: Input not allowed here.\n";
+                                    if (!(currentPosition & to & safetyEnv).isFalse()) {
+                                        std::cout << "       -> Actually, that's an internal error!\n";
+                                    }
+                                } else {
+
+                                    transition = determinize(transition,postOutputVars);
+
+                                    for (unsigned int i=0;i<variables.size();i++) {
+                                        if (variableTypes[i]==PostOutput) {
+                                            if ((variables[i] & transition).isFalse()) {
+                                                std::cout << " - " << variableNames[i] << " = 0\n";
+                                                nextPosition &= !variables[i];
+                                            } else {
+                                                std::cout << " - " << variableNames[i] << " = 1\n";
+                                                nextPosition &= variables[i];
+                                            }
+                                        }
+                                    }
+
+                                    std::cout << "- The transition is a goal transition for the following liveness assumptions: ";
+                                    bool foundOne = false;
+                                    for (unsigned int i=0;i<livenessAssumptions.size();i++) {
+                                        if (!(livenessAssumptions[i] & transition).isFalse()) {
+                                            if (foundOne) std::cout << ", ";
+                                            foundOne = true;
+                                            std::cout << i;
+                                        }
+                                    }
+                                    if (!foundOne) std::cout << "none";
+                                    std::cout << std::endl;
+                                    std::cout << "- The transition is a goal transition for the following liveness guarantees: ";
+                                    foundOne = false;
+                                    for (unsigned int i=0;i<livenessGuarantees.size();i++) {
+                                        if (!(livenessGuarantees[i] & transition).isFalse()) {
+                                            if (foundOne) std::cout << ", ";
+                                            foundOne = true;
+                                            std::cout << i;
+                                        }
+                                    }
+                                    if (!foundOne) std::cout << "none";
+                                    std::cout << std::endl;
+
+                                    // Analyse if it is part of a possible strategy
+                                    std::cout << "- The transition is a possible transition in a strategy for the following goals: ";
+                                    foundOne = false;
+                                    for (unsigned int i=0;i<livenessGuarantees.size();i++) {
+                                        if (!(positionalStrategiesForTheIndividualGoals[i] & transition).isFalse()) {
+                                            if (foundOne) std::cout << ", ";
+                                            foundOne = true;
+                                            std::cout << i;
+                                        }
+                                    }
+                                    if (!foundOne) std::cout << "none";
+                                    std::cout << std::endl;
+
+                                    currentPosition = nextPosition.SwapVariables(varVectorPre,varVectorPost);
+                                }
                             }
                         }
                     }

@@ -14,20 +14,25 @@ import subprocess, md5, time
 # Difficulty Options
 # =====================================================
 nofAPsPerType = 5
-probabilityPerProperty = 0.5
+probabilityPerAssumptionProperty = 0.75
+probabilityPerGuaranteeProperty = 0.9
 
 # =====================================================
 # Execution Options
 # =====================================================
 slugsFile = "/tmp/fuzz_"+str(os.getpid())+".slugsin"
 aagFile = "/tmp/fuzz_"+str(os.getpid())+".aag"
+aigFile = "/tmp/fuzz_"+str(os.getpid())+".aig"
 slugsResultFile = "/tmp/fuzz_"+str(os.getpid())+".slugsResultFile"
 slugsErrorFile = "/tmp/fuzz_"+str(os.getpid())+".slugsErrorFile"
+abcErrorFile = "/tmp/fuzz_"+str(os.getpid())+".abcErrorFile"
 aisyResultFile = "/tmp/fuzz_"+str(os.getpid())+".aisyResultFile"
 aisyErrorFile = "/tmp/fuzz_"+str(os.getpid())+".aisyErrorFile"
 slugsExecutableAndBasicOptions = "../src/slugs --onlyRealizability"
 translaterExecutable = "./translateSafetySlugsSpecToSyntCompAIGFormat.py"
-aisyExecutableAndBasicOptions = "aisy.py"
+aisyExecutableAndBasicOptions = "$AISY"
+aigtoaigExecutable = "$AIGTOAIG"
+abcExecutable = "$ABC"
 
 # =====================================================
 # =====================================================
@@ -71,13 +76,13 @@ def fuzzOnce():
 
     # Init assumptions
     properties =  {"[INPUT]":apsInput,"[OUTPUT]":apsOutput,"[ENV_INIT]":[],"[ENV_TRANS]":[],"[SYS_INIT]":[],"[SYS_TRANS]":[]} 
-    while random.random() < probabilityPerProperty:
+    while random.random() < probabilityPerAssumptionProperty:
         properties["[ENV_TRANS]"].append(makeAProperty(apsInput+apsOutput+apsInputPost))
-    while random.random() < probabilityPerProperty:
+    while random.random() < probabilityPerAssumptionProperty:
         properties["[ENV_INIT]"].append(makeAProperty(apsInput))
-    while random.random() < probabilityPerProperty:
+    while random.random() < probabilityPerGuaranteeProperty:
         properties["[SYS_INIT]"].append(makeAProperty(apsOutput))
-    while random.random() < probabilityPerProperty:
+    while random.random() < probabilityPerGuaranteeProperty:
         properties["[SYS_TRANS]"].append(makeAProperty(apsInput+apsOutput+apsInputPost+apsOutputPost))
 
     # Write input file
@@ -119,6 +124,30 @@ def fuzzOnce():
     retValue = os.system(translaterExecutable + " " + slugsFile+" > "+aagFile)
     if (retValue!=0):
         print >>sys.stderr, "Translation failed!"
+        raise Exception("Fuzzing Aborted")
+
+    # =====================================================
+    # to Binary AIG
+    # =====================================================
+    retValue = os.system(aigtoaigExecutable + " " + aagFile +" "+aigFile)
+    if (retValue!=0):
+        print >>sys.stderr, "Translation Part 2 failed!"
+        raise Exception("Fuzzing Aborted")
+
+    # =====================================================
+    # Optimize
+    # =====================================================
+    retValue = os.system(abcExecutable + " -c \"read_aiger "+aigFile+"; rewrite; write_aiger -s "+aigFile+"\" > "+abcErrorFile)
+    if (retValue!=0):
+        print >>sys.stderr, "Translation Part 3 failed!"
+        raise Exception("Fuzzing Aborted")
+
+    # =====================================================
+    # to ASCII AIG
+    # =====================================================
+    retValue = os.system(aigtoaigExecutable + " " + aigFile +" "+aagFile)
+    if (retValue!=0):
+        print >>sys.stderr, "Translation Part 2 failed!"
         raise Exception("Fuzzing Aborted")
 
     # =====================================================

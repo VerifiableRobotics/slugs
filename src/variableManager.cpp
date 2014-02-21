@@ -88,14 +88,18 @@ public:
 #include "variableTypes.hpp"
 #include "variableManager.hpp"
 
-
 // =================================================
 // Variable manager functions
 // =================================================
 
+/**
+ * @brief Stores all top-most level variables into the "types" array
+ * @param types where to store the types
+ */
 void SlugsVariableManager::getVariableTypes(std::vector<std::string> &types) const {
     for (auto it = allPossibleVariableTypes->begin();it!=allPossibleVariableTypes->end();it++) {
-        types.push_back(it->first);
+        if ((*variableHierarchy)[it->second]==(int)(NoneVariableType))
+            types.push_back(it->first);
     }
 }
 
