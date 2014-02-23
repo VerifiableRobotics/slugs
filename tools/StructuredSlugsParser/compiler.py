@@ -41,7 +41,7 @@ def tokenize(str):
         if m:
             currentSymbol = m.group(0)
             if (currentSymbol in ["X","F","G","U","W","FALSE","TRUE","next"]):
-                res.append((str[0],))
+                res.append((currentSymbol,))
             else:
                 currentSymbol = m.group(0)
                 if currentSymbol in booleanAPs:

@@ -1,0 +1,178 @@
+\documentclass[a4paper,conference,10pt]{IEEEtran}
+%\usepackage{scrpage2}
+\usepackage[latin1]{inputenc}
+\usepackage[pdftex,colorlinks,linkcolor=black,citecolor=black]{hyperref}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{latexsym} 
+\usepackage{bbm}
+\usepackage{tikz}
+\usepackage{flushend}
+\usetikzlibrary{shapes}
+%\usetikzlibrary{snakes}
+%\usepackage{pgflibraryshapes}
+%\usepackage{pgflibrarysnakes}
+\usepackage{xspace}
+\usepackage{rotating}
+\usepackage{mathrsfs}
+
+
+\newtheorem{lem}{Lemma}
+\newtheorem{theo}[lem]{Theorem}
+\newtheorem{defi}[lem]{Definition}
+\newtheorem{corol}[lem]{Corollary}
+
+\newcommand{\LL}{\mathcal{L}}
+\newcommand{\NN}{\mathbbm{N}}
+\newcommand{\ZZ}{\mathbbm{Z}}
+\newcommand{\AP}{\mathit{AP}}
+\newcommand{\FALSE}{\mathbf{false}}
+\newcommand{\TRUE}{\mathbf{true}}
+\newcommand{\BB}{\mathbbm{B}}
+\newcommand{\SpaceforresultsA}{$\quad$\\$\quad$\\$\quad$\\$\quad$\\$\quad$\\}
+\newcommand{\SpaceforresultsB}{\SpaceforresultsA\SpaceforresultsA}
+\newcommand{\SpaceforresultsC}{\SpaceforresultsB\SpaceforresultsB}
+\newcommand{\SpaceforresultsD}{\SpaceforresultsC\SpaceforresultsC}
+\newcommand{\Spaceforresults}{\SpaceforresultsD\SpaceforresultsD}
+\newcommand{\newterm}{\textit}
+%\newcommand{\existsinfmany}{\mathop{\exists}\limits_{\infty}}
+\newcommand{\existsinfmany}{\mathop{\exists}^{\infty}}
+\newcommand{\true}{\TRUE}
+\newcommand{\false}{\FALSE}
+\hyphenation{rea-li-sa-bi-li-ty ge-ne-ra-lised li-mi-ted}
+\allowdisplaybreaks
+
+\author{\IEEEauthorblockN{R\"udiger Ehlers}
+\IEEEauthorblockA{University of Bremen\\
+Germany
+}}
+
+%\cfoot[]{Blubb}
+%\pagestyle{scrplain}
+\begin{document}
+%\pagestyle{scrplain}
+\title{Robot-on-a-grid Moving Obstacle Evasion Benchmark}
+\maketitle
+
+\section{Basic Setup}
+
+This benchmark set represents a robot moving on an $m_x \times m_y$-cell two-dimensional grid with the objective to avoid colliding with a $2 \times 2$-cell moving obstacle. In every step, the robot can move by $\pm 1$ cell in the $x$ direction, and/or by $\pm 1$ cell into the $y$ direction. Collisions with the boundaries of the workspace do not need to be avoided, but are taken care of, such that the $m_x \times m_y$-cell workspace does not have a torus shape.
+
+Motion is triggered by the robot using two atomic propositions for the $x$ direction, and two propositions for the $y$ direction. The robot has no inertia. Providing the updated $x$- and $y$-coordinates is the task of the environment.
+
+In order to allow the robot to evade the moving obstacle, the obstacle can only move in every second computation step, while the robot can move in every computation step.
+
+The overall setting is very simple and abstracts from many aspects of interest in the robotics application domain. However, it is already challenging when scaled and the abstraction from the details present in robotics applications makes it easy to understand.
+
+\subsection{Input and output signals}
+
+We have the following signals:
+\begin{itemize}
+\item Inputs to the system to be synthesized:
+\begin{enumerate}
+\item Propositions $\mathit{rx}_0, \ldots, \mathit{rx}_{|\mathit{rx}|}$ that encode the binary representation of the current robot $x$ position
+\item Propositions $\mathit{ry}_0, \ldots, \mathit{ry}_{|\mathit{ry}|}$ that encode the binary representation of the current robot $y$ position
+\item Propositions $\mathit{ox}_0, \ldots, \mathit{ox}_{|\mathit{ox}|}$ that encode the binary representation of the current obstacle $x$ position
+\item Propositions $\mathit{oy}_0, \ldots, \mathit{oy}_{|\mathit{oy}|}$ that encode the binary representation of the current obstacle $y$ position
+\end{enumerate}
+\item Outputs of the system to be synthesized:
+\begin{enumerate}
+\item Propositions $\mathit{mx}_0$, $\mathit{mx}_1$ to encode whether the robot wants to move left, right, or does not want to change its $x$ position
+\item Propositions $\mathit{my}_0$, $\mathit{my}_1$ to encode whether the robot wants to move up, down, or does not want to change its $y$ position
+\item Proposition $\mathit{obsmove}$ with which the system must track whether the obstacle has moved in the previous steps.
+\end{enumerate}
+\end{itemize}
+
+\subsection{Specification}
+The specification consists of \emph{assumptions} and \emph{guarantees}, which are connected by a \emph{strong implication} as common in GR(1) synthesis, i.e., it is the aim of the system to make sure that no guarantee is violated before some assumption is violated. If some assumption and some guarantee are violated in the same step, the system also satisfies its overall specification.
+\begin{itemize}
+\item Assumptions:
+\begin{enumerate}
+\item At every step, the obstacle and the robot can only move by at most one step in x and y directions each
+\item The robot position is updated according to the moves chosen by the system
+\item Initially, the x positions and y positions of the robot are both $0$
+\item The binary encoding of the robot's x position is never $\geq m_x$
+\item The binary encoding of the robot's y position is never $\geq m_y$
+\item The binary encoding of the x position of the robot's upper left corner is never $\geq m_x - 1$
+\item The binary encoding of the y position of the robot's upper left corner is never $\geq m_y - 1$
+\item \label{item:ObsMove} The obstacle can only change position during a step if before the change, $\mathit{obsmove}$ is true
+\item Initially, the obstacle is in the workspace corner that is most distant from the robot
+\end{enumerate}
+\item Guarantees:
+\begin{enumerate}
+\item The robot is never within the boundaries of the moving obstacle
+\item $\mathit{obsmove}$ is set to false precisely after a change of the obstacle position
+\item $\mathit{mx}_0$ and $\mathit{mx}_1$ do already represent a valid move
+\item $\mathit{my}_0$ and $\mathit{my}_1$ do already represent a valid move
+\end{enumerate}
+\end{itemize}
+
+\section{Error-resilience}
+
+In the basic setup, the robot can move twice as fast as the obstacle, which allows the robot to evade the obstacle for workspace sizes of $5 \times 5$ cells or larger.
+
+To make the benchmark a bit more challenging, we add a little twist: during the run of the system, the environment may temporarily violate assumption \ref{item:ObsMove} a few times, so that the obstacle can sometimes move in successive steps. Such temporary assumption violations are also called \emph{glitches}.
+
+To implement this idea, a \emph{glitch counter} is introduced that is under the control of the environment, i.e., is an input to the system. The counter can have a maximum value of $c$ for some $c \in \NN$ and is binary-encoded into a set of additional input signals of sufficient number. 
+
+Assumption \ref{item:ObsMove} of the basic setting is removed and the following assumptions are added:
+\begin{enumerate}
+\item The glitch counter value can only increase over time
+\item Whenever the obstacle moves while $\mathit{obsmove}$ is false, the glitch counter value strictly increases
+\item The glitch counter value is never $> c$
+\end{enumerate}
+
+Note that the error-resilience model here is relatively simple: a finite, fixed number of glitches must be tolerated during the execution of the system (which is infinite). 
+This is in contrast to more advanced error-resilience schemes such as $k$-resilience \cite{DBLP:journals/corr/abs-1210-2449,EhlersTopcuHSCC2014}, where an infinite number of execution blocks with each up to $k$ (not necessarily consecutive) glitches need to be tolerated, provided that there is enough time for the system to recover from the glitches in between the blocks. In contrast to GR(1) synthesis, without using liveness properties, a second counter for measuring the length of the recovery period would have been needed here, which is why the simpler error-resilience notion was used for this benchmark.
+
+\section{Compilation workflow}
+
+The benchmarks have been formulated as \emph{structured specifications} for the generalized reactivity(1) game solver \textsc{slugs} \cite{SlugsReference}. The term \emph{structured} in this context refers to support for constraints over (non-negative) integer numbers, which are automatically translated to Boolean constraints when compiling the structured \textsc{slugs} specification into a purely boolean form.
+
+The purely boolean GR(1) safety specification is then translated to an and-inverter-graph (AIG) representation of a monitor automaton checking the specification. The AIG is finally optimized using the ABC toolset \cite{ABCTool} by applying the command sequence \texttt{rewrite}.
+
+
+\section{Configurations}
+
+Table \ref{tab:benchmarks} lists the configurations used as benchmarks:
+
+\begin{table}[b]
+\normalsize
+\begin{center}
+\begin{tabular}{c|c|c||c|c}
+$m_x$ & $m_y$ & $c$ & is realizable & \textsc{slugs} com- \\ & & & & putation time\\ \hline \hline
+8 & 8 & 0 & yes & 0.3s \\ \hline
+8 & 8 & 1 & no & 0.4s \\ \hline
+16 & 16 & 3 & yes & 1.7s \\ \hline
+16 & 16 & 4 & no & 4.5s \\ \hline
+24 & 24 & 7 & yes & 27.6s\\ \hline
+24 & 24 & 8 & no & 20s \\ \hline
+32 & 32 & 11 & yes & 53s \\ \hline
+32 & 32 & 12 & no & 53s \\ \hline
+48 & 48 & 19 & yes & 5m59s \\ \hline
+48 & 48 & 20 & no & 4m54s \\ \hline
+64 & 64 & 27 & yes & 36m12s   \\ \hline
+64 & 64 & 28 & no & 54m40s   \\ \hline
+96 & 96 & 43 & yes & 62m44s  \\ \hline
+96 & 96 & 44 & no & 95m44.829s  \\ \hline
+128 & 128 & 59 & unknown & $> 4$h   \\ \hline
+128 & 128 & 60 & unknown &    \\ 
+
+\end{tabular}
+\end{center}
+\caption{Parameter combinations used as benchmarks}
+\label{tab:benchmarks}
+\end{table}
+
+To allow comparison with the later outcomes of the SyntComp competition, computation times of the \textsc{slugs} GR(1) synthesis tool on the benchmarks before translation to an AIG monitor automaton form are given. They are wall-clock times and have been obtained on a computer with an AMD E-450 processor running at 1.6GHz, an x86 Linux, and 4GB of memory.
+
+The tool \textsc{slugs} has been used in its version from the 21$^\mathrm{st}$ of Februrary 2014, with the parameter \texttt{--onlyRealizability} in order to switch off extracting an explicit-state strategy from the game in case the specification is found to be realizable.
+
+\bibliographystyle{ieeetr}
+\bibliography{bib}
+
+
+
+\end{document}
+Christyna
