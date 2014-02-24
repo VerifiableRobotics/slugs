@@ -203,6 +203,7 @@ def parseLTL(ltlTxt,reasonForNotBeingASlugsFormula):
 
     try:
         input = tokenize(ltlTxt)
+        # print >>sys.stderr, input
         tree = p.parse(input)
 
     except p.ParseErrors, exception:
@@ -212,15 +213,10 @@ def parseLTL(ltlTxt,reasonForNotBeingASlugsFormula):
                 continue
 
             found = repr(t[0])
-            if len(e) == 1:
-                print >>sys.stderr, "Error in the property line: "+ltlTxt
-                print >>sys.stderr, "... which could not have been a slugs Polish notation line because of: "+ reasonForNotBeingASlugsFormula
-                print >>sys.stderr, "Expected %s, but found %s " %(repr(e[0]), found)
-            else:
-                print >>sys.stderr, "Error in the property line: "+ltlTxt
-                print >>sys.stderr, "... which could not have been a slugs Polish notation line because of: "+ reasonForNotBeingASlugsFormula
-                print >>sys.stderr, "Could not parse %s, "%found
-                print >>sys.stderr, "Wanted a token of one of the following forms: "+", ".join([ repr(s) for s in e ])
+            print >>sys.stderr, "Error in the property line: "+ltlTxt
+            print >>sys.stderr, "... which could not have been a slugs Polish notation line because of: "+ reasonForNotBeingASlugsFormula
+            print >>sys.stderr, "Could not parse %s, "%found
+            print >>sys.stderr, "Wanted a token of one of the following forms: "+", ".join([ repr(s) for s in e ])
         raise
 
     # Convert to a tree
@@ -461,7 +457,7 @@ def isValidRecursiveSlugsProperty(tokens):
             elif currentToken=="0" or currentToken=="1":
                 stacksize += 1
             else:
-                return (False,"Rejected part "+currentToken)
+                return (False,"Rejected part \""+tokens[i]+"\" when reading right-to-left.")
     return (stacksize==1,"Stack size at end: "+str(stacksize))
 
 # ============================================
