@@ -191,8 +191,6 @@ void SlugsVariableManager::computeVariableInformation() {
             }
         }
 
-        // std::cerr << "Computed cube with " << varsInThisCube.size() << " variables!\n";
-
         // Debug check: No variable occurring twice?
 #ifndef NDEBUG
         std::set<size_t> vars;

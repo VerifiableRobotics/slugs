@@ -45,6 +45,7 @@
 #include "extensionFixedPointRecycling.hpp"
 #include "extensionInteractiveStrategy.hpp"
 #include "extensionIROSfastslow.hpp"
+#include "extensionAnalyzeInitialPositions.hpp"
 
 //===================================================================================
 // List of command line arguments
@@ -60,7 +61,8 @@ const char *commandLineArguments[] = {
     "--experimentalIncrementalSynthesis","A very experimental implementation of incremental synthesis for sequences of changing GR(1) specifications. By no means stable yet!",
     "--fixedPointRecycling","Modifies the realizability checking algorithm to recycle previous innermost fixed points. Realizability checking should typically become faster this way.",
     "--interactiveStrategy","Opens an interactive shell after realizability checking to allow examining the properties of the generated strategy.",
-    "--IROSfastslow","Uses fastslow semantics from IROS 2012 paper. Requires different input file format."
+    "--IROSfastslow","Uses fastslow semantics from IROS 2012 paper. Requires different input file format.",
+    "--analyzeInitialPositions","Performs an analysis of the set of starting positions in the realizability game."
 };
 
 //===================================================================================
@@ -108,7 +110,8 @@ OptionCombination optionCombinations[] = {
     OptionCombination("--IROSfastslow",XExtractExplicitStrategy<XIROSFS<GR1Context>,false>::makeInstance),
     OptionCombination("--IROSfastslow --onlyRealizability",XIROSFS<GR1Context>::makeInstance),
     OptionCombination("--IROSfastslow --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<XIROSFS<GR1Context> >,false>::makeInstance),
-    OptionCombination("--IROSfastslow --onlyRealizability --sysInitRoboticsSemantics",XRoboticsSemantics<XIROSFS<GR1Context> >::makeInstance)
+    OptionCombination("--IROSfastslow --onlyRealizability --sysInitRoboticsSemantics",XRoboticsSemantics<XIROSFS<GR1Context> >::makeInstance),
+    OptionCombination("--analyzeInitialPositions", XAnalyzeInitialPositions<GR1Context>::makeInstance)
     
 
     // TODO: Combination between BiasForAction and FixedPointRecycling is not supported yet but would make sense

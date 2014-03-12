@@ -37,8 +37,8 @@ protected:
     SlugsVarCube varCubePreOutput{PreOutput,this};
     SlugsVarCube varCubePre{PreOutput,PreInput,this};
     SlugsVarCube varCubePost{PostOutput,PostInput,this};
-    SlugsVectorOfVarBFs preVars{PreInput, PreOutput, this};
-    SlugsVectorOfVarBFs postVars{PostInput, PostOutput, this};
+    SlugsVectorOfVarBFs preVars{Pre, this};
+    SlugsVectorOfVarBFs postVars{Post, this};
     SlugsVectorOfVarBFs postInputVars{PostInput, this};
     SlugsVectorOfVarBFs postOutputVars{PostOutput, this};
     //@}

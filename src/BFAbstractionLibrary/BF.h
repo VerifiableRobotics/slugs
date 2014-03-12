@@ -22,6 +22,7 @@
 #define BFVarVector BFBddVarVector
 
 #include "BFCuddInlines.h"
+#include "BFCuddMintermEnumerator.h"
 
 #undef fail
 

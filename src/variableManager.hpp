@@ -128,6 +128,7 @@ public:
         varMgr->varCubesToConstruct[&cube] = types;
     }
     operator BFVarCube& () {return cube;}
+    size_t size() { return cube.size(); }
 };
 
 // Template class to simplify building variable vectors
@@ -147,7 +148,9 @@ public:
         types.push_back(t2);
         varMgr->varVectorOfBFsToConstruct[&vector] = types;
     }
+    size_t size() { return vector.size(); }
     operator const std::vector<BF>& () {return vector;}
+    BF operator[](size_t pos) const { return vector.at(pos); }
 };
 
 #endif

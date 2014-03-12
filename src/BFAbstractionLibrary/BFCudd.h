@@ -193,6 +193,10 @@ public:
 		return (size_t) (node);
 	}
 
+    inline DdNode* getCuddNode() const {
+        return node;
+    }
+
 	friend class BFBddManager;
 	friend class BFBddVarCube;
 	friend class BFBddVarVector;
