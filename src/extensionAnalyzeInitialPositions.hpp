@@ -93,9 +93,6 @@ public:
         printLargePreCubes(winningPositions & initEnv & initSys);
         std::cout << "\nSome cubes of non-winning positions satisfying the initialization assumptions & guarantees: \n";
         printLargePreCubes((!winningPositions) & initEnv & initSys);
-
-
-
     }
 
     static GR1Context* makeInstance(std::list<std::string> &filenames) {

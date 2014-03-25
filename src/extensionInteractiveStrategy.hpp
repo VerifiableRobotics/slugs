@@ -451,6 +451,8 @@ public:
 
             }
 
+        } else {
+            std::cerr << "RESULT: Specification is unrealizable.\n";
         }
 
     }

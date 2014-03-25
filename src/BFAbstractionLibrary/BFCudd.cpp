@@ -21,6 +21,7 @@ double recurse_getNofSatisfyingAssignments(DdManager *dd, DdNode *orig, DdNode *
 	if (Cudd_Regular(cube)==cube) {
 		cubeNext = cuddT(cube);
 	} else {
+        throw "Wua";
 		if (!Cudd_IsConstant(cube)) {
 			cube = Cudd_Regular(cube);
 			cubeNext = (DdNode*)(((size_t)(cuddE(cube)) ^ 0x1));
@@ -30,7 +31,6 @@ double recurse_getNofSatisfyingAssignments(DdManager *dd, DdNode *orig, DdNode *
 		}
 	}
 
-	if (buffer.count(orig)>0) return buffer[orig];
 	if (Cudd_IsConstant(orig)) {
 		if (Cudd_IsConstant(cube)) {
 			return (orig==dd->one)?1:0;
@@ -48,14 +48,14 @@ double recurse_getNofSatisfyingAssignments(DdManager *dd, DdNode *orig, DdNode *
 
 	if (i1<i2) {
 		double value = 2*recurse_getNofSatisfyingAssignments(dd,(DdNode*)((size_t)reference ^ xoring),cubeNext,buffer);
-		buffer[orig] = value;
 		return value;
 	} else if (i1>i2) {
 		return std::numeric_limits<double>::quiet_NaN();
 	} else {
+        // Use buffer only for the cases that i1==i2
+        if (buffer.count(orig)>0) return buffer[orig];
 		double value = recurse_getNofSatisfyingAssignments(dd,(DdNode*)((size_t)(cuddT(reference)) ^ xoring),cubeNext,buffer)
 			+ recurse_getNofSatisfyingAssignments(dd,(DdNode*)((size_t)(cuddE(reference)) ^ xoring),cubeNext,buffer);
-
 		buffer[orig] = value;
 		return value;
 	}

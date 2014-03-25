@@ -1,0 +1,193 @@
+\documentclass[a4paper,conference,10pt]{IEEEtran}
+%\usepackage{scrpage2}
+\usepackage[latin1]{inputenc}
+\usepackage[pdftex,colorlinks,linkcolor=black,citecolor=black]{hyperref}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{latexsym} 
+\usepackage{bbm}
+\usepackage{tikz}
+\usepackage{flushend}
+\usetikzlibrary{shapes}
+%\usetikzlibrary{snakes}
+%\usepackage{pgflibraryshapes}
+%\usepackage{pgflibrarysnakes}
+\usepackage{xspace}
+\usepackage{rotating}
+\usepackage{mathrsfs}
+
+
+\newtheorem{lem}{Lemma}
+\newtheorem{theo}[lem]{Theorem}
+\newtheorem{defi}[lem]{Definition}
+\newtheorem{corol}[lem]{Corollary}
+
+\newcommand{\SyntComp}{\textsc{SyntComp}}
+\newcommand{\LL}{\mathcal{L}}
+\newcommand{\NN}{\mathbbm{N}}
+\newcommand{\ZZ}{\mathbbm{Z}}
+\newcommand{\AP}{\mathit{AP}}
+\newcommand{\FALSE}{\mathbf{false}}
+\newcommand{\TRUE}{\mathbf{true}}
+\newcommand{\BB}{\mathbbm{B}}
+\newcommand{\SpaceforresultsA}{$\quad$\\$\quad$\\$\quad$\\$\quad$\\$\quad$\\}
+\newcommand{\SpaceforresultsB}{\SpaceforresultsA\SpaceforresultsA}
+\newcommand{\SpaceforresultsC}{\SpaceforresultsB\SpaceforresultsB}
+\newcommand{\SpaceforresultsD}{\SpaceforresultsC\SpaceforresultsC}
+\newcommand{\Spaceforresults}{\SpaceforresultsD\SpaceforresultsD}
+\newcommand{\newterm}{\textit}
+%\newcommand{\existsinfmany}{\mathop{\exists}\limits_{\infty}}
+\newcommand{\existsinfmany}{\mathop{\exists}^{\infty}}
+\newcommand{\true}{\TRUE}
+\newcommand{\false}{\FALSE}
+\hyphenation{rea-li-sa-bi-li-ty ge-ne-ra-lised li-mi-ted}
+\allowdisplaybreaks
+
+\author{\IEEEauthorblockN{R\"udiger Ehlers}
+\IEEEauthorblockA{University of Bremen \& DFKI GmbH\\
+Germany
+}}
+
+%\cfoot[]{Blubb}
+%\pagestyle{scrplain}
+\begin{document}
+%\pagestyle{scrplain}
+\title{Cinderella-Stepmother Game Benchmarks}
+\maketitle
+
+\section{Description}
+
+\noindent The Cinderella-Stepmother game was recently proposed as a challenge problem for the synthesis community by Rajeev Alur. 
+
+In this two-player safety game, Cinderella is the safety player whereas the stepmother is the reachability player. Cinderella has $n$ water buckets that are arranged in a circle. In every step, she empties $c$ adjacent buckets. Afterwards, the stepmother adds up to $1$ liter of water to the buckets. She can distribute it freely over the buckets. After the stepmother's turn, the game proceeds with the next step and it is Cinderella's turn again. 
+Every bucket has a capacity of $b$, and it is Cinderella's objective to avoid that any bucket ever overflows.
+
+The Cinderella-Stepmother game has recently gained some attention in several research communities.
+Beyene et al.~\cite{DBLP:conf/popl/BeyeneCPR14} use the game as a running example for a synthesis approach for reactive software.
+Hurkens et al.~\cite{Hurkens2011} discuss the general properties of the game.
+Bodlaender et al.~\cite{DBLP:conf/ifipTCS/BodlaenderHKSWZ12} analyze for which values of $n$, $c$, and $b$ Cinderella can win, motivated by data management applications in wireless sensor networks.
+
+In order to obtain a benchmark set for the \SyntComp, we discretize the water levels in the buckets. This imposes  a granularity constraint on the stepmother's moves by requiring that she distributes her one liter of water in multiples of $\frac{1}{k}$ liters of water for some given value of $k$.
+
+\subsection{Input and output signals}
+
+\noindent We have the following signals:
+\begin{itemize}
+\item Boolean inputs to the system to be synthesized:
+\begin{enumerate}
+\item signals $\{\mathit{x}_{i,j}\}_{i \in \{1, \ldots, n\}, j \in \{1, \ldots, \lceil \log_2(k+1) \rceil \}}$ that encode the numbers of $\frac{1}{k}$ liter units of water that the stepmother wants to pour into Cinderella's $n$ buckets
+\end{enumerate}
+\item Boolean outputs of the system to be synthesized:
+\begin{enumerate}
+\item signals $\{\mathit{y}_{i,j}\}_{i \in \{1, \ldots, n\}, j \in \{1, \ldots, \lceil \log_2(k \cdot b+1) \rceil \}}$ that encode the amount of water in Cinderella's  buckets
+\item signals $e_1 \ldots e_{\lceil \log_2(n)\rceil}$ that encode which bucket (and its clockwise neighbor) Cinderella wants to empty
+\end{enumerate}
+\end{itemize}
+
+\subsection{Specification}
+\noindent The specification consists of \emph{assumptions} and \emph{guarantees}, which are connected by a \emph{strong implication} as common in GR(1) synthesis, i.e., it is the aim of the system to make sure that no guarantee is violated before some assumption is violated (see, e.g., \cite{DBLP:journals/jcss/BloemJPPS12}, Section 3.3). If some assumption and some guarantee are violated in the same step, the system also satisfies its overall specification.
+\begin{itemize}
+\item Assumptions:
+\begin{enumerate}
+\item At every step, the total number of $\frac{1}{k}$ liter water units distributed by the stepmother may not exceed $k$.
+\end{enumerate}
+\item Guarantees:
+\begin{enumerate}
+\item The variables $\{\mathit{y}_{i,j}\}$ never represent a bucket configuration in which one bucket contains more than $b$ liters
+\item When the game makes a transition, Cinderella empties some buckets first, and then the stepmother makes her move. The new bucket water level configuration is obtained from the old one after applying Cinderella's move and the stepmother's move.
+\end{enumerate}
+\end{itemize}
+
+\section{Compilation workflow}
+
+\noindent The benchmarks have been formulated as \emph{structured specifications} for the generalized reactivity(1) game solver \textsc{slugs} \cite{SlugsReference}. The term \emph{structured} in this context refers to support for constraints over (non-negative) integer numbers, which are automatically translated to Boolean constraints when compiling the structured \textsc{slugs} specification into a purely boolean form. An example structured specification for the Cinderella-Stepmother game with 
+$n = 5$, $c = 2$, $b = 1.5$, and $k = 4$ 
+is given in Figure \ref{fig:exampleSpec}.
+
+The purely boolean generalized reactivity(1) safety specification is then translated to an and-inverter-graph (AIG) representation of a monitor automaton that checks the satisfaction of the specification. The AIG is finally optimized using the ABC toolset \cite{ABCTool} by applying the command sequence \texttt{rewrite}.
+
+\section{Configurations}
+
+\noindent Table \ref{tab:benchmarks} lists the configurations used as benchmarks.
+%
+To allow a comparison with the later outcomes of the \SyntComp, computation times of the \textsc{slugs} GR(1) synthesis tool on the benchmarks (before translation to the AIG monitor automaton form) are given. They are wall-clock times and have been obtained on a computer with an AMD E-450 processor running an x86 Linux at 1.6\,GHz with 4GB of memory.
+
+The tool \textsc{slugs} has been used in its version from the 21$^\mathrm{st}$ of Februrary 2014, with the parameter \texttt{--onlyRealizability} in order to switch off extracting an explicit-state strategy from the game in case the specification is found to be realizable.
+
+\bibliographystyle{ieeetr}
+\bibliography{bib}
+%
+\begin{table}[b]
+\normalsize
+\begin{center}
+\begin{tabular}{c|c|c||c|c}
+$n$ & $c$ & $b \cdot k/k$ & is realizable & \textsc{slugs} com- \\ & & $(=b)$& & putation time\\ \hline \hline
+5 & 2 & 6/4 & no & 0.95s\\ \hline
+5 & 2 & 7/4 & yes & 1.95s\\ \hline
+5 & 3 & 9/6 & yes & 0.62s\\ \hline
+5 & 3 & 9/7 & no & 0.77s\\ \hline
+6 & 1 & 50/15 & no & 21m48.738s \\ \hline
+6 & 1 & 52/15 & ?? & ??? \\ \hline
+6 & 2 & 14/6 & yes & 1m1.253s \\ \hline
+6 & 2 & 13/6 & no & 55.303s\\ \hline
+6 & 3 & 11/6 & yes & 2.685s \\ \hline
+6 & 3 & 10/6 & no & 2.220s\\ \hline
+7 & 1 & 34/10 & & 
+\end{tabular}
+\end{center}
+\caption{Parameter combinations used as benchmarks}
+\label{tab:benchmarks}
+\end{table}
+
+
+\begin{figure}
+\centering{
+\scriptsize
+\begin{verbatim}
+[INPUT]
+x0:0...4
+x1:0...4
+x2:0...4
+x3:0...4
+x4:0...4
+
+[OUTPUT]
+y0:0...6
+y1:0...6
+y2:0...6
+y3:0...6
+y4:0...6
+e:1...5
+
+[ENV_TRANS]
+x0+x1+x2+x3+x4 <= 4
+
+[SYS_INIT]
+y0 = 0
+y1 = 0
+y2 = 0
+y3 = 0
+y4 = 0
+
+[SYS_TRANS]
+!((e>=0 & e<2) | (e+1 > 5)) -> y0' = y0 + x0'
+!((e>=1 & e<3) | (e+1 > 6)) -> y1' = y1 + x1'
+!((e>=2 & e<4) | (e+1 > 7)) -> y2' = y2 + x2'
+!((e>=3 & e<5) | (e+1 > 8)) -> y3' = y3 + x3'
+!((e>=4 & e<6) | (e+1 > 9)) -> y4' = y4 + x4'
+((e>=0 & e<2) | (e+1 > 5)) -> y0' = x0'
+((e>=1 & e<3) | (e+1 > 6)) -> y1' = x1'
+((e>=2 & e<4) | (e+1 > 7)) -> y2' = x2'
+((e>=3 & e<5) | (e+1 > 8)) -> y3' = x3'
+((e>=4 & e<6) | (e+1 > 9)) -> y4' = x4'
+\end{verbatim}
+}
+\caption{A structured \textsc{slugs} specification for the case of $n = 5$, $c = 2$, $b = 1.5$, and $k = 0.25$. The sections \texttt{[INPUT]} and \texttt{[OUTPUT]} contain declarations of the input and output atomic propositions. The structured \textsc{slugs} compiler allows to declare multiple propositions to jointly represent an integer number in a single declaration. The section \texttt{[ENV\_TRANS]} represents the safety transition constraint assumptions, \texttt{[SYS\_TRANS]} represents the safety transition constraint guarantees, and \texttt{[SYS\_INIT]} represents the safety initialization guarantees.}
+\label{fig:exampleSpec}
+\end{figure}
+
+
+
+\end{document}
+Christyna

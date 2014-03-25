@@ -16,7 +16,7 @@ TEMPLATE = app \
 CONFIG += debug
 CONFIG -= app_bundle
 CONFIG -= qt
-HEADERS += BFAbstractionLibrary/BF.h gr1context.hpp variableTypes.hpp variableManager.hpp extensionExtractExplicitStrategy.hpp extensionRoboticsSemantics.hpp \
+HEADERS += BFAbstractionLibrary/BF.h BFAbstractionLibrary/BFCudd.h gr1context.hpp variableTypes.hpp variableManager.hpp extensionExtractExplicitStrategy.hpp extensionRoboticsSemantics.hpp \
     extensionWeakenSafetyAssumptions.hpp extensionBiasForAction.hpp \
     extensionComputeCNFFormOfTheSpecification.hpp extensionCounterstrategy.hpp extensionExtractExplicitCounterstrategy.hpp \
     extensionIncrementalSynthesis.hpp extensionFixedPointRecycling.hpp extensionInteractiveStrategy.hpp extensionIROSfastslow.hpp \
