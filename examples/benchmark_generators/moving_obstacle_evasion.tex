@@ -53,12 +53,12 @@ Germany
 %\pagestyle{scrplain}
 \begin{document}
 %\pagestyle{scrplain}
-\title{Robot-on-a-grid Moving Obstacle Evasion Benchmark}
+\title{Robot-on-a-grid Moving Obstacle Evasion Benchmarks}
 \maketitle
 
 \section{Basic Setup}
 
-\noindent This benchmark set is concerned with a robot moving on an $m_x \times m_y$-cell two-dimensional grid with the objective to avoid colliding with a $2 \times 2$-cell moving obstacle. In every step, the robot can move by $\pm 1$ cell in the $x$ direction, and/or by $\pm 1$ cell into the $y$ direction. Collisions with the boundaries of the workspace do not need to be avoided. However, the workspace does not have a torus shape, so that its boundaries cannot be crossed.
+\noindent This benchmark set is concerned with a robot moving on an $m_x \times m_y$-cell two-dimensional grid with the objective to avoid colliding with a $2 \times 2$-cell moving obstacle. In every step, the robot can move by $\pm 1$ cell in the $x$ direction, and/or by $\pm 1$ cell in the $y$ direction. Collisions with the boundaries of the workspace do not need to be avoided. However, the workspace does not have a torus shape, so that its boundaries cannot be crossed.
 
 Motion is triggered by the robot using two atomic propositions for the $x$ direction, and two propositions for the $y$ direction. The robot has no inertia. Providing the updated $x$- and $y$-coordinates is the task of the environment.
 
@@ -70,14 +70,14 @@ The overall setting is very simple and abstracts from many aspects of interest i
 
 \noindent We have the following signals:
 \begin{itemize}
-\item Inputs to the system to be synthesized:
+\item Boolean inputs to the system to be synthesized:
 \begin{enumerate}
 \item signals $\mathit{rx}_0, \ldots, \mathit{rx}_{|\mathit{rx}|}$ that encode the binary representation of the current $x$ position of the robot 
 \item signals $\mathit{ry}_0, \ldots, \mathit{ry}_{|\mathit{ry}|}$ that encode the binary representation of the current $y$ position of the robot
 \item signals $\mathit{ox}_0, \ldots, \mathit{ox}_{|\mathit{ox}|}$ that encode the binary representation of the current $x$ position of the obstacle
 \item signals $\mathit{oy}_0, \ldots, \mathit{oy}_{|\mathit{oy}|}$ that encode the binary representation of the current $y$ position of the obstacle
 \end{enumerate}
-\item Outputs of the system to be synthesized:
+\item Boolean outputs of the system to be synthesized:
 \begin{enumerate}
 \item signals $\mathit{mx}_0$, $\mathit{mx}_1$ to encode whether the robot wants to move left, right, or does not want to change its $x$ position
 \item signals $\mathit{my}_0$, $\mathit{my}_1$ to encode whether the robot wants to move up, down, or does not want to change its $y$ position
@@ -113,9 +113,9 @@ The overall setting is very simple and abstracts from many aspects of interest i
 
 \noindent In the basic setup, the robot can move twice as fast as the obstacle, which allows the robot to evade the obstacle for workspace sizes of $5 \times 5$ cells or larger.
 
-To make the benchmark a bit more challenging, we add a little twist: during the run of the system, the environment may temporarily violate assumption \ref{item:ObsMove} a few times, so that the obstacle can sometimes move in successive steps. Such temporary assumption violations are also called \emph{glitches}.
+To make the benchmark a bit more challenging, we add a little twist: during the run of the system, the environment may temporarily violate Assumption \ref{item:ObsMove} a few times, so that the obstacle can sometimes move in successive steps. Such temporary assumption violations are also called \emph{glitches}.
 
-To implement this idea, a \emph{glitch counter} is introduced that is under the control of the environment, i.e., is an input to the system. The counter can have a maximum value of $c$ for some $c \in \NN$ and is binary-encoded into a set of additional input signals of sufficient number. 
+To implement this idea, a \emph{glitch counter} is introduced that is under the control of the environment, i.e., is an input to the system. The counter has a maximum value of $c$ for some $c \in \NN$ and is binary-encoded into a set of additional input signals of sufficient number. 
 
 Assumption \ref{item:ObsMove} of the basic setting is removed and the following assumptions are added:
 \begin{enumerate}
@@ -124,14 +124,14 @@ Assumption \ref{item:ObsMove} of the basic setting is removed and the following 
 \item The glitch counter value is never $> c$
 \end{enumerate}
 
-Note that the error-resilience model here is relatively simple: a finite, fixed number of glitches must be tolerated during the execution of the system (which is infinite). 
-This is in contrast to more advanced error-resilience schemes such as $k$-resilience \cite{DBLP:journals/corr/abs-1210-2449,EhlersTopcuHSCC2014}, where an infinite number of execution blocks with each up to $k$ (not necessarily consecutive) glitches need to be tolerated, provided that there is enough time for the system to recover from the glitches in between the blocks. In contrast to GR(1) synthesis, without using liveness properties, a second counter for measuring the length of the recovery period would have been needed here, which is why the simpler error-resilience notion was used for this benchmark.
+Note that the error-resilience model here is relatively simple: a finite, fixed number of glitches must be tolerated during the execution of the system (which is infinitely long). 
+This is in contrast to more advanced error-resilience schemes such as $k$-resilience \cite{DBLP:journals/corr/abs-1210-2449,EhlersTopcuHSCC2014}, where an infinite number of blocks of the system's execution with up to $k$ (not necessarily consecutive) glitches each need to be tolerated, provided that there is enough time for the system to recover from the glitches in between the blocks. In contrast to GR(1) synthesis, without using liveness properties, a second counter for measuring the length of the recovery period would have been needed here, which is why the simpler error-resilience notion was used for this benchmark set.
 
 \section{Compilation workflow}
 
 \noindent The benchmarks have been formulated as \emph{structured specifications} for the generalized reactivity(1) game solver \textsc{slugs} \cite{SlugsReference}. The term \emph{structured} in this context refers to support for constraints over (non-negative) integer numbers, which are automatically translated to Boolean constraints when compiling the structured \textsc{slugs} specification into a purely boolean form.
 
-The purely boolean GR(1) safety specification is then translated to an and-inverter-graph (AIG) representation of a monitor automaton checking the specification. The AIG is finally optimized using the ABC toolset \cite{ABCTool} by applying the command sequence \texttt{rewrite}.
+The purely boolean generalized reactivity(1) safety specification is then translated to an and-inverter-graph (AIG) representation of a monitor automaton that checks the satisfaction of the specification. The AIG is finally optimized using the ABC toolset \cite{ABCTool} by applying the command sequence \texttt{rewrite}.
 
 
 \section{Configurations}
@@ -166,9 +166,9 @@ $m_x$ & $m_y$ & $c$ & is realizable & \textsc{slugs} com- \\ & & & & putation ti
 \label{tab:benchmarks}
 \end{table}
 %
-To allow comparison with the later outcomes of the \SyntComp competition, computation times of the \textsc{slugs} GR(1) synthesis tool on the benchmarks (before translation to the AIG monitor automaton form) are given. They are wall-clock times and have been obtained on a computer with an AMD E-450 processor running an x86 Linux at 1.6\,GHz with 4GB of memory.
+To allow a comparison with the later outcomes of the \SyntComp{}, computation times of the \textsc{slugs} GR(1) synthesis tool on the benchmarks (before translation to the AIG monitor automaton form) are given. They are wall-clock times and have been obtained on a computer with an AMD E-450 processor running an x86 Linux at 1.6\,GHz with 4GB of memory.
 
-The tool \textsc{slugs} has been used in its version from the 21$^\mathrm{st}$ of Februrary 2014, with the parameter \texttt{--onlyRealizability} in order to switch off extracting an explicit-state strategy from the game in case the specification is found to be realizable.
+The tool \textsc{slugs} has been used in its version from the 21$^\mathrm{st}$ of Februrary 2014. The parameter \texttt{--onlyRealizability} has been supplied to the tool in order to switch off extracting an explicit-state implementation in case the specification is found to be realizable.
 
 \bibliographystyle{ieeetr}
 \bibliography{bib}

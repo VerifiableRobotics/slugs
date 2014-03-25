@@ -21,11 +21,12 @@ import copy
 # ==================================
 configurations = [
                   (5,2,6,4),(5,2,7,4),
-                  (5,3,9,6),(5,3,9,7),
-                  (6,1,50,15), (6,1,52,15),
+                  (5,3,12,9),(5,3,13,9),
+                  (6,1,14,5), (6,1,15,5),
+                  (6,1,29,10),
                   (6,2,14,6),(6,2,13,6),
                   (6,3,11,6),(6,3,10,6),
-                  (7,1,34,10)
+                  (7,1,33,10)
 ]
 
 
@@ -75,7 +76,7 @@ def makeBenchmarkFile(configuration):
 
 [OUTPUT]
 %(outLines)s
-e:1...%(nofBuckets)d
+e:0...%(nofBucketsMinusOne)d
 
 [ENV_TRANS]
 %(stepMotherRestrictionLine)s
@@ -91,11 +92,11 @@ e:1...%(nofBuckets)d
     text = text % {
       'inLines': "\n".join(["x"+str(i)+":0..."+str(stepmotherPower) for i in xrange(0,nofBuckets)]),
       'outLines': "\n".join(["y"+str(i)+":0..."+str(bucketCapacity) for i in xrange(0,nofBuckets)]),
-      'nofBuckets': nofBuckets,
+      'nofBucketsMinusOne': nofBuckets-1,
       'stepMotherRestrictionLine': "+".join(["x"+str(i) for i in xrange(0,nofBuckets)])+" <= "+str(stepmotherPower),
       'sysInit': "\n".join(["y"+str(i)+" = 0" for i in xrange(0,nofBuckets)]),
-      'sysTransA': "\n".join(["!((e>="+str(i)+" & e<"+str(i+cinderellaPower)+") | (e+"+str(cinderellaPower-1)+" > "+str(i+nofBuckets)+")) -> y"+str(i)+"' = y"+str(i)+" + x"+str(i)+"'" for i in xrange(0,nofBuckets)]),
-      'sysTransB': "\n".join(["((e>="+str(i)+" & e<"+str(i+cinderellaPower)+") | (e+"+str(cinderellaPower-1)+" > "+str(i+nofBuckets)+")) -> y"+str(i)+"' = x"+str(i)+"'" for i in xrange(0,nofBuckets)])
+      'sysTransA': "\n".join(["!((e<="+str(i)+" & e+"+str(cinderellaPower)+" > "+str(i)+") | (e+"+str(cinderellaPower-1)+" >= "+str(i+nofBuckets)+")) -> y"+str(i)+"' = y"+str(i)+" + x"+str(i)+"'" for i in xrange(0,nofBuckets)]),
+      'sysTransB': "\n".join(["((e<="+str(i)+" & e+"+str(cinderellaPower)+" > "+str(i)+") | (e+"+str(cinderellaPower-1)+" >= "+str(i+nofBuckets)+")) -> y"+str(i)+"' = x"+str(i)+"'" for i in xrange(0,nofBuckets)])
     }
     
     outFile.write(text)

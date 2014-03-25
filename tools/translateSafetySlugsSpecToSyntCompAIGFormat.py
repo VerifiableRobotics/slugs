@@ -119,13 +119,14 @@ def produceAIGFileFromSlugsFile(filename):
     # Have a counter for the last variable. Initialize to account for the "checking gates"
     # Also have a list of AIG file lines so far and reserve some numbers for GR(1)-spec
     # semantics encoding
-    varNumbersUsedSoFar = 5
+    varNumbersUsedSoFar = 1
     nofGates = 0
     lines = []
-    latchOutputIsNotFirstRound = 2 
-    latchOutputIsAssumptionsAlreadyViolated = 4
-    gateNumberAssumptionFailure = 6
-    gateNumberGuaranteeFailure = 8
+
+    # Put one special latch at the beginning
+    latchOutputIsNotFirstRound = varNumbersUsedSoFar*2+2 
+    varNumbersUsedSoFar += 1
+
 
     # Assign variable numbers to input and output variables
     variables = {}
@@ -135,9 +136,14 @@ def produceAIGFileFromSlugsFile(filename):
             variables[x] = varNumbersUsedSoFar*2
             lines.append(str(varNumbersUsedSoFar*2))
 
-    # Declare the "GR(1) semantics" latches.
+    # Put some special latches later
+    latchOutputIsAssumptionsAlreadyViolated = varNumbersUsedSoFar*2+2
+    gateNumberAssumptionFailure = varNumbersUsedSoFar*2+4
+    gateNumberGuaranteeFailure = varNumbersUsedSoFar*2+6
+    varNumbersUsedSoFar += 3
+
+    # Declare one "GR(1) semantics" latch here.
     lines.append(str(latchOutputIsNotFirstRound)+" 1")
-    lines.append(str(latchOutputIsAssumptionsAlreadyViolated)+" "+str(gateNumberAssumptionFailure ^ 1))
 
     # Prepare latches for the last Input/Output. Also register the latches in the "varibles" dictionary so
     # that they can be used in "recurseMakeAIGEncodingOfBooleanFormula"
@@ -151,6 +157,9 @@ def produceAIGFileFromSlugsFile(filename):
             variablesInTrans[x] = varNumbersUsedSoFar*2
             variablesInTrans[x+"'"] = variables[x]
             lines.append(str(varNumbersUsedSoFar*2)+" "+str(variables[x]))
+
+    # Put one special latch definition here
+    lines.append(str(latchOutputIsAssumptionsAlreadyViolated)+" "+str(gateNumberAssumptionFailure ^ 1))
 
     # Now the output lines
     lines.append(str(gateNumberGuaranteeFailure))
@@ -203,12 +212,12 @@ def produceAIGFileFromSlugsFile(filename):
             print "i"+str(inNumberSoFar)+" "+prefix+x
             inNumberSoFar += 1
     print "l0 IsNotFirstRound"
-    print "l1 AssumptionsAlreadyViolated"
-    inNumberSoFar = 2
+    inNumberSoFar = 1
     for cat in ["[INPUT]","[OUTPUT]"]:
         for x in categories[cat]:
             print "l"+str(inNumberSoFar)+" prev_"+x
             inNumberSoFar += 1
+    print "l"+str(inNumberSoFar)+" AssumptionsAlreadyViolated"
     print "o0 err"
     print "c"
     print "This input file has been automatically translated by 'translateSafetySlugsSpecToSyntCompAIGFormat.py' from the following input file:"

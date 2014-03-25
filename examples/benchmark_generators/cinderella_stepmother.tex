@@ -68,7 +68,7 @@ Beyene et al.~\cite{DBLP:conf/popl/BeyeneCPR14} use the game as a running exampl
 Hurkens et al.~\cite{Hurkens2011} discuss the general properties of the game.
 Bodlaender et al.~\cite{DBLP:conf/ifipTCS/BodlaenderHKSWZ12} analyze for which values of $n$, $c$, and $b$ Cinderella can win, motivated by data management applications in wireless sensor networks.
 
-In order to obtain a benchmark set for the \SyntComp, we discretize the water levels in the buckets. This imposes  a granularity constraint on the stepmother's moves by requiring that she distributes her one liter of water in multiples of $\frac{1}{k}$ liters of water for some given value of $k$.
+In order to obtain a benchmark set for the \SyntComp, the water levels in the buckets have been discretized. This imposes  a granularity constraint on the stepmother's moves by requiring that she distributes her one liter of water in multiples of $\frac{1}{k}$ liters of water for some given value of $k$.
 
 \subsection{Input and output signals}
 
@@ -76,7 +76,7 @@ In order to obtain a benchmark set for the \SyntComp, we discretize the water le
 \begin{itemize}
 \item Boolean inputs to the system to be synthesized:
 \begin{enumerate}
-\item signals $\{\mathit{x}_{i,j}\}_{i \in \{1, \ldots, n\}, j \in \{1, \ldots, \lceil \log_2(k+1) \rceil \}}$ that encode the numbers of $\frac{1}{k}$ liter units of water that the stepmother wants to pour into Cinderella's $n$ buckets
+\item signals $\{\mathit{x}_{i,j}\}_{i \in \{1, \ldots, n\}, j \in \{1, \ldots, \lceil \log_2(k+1) \rceil \}}$ that encode the numbers of $\frac{1}{k}$ liter units of water that the stepmother pours into Cinderella's $n$ buckets
 \end{enumerate}
 \item Boolean outputs of the system to be synthesized:
 \begin{enumerate}
@@ -121,19 +121,21 @@ The tool \textsc{slugs} has been used in its version from the 21$^\mathrm{st}$ o
 \begin{table}[b]
 \normalsize
 \begin{center}
+%\renewcommand{\arraystretch}{1.2}
 \begin{tabular}{c|c|c||c|c}
-$n$ & $c$ & $b \cdot k/k$ & is realizable & \textsc{slugs} com- \\ & & $(=b)$& & putation time\\ \hline \hline
-5 & 2 & 6/4 & no & 0.95s\\ \hline
-5 & 2 & 7/4 & yes & 1.95s\\ \hline
-5 & 3 & 9/6 & yes & 0.62s\\ \hline
-5 & 3 & 9/7 & no & 0.77s\\ \hline
-6 & 1 & 50/15 & no & 21m48.738s \\ \hline
-6 & 1 & 52/15 & ?? & ??? \\ \hline
-6 & 2 & 14/6 & yes & 1m1.253s \\ \hline
-6 & 2 & 13/6 & no & 55.303s\\ \hline
-6 & 3 & 11/6 & yes & 2.685s \\ \hline
-6 & 3 & 10/6 & no & 2.220s\\ \hline
-7 & 1 & 34/10 & & 
+$n$ & $c$ & $(k \cdot b)/k$ & is realizable & \textsc{slugs} com- \\ & & $(=b)$ & & putation time\\ \hline \hline
+5 & 2 & $6/{4}$ & no &	0m0.943s \\ \hline
+5 & 2 & $7/{4}$ & yes & 0m2.018s \\ \hline
+5 & 3 & $12/{9}$ & no & 0m2.176s \\ \hline
+5 & 3 & $13/{9}$ & yes & 0m2.317s\\ \hline
+6 & 1 & $14/{5}$ & no & 7m25.831s \\ \hline
+6 & 1 & $15/{5}$ & yes & 3m54.455s \\ \hline
+6 & 1 & $29/{10}$ & ??? & ???? \\ \hline
+6 & 2 & 13/6 & no & 0m53.449s \\ \hline
+6 & 2 & 14/6 & yes &1m2.192s\\ \hline
+6 & 3 & 10/6 & no & 0m9.856s\\ \hline
+6 & 3 & 11/6 & yes & 0m2.616s \\ \hline
+7 & 1 & 33/10 & ??? & ?????
 \end{tabular}
 \end{center}
 \caption{Parameter combinations used as benchmarks}
@@ -158,7 +160,7 @@ y1:0...6
 y2:0...6
 y3:0...6
 y4:0...6
-e:1...5
+e:0...4
 
 [ENV_TRANS]
 x0+x1+x2+x3+x4 <= 4
@@ -171,19 +173,19 @@ y3 = 0
 y4 = 0
 
 [SYS_TRANS]
-!((e>=0 & e<2) | (e+1 > 5)) -> y0' = y0 + x0'
-!((e>=1 & e<3) | (e+1 > 6)) -> y1' = y1 + x1'
-!((e>=2 & e<4) | (e+1 > 7)) -> y2' = y2 + x2'
-!((e>=3 & e<5) | (e+1 > 8)) -> y3' = y3 + x3'
-!((e>=4 & e<6) | (e+1 > 9)) -> y4' = y4 + x4'
-((e>=0 & e<2) | (e+1 > 5)) -> y0' = x0'
-((e>=1 & e<3) | (e+1 > 6)) -> y1' = x1'
-((e>=2 & e<4) | (e+1 > 7)) -> y2' = x2'
-((e>=3 & e<5) | (e+1 > 8)) -> y3' = x3'
-((e>=4 & e<6) | (e+1 > 9)) -> y4' = x4'
+!((e<=0 & e+2 > 0) | (e+1 >= 5)) -> y0' = y0 + x0'
+!((e<=1 & e+2 > 1) | (e+1 >= 6)) -> y1' = y1 + x1'
+!((e<=2 & e+2 > 2) | (e+1 >= 7)) -> y2' = y2 + x2'
+!((e<=3 & e+2 > 3) | (e+1 >= 8)) -> y3' = y3 + x3'
+!((e<=4 & e+2 > 4) | (e+1 >= 9)) -> y4' = y4 + x4'
+((e<=0 & e+2 > 0) | (e+1 >= 5)) -> y0' = x0'
+((e<=1 & e+2 > 1) | (e+1 >= 6)) -> y1' = x1'
+((e<=2 & e+2 > 2) | (e+1 >= 7)) -> y2' = x2'
+((e<=3 & e+2 > 3) | (e+1 >= 8)) -> y3' = x3'
+((e<=4 & e+2 > 4) | (e+1 >= 9)) -> y4' = x4'
 \end{verbatim}
 }
-\caption{A structured \textsc{slugs} specification for the case of $n = 5$, $c = 2$, $b = 1.5$, and $k = 0.25$. The sections \texttt{[INPUT]} and \texttt{[OUTPUT]} contain declarations of the input and output atomic propositions. The structured \textsc{slugs} compiler allows to declare multiple propositions to jointly represent an integer number in a single declaration. The section \texttt{[ENV\_TRANS]} represents the safety transition constraint assumptions, \texttt{[SYS\_TRANS]} represents the safety transition constraint guarantees, and \texttt{[SYS\_INIT]} represents the safety initialization guarantees.}
+\caption{A structured \textsc{slugs} specification for the case of $n = 5$, $c = 2$, $b = 1.5$, and $k = 4$. The sections \texttt{[INPUT]} and \texttt{[OUTPUT]} contain declarations of the input and output atomic propositions. The structured \textsc{slugs} compiler allows to define multiple propositions to jointly represent an integer number in a single declaration. The section \texttt{[ENV\_TRANS]} represents the safety transition constraint assumptions, \texttt{[SYS\_TRANS]} represents the safety transition constraint guarantees, and \texttt{[SYS\_INIT]} represents the safety initialization guarantees.}
 \label{fig:exampleSpec}
 \end{figure}
 

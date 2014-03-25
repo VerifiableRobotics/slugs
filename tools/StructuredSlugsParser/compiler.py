@@ -498,6 +498,7 @@ def performConversion(inputFile):
                 raise Exception("Translation error")
             if ":" in line:
                 parts = line.split(":")
+                parts = [a.strip() for a in parts]
                 if len(parts)!=2:
                     print >>sys.stderr, "Error reading line '"+line+"' in section "+variableType+": Too many ':'s!"
                     raise Exception("Failed to translate file.")

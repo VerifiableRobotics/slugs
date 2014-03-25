@@ -53,26 +53,26 @@ Germany
 %\pagestyle{scrplain}
 \begin{document}
 %\pagestyle{scrplain}
-\title{Simple Factory Assembly Line Benchmark}
+\title{Simple Factory Assembly Line Benchmarks}
 \maketitle
 
 \section{Basic Setup}
 %
-\noindent This benchmark set is concerned with a very simple assembly line. Figure \ref{fig:assemblyLineDrawing} depicts the scenario graphically. We have a conveyor belt with $n=7$ places reachable by two manipulator arms, and on each of the places, there is an object. Before an object is pushed off the belt, $m=4$ tasks have to be performed on the object. Every $k$ cycles, the belt rotates by one place and delivers a new object. At every step, a manipulator arm can perform one task on the object underneath it. The manipulator arms can also move by one place, but they can never be at the same place and can also not overtake each other. The objects come with one task already having been performed on them. Initially, the belt is filled with objects for which all tasks have been performed already.
+\noindent This benchmark set is concerned with a very simple assembly line. Figure \ref{fig:assemblyLineDrawing} depicts the scenario graphically. We have a conveyor belt with $n=7$ places that are reachable by two manipulator arms, and on each of the places, there is an object. Before an object is pushed off the belt, $m=4$ tasks have to be performed on the object. Every $k$ cycles, the belt rotates by one place and delivers a new object. At every step, a manipulator arm can perform one task on the object underneath it. The manipulator arms can also move by one place, but they can never be at the same place and can also not overtake each other. The objects come with one task already having been performed on them. Initially, the belt is filled with objects for which all tasks have been performed already.
 
 
-This scenario is used as a benchmark that has many input and output signals, but only few counters. Thus, it aims at complementing counter-rich other benchmarks in the \SyntComp.
+The scenarios in this benchmark set have many input and output signals, but only few counters. Thus, they aim at complementing counter-rich other benchmarks in the \SyntComp.
 
 \subsection{Input and output signals}
 %
 \noindent We have the following signals:
 \begin{itemize}
-\item Inputs to the system to be synthesized:
+\item Boolean inputs to the system to be synthesized:
 \begin{enumerate}
 \item signals $\mathit{ck}_0, \ldots, \mathit{ck}_{|\mathit{ck}|}$ that encode the binary representation of a counter for how many steps are left until $k$ steps without belt motion have been witnessed
 \item signals $\{\mathit{p}_{i,j} \}_{0 \leq i < n, 0 \leq j < m}$ that encode whether task $j$ has already been performed on the object at position $i$ 
 \end{enumerate}
-\item Outputs of the system to be synthesized:
+\item Boolean outputs of the system to be synthesized:
 \begin{enumerate}
 \item signals $\mathit{arm1pos}_1,  \ldots, \mathit{arm1pos}_{\lceil \log_2 n \rceil}$ to encode the position of the first arm
 \item signals $\mathit{arm2pos}_1,  \ldots, \mathit{arm2pos}_{\lceil \log_2 n \rceil}$ to encode the position of the second arm
@@ -175,40 +175,40 @@ This scenario is used as a benchmark that has many input and output signals, but
 \item Assumptions:
 \begin{enumerate}
 \item The $\mathit{ck}$ counter cycles through the values $0, \ldots, k-1$.
-\item Whenever the $\mathit{ck}$ counter becomes $0$, all objects are pushed forward by one position, and the new object at the left of the belt has at least one task already set. Tasks performed on the objects are applied before the push. \label{item:NoDouble}
-\item Whenever the $\mathit{ck}$ counter is not $0$, the object task signals that represent tasks currently performed by one of the arms become $\mathbf{true}$. All others retain their value.
+\item Whenever the $\mathit{ck}$ counter becomes $0$, all objects are pushed forward by one position, and the new object at the left of the belt has at least one task already been performed. Tasks performed by the robot arms on the objects are applied before the push. \label{item:NoDouble}
+\item Whenever the $\mathit{ck}$ counter is not $0$, the object task signals that represent tasks currently being performed by one of the arms become $\mathbf{true}$. All others retain their value.
 \item Initially, the tasks of all objects on the belt have already been performed, and the $\mathit{ck}$ counter starts with a value of $0$.
 \end{enumerate}
 \item Guarantees:
 \begin{enumerate}
 \item Manipulator arm 1 is always left of manipulator arm 2
 \item All arms can move by at most one position per round.
-\item Before a push occurs, all tasks of the right-most objects must have been performed already.
+\item Before a push occurs, all tasks of the right-most objects must have already been performed.
 \end{enumerate}
 \end{itemize}
 
 \section{Error-resilience}
 
-\noindent To make the benchmark a bit more challenging, we add a little twist: during the run of the system, the environment may temporarily violate assumption \ref{item:NoDouble} in the sense that a new object without any task having been performed already can be placed onto the belt. We call such a case a \emph{glitch} for the scope of this section.
+\noindent To make the benchmark a bit more challenging, we add a little twist: during the run of the system, the environment may temporarily violate assumption \ref{item:NoDouble} in the sense that a new object without any task having already been performed can be placed onto the belt. We call such a case a \emph{glitch} for the scope of this benchmark description.
 
-To implement this idea, a \emph{glitch counter} is introduced that is under the control of the environment, i.e., is an input to the system. The counter can have a maximum value of $c$ for some $c \in \NN$ and is binary-encoded into a set of additional input signals of sufficient number. 
+To implement this idea, a \emph{glitch counter} is introduced that is under the control of the environment, i.e., is an input to the system. The counter has a maximum value of $c$ for some $c \in \NN$ and is binary-encoded into a set of additional input signals of sufficient number. 
 
 Assumption \ref{item:NoDouble} is replaced by the requirement that whenever the $\mathit{ck}$ counter becomes $0$, all objects are pushed forward by one position. Tasks performed on the objects are still applied before the push.
-We add the following following assumptions:
+We add the following assumptions:
 \begin{enumerate}
 \item The glitch counter value can only increase over time
 \item Whenever in some round, a new object is pushed onto the belt for which no task has already been performed, the glitch counter is increased by $1$.
 \item The glitch counter value is never $> c$
 \end{enumerate}
 
-Note that the error-resilience model here is relatively simple: a finite, fixed number of glitches must be tolerated during the execution of the system (which is infinite). 
-This is in contrast to more advanced error-resilience schemes such as $k$-resilience \cite{DBLP:journals/corr/abs-1210-2449,EhlersTopcuHSCC2014}, where an infinite number of execution blocks with each up to $k$ (not necessarily consecutive) glitches need to be tolerated, provided that there is enough time for the system to recover from the glitches in between the blocks. In contrast to GR(1) synthesis, without using liveness properties, a second counter for measuring the length of the recovery period would have been needed here, which is why the simpler error-resilience notion was used for this benchmark.
+Note that the error-resilience model here is relatively simple: a finite, fixed number of glitches must be tolerated during the execution of the system (which is infinitely long). 
+This is in contrast to more advanced error-resilience schemes such as $k$-resilience \cite{DBLP:journals/corr/abs-1210-2449,EhlersTopcuHSCC2014}, where an infinite number of blocks of the system's execution with up to $k$ (not necessarily consecutive) glitches each need to be tolerated, provided that there is enough time for the system to recover from the glitches in between the blocks. In contrast to when using GR(1) synthesis, we cannot use liveness properties in the \SyntComp{}, so a second counter for measuring the length of the recovery period would have been needed here for adding a $k$-resilience system requirement to the benchmarks, which is why the simpler error-resilience notion was used for this benchmark set.
 
 \section{Compilation workflow}
 
 \noindent The benchmarks have been formulated as \emph{structured specifications} for the generalized reactivity(1) game solver \textsc{slugs} \cite{SlugsReference}. The term \emph{structured} in this context refers to support for constraints over (non-negative) integer numbers, which are automatically translated to Boolean constraints when compiling the structured \textsc{slugs} specification into a purely boolean form.
 
-The purely boolean GR(1) safety specification is then translated to an and-inverter-graph (AIG) representation of a monitor automaton that checks the specification. The AIG is finally optimized using the ABC toolset \cite{ABCTool} by applying the command sequence \texttt{rewrite}.
+The purely boolean generalized reactivity(1) safety specification is then translated to an and-inverter-graph (AIG) representation of a monitor automaton that checks the satisfaction of the specification. The AIG is finally optimized using the ABC toolset \cite{ABCTool} by applying the command sequence \texttt{rewrite}.
 
 
 \section{Configurations}
@@ -242,9 +242,9 @@ $m$ & $n$ & $k$ & $c$ & is realizable & \textsc{slugs} com- \\ & & & & & putatio
 \label{tab:benchmarks}
 \end{table}
 %
-To allow comparison with the later outcomes of the \SyntComp competition, computation times of the \textsc{slugs} GR(1) synthesis tool on the benchmarks (before translation to the AIG monitor automaton form) are given. They are wall-clock times and have been obtained on a computer with an AMD E-450 processor running an x86 Linux at 1.6\,GHz with 4GB of memory.
+To allow a comparison with the later outcomes of the \SyntComp{}, computation times of the \textsc{slugs} GR(1) synthesis tool on the benchmarks (before translation to the AIG monitor automaton form) are given. They are wall-clock times and have been obtained on a computer with an AMD E-450 processor running an x86 Linux at 1.6\,GHz with 4GB of memory.
 
-The tool \textsc{slugs} has been used in its version from the 21$^\mathrm{st}$ of Februrary 2014, with the parameter \texttt{--onlyRealizability} in order to switch off extracting an explicit-state strategy from the game in case the specification is found to be realizable.
+The tool \textsc{slugs} has been used in its version from the 21$^\mathrm{st}$ of Februrary 2014. The parameter \texttt{--onlyRealizability} has been supplied to the tool in order to switch off extracting an explicit-state implementation in case the specification is found to be realizable.
 
 \bibliographystyle{ieeetr}
 \bibliography{bib}
