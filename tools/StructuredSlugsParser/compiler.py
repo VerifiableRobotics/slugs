@@ -542,10 +542,12 @@ def performConversion(inputFile,thoroughly):
                             tokens = ["| !",translatedNames[variable][i]]+tokens
                         else:
                             tokens = ["& !",translatedNames[variable][i]]+tokens
+                    lines["["+propertyDestination+"_INIT]"].append("## "+str(minValue)+"<="+variable+"<="+str(maxValue))
                     lines["["+propertyDestination+"_INIT]"].append(" ".join(tokens))
 
                     # Transition constraint for previous state -- only if using the "--thorougly mode"
                     if thoroughly:
+                        lines["["+propertyDestination+"_TRANS]"].append("## "+str(minValue)+"<="+variable+"<="+str(maxValue))
                         lines["["+propertyDestination+"_TRANS]"].append(" ".join(tokens))
 
                     # Trans constraint for next states
@@ -555,8 +557,8 @@ def performConversion(inputFile,thoroughly):
                             tokens = ["| !",translatedNames[variable][i]+"'"]+tokens
                         else:
                             tokens = ["& !",translatedNames[variable][i]+"'"]+tokens
+                    lines["["+propertyDestination+"_TRANS]"].append("## "+str(minValue)+"<="+variable+"'<="+str(maxValue))
                     lines["["+propertyDestination+"_TRANS]"].append(" ".join(tokens))
-
 
             else:
                 # A "normal" atomic proposition
@@ -584,16 +586,19 @@ def performConversion(inputFile,thoroughly):
             # Test for conformance with recursive definition
             for a in lines[propertyType]:
                 print >>sys.stderr, a.strip().split(" ")
-                (isSlugsFormula,reasonForNotBeingASlugsFormula) = isValidRecursiveSlugsProperty(a.strip().split(" "))
-                if isSlugsFormula:
+                if a.strip()[0:1] == "#":
                     print a
                 else:
-                    print >>sys.stderr,a
-                    # Try to parse!
-                    tree = parseLTL(a,reasonForNotBeingASlugsFormula)            
-                    # printTree(tree)
-                    currentLine = translateToSlugsFormat(tree)
-                    print currentLine
+                    (isSlugsFormula,reasonForNotBeingASlugsFormula) = isValidRecursiveSlugsProperty(a.strip().split(" "))
+                    if isSlugsFormula:
+                        print a
+                    else:
+                        print >>sys.stderr,a
+                        # Try to parse!
+                        tree = parseLTL(a,reasonForNotBeingASlugsFormula)            
+                        # printTree(tree)
+                        currentLine = translateToSlugsFormat(tree)
+                        print currentLine
             print ""
         
 

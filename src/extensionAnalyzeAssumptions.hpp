@@ -33,6 +33,7 @@ protected:
     using T::varCubePreOutput;
 
     std::vector<BF> safetyEnvParts;
+    std::vector<std::string> safetyEnvPartNames;
 
     XAnalyzeAssumptions<T>(std::list<std::string> &filenames) : T(filenames) {}
 
@@ -61,11 +62,15 @@ protected:
         // The readmode variable stores in which chapter of the input file we are
         int readMode = -1;
         std::string currentLine;
+        std::string currentPropertyName = "";
         lineNumberCurrentlyRead = 0;
         while (std::getline(inFile,currentLine)) {
             lineNumberCurrentlyRead++;
             boost::trim(currentLine);
-            if ((currentLine.length()>0) && (currentLine[0]!='#')) {
+            if (currentLine.substr(0,2)=="##") {
+                currentPropertyName = currentLine.substr(2,std::string::npos);
+                boost::trim(currentPropertyName);
+            } else if ((currentLine.length()>0) && (currentLine[0]!='#')) {
                 if (currentLine[0]=='[') {
                     if (currentLine=="[INPUT]") {
                         readMode = 0;
@@ -111,6 +116,13 @@ protected:
                         BF newSafetyEnvPart = parseBooleanFormula(currentLine,allowedTypes);
                         safetyEnvParts.push_back(newSafetyEnvPart);
                         safetyEnv &= newSafetyEnvPart;
+                        if (currentPropertyName.length()>0) {
+                            safetyEnvPartNames.push_back(currentPropertyName);
+                        } else {
+                            std::ostringstream propertyName;
+                            propertyName << "Safety Assumption " << safetyEnvParts.size();
+                            safetyEnvPartNames.push_back(propertyName.str());
+                        }
                     } else if (readMode==5) {
                         std::set<VariableType> allowedTypes;
                         allowedTypes.insert(PreInput);
@@ -136,6 +148,7 @@ protected:
                         std::cerr << "Error with line " << lineNumberCurrentlyRead << "!";
                         throw "Found a line in the specification file that has no proper categorial context.";
                     }
+                    currentPropertyName = ""; // Is always reset after a semantically non-null property line.
                 }
             }
         }
@@ -225,12 +238,12 @@ protected:
             for (unsigned int j=0;j<safetyEnvParts.size();j++) {
                 if (i!=j) safetyEnv &= safetyEnvParts[j];
             }
-            std::cout << "\"Safety Assumption " << i << "\" ";
+            std::cout << "\"" << safetyEnvPartNames[i] << "\" ";
 
             std::vector<std::vector<BF> > newDistances;
             BF newWinningPositions = computeReactiveDistancesAndWinningPositions(newDistances);
 
-            if (initEnv.Implies((referenceWinningPositions & initSys).ExistAbstract(varCubePreOutput)).UnivAbstract(varCubePreInput).isTrue()) {
+            if (initEnv.Implies((newWinningPositions & initSys).ExistAbstract(varCubePreOutput)).UnivAbstract(varCubePreInput).isTrue()) {
                 // Not crucially needed
                 if (newWinningPositions < referenceWinningPositions) {
                     if ((newWinningPositions & initEnv) < (referenceWinningPositions & initEnv)) {

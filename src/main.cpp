@@ -232,5 +232,4 @@ int main(int argc, const char **args) {
         std::cerr << "Error: " << e.getMessage() << std::endl;
         return 1;
     }
-
 }
