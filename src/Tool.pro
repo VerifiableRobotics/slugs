@@ -20,7 +20,7 @@ HEADERS += BFAbstractionLibrary/BF.h BFAbstractionLibrary/BFCudd.h gr1context.hp
     extensionWeakenSafetyAssumptions.hpp extensionBiasForAction.hpp \
     extensionComputeCNFFormOfTheSpecification.hpp extensionCounterstrategy.hpp extensionExtractExplicitCounterstrategy.hpp \
     extensionIncrementalSynthesis.hpp extensionFixedPointRecycling.hpp extensionInteractiveStrategy.hpp extensionIROSfastslow.hpp \
-    extensionAnalyzeInitialPositions.hpp \
+    extensionAnalyzeInitialPositions.hpp extensionAnalyzeAssumptions.hpp \
     BFAbstractionLibrary/BFCuddMintermEnumerator.h
 
 SOURCES += main.cpp BFAbstractionLibrary/bddDump.cpp BFAbstractionLibrary/BFCuddVarVector.cpp BFAbstractionLibrary/BFCudd.cpp BFAbstractionLibrary/BFCuddManager.cpp \

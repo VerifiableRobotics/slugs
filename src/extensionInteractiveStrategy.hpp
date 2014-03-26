@@ -448,13 +448,10 @@ public:
                 } else {
                     std::cout << "Error: Did not understand command '" << command << "'" << std::endl;
                 }
-
             }
-
         } else {
             std::cerr << "RESULT: Specification is unrealizable.\n";
         }
-
     }
 
 

@@ -463,7 +463,7 @@ def isValidRecursiveSlugsProperty(tokens):
 # ============================================
 # Main worker
 # ============================================
-def performConversion(inputFile):
+def performConversion(inputFile,thoroughly):
     specFile = open(inputFile,"r")
     mode = ""
     lines = {"[ENV_TRANS]":[],"[ENV_INIT]":[],"[INPUT]":[],"[OUTPUT]":[],"[SYS_TRANS]":[],"[SYS_INIT]":[],"[ENV_LIVENESS]":[],"[SYS_LIVENESS]":[] }
@@ -544,7 +544,11 @@ def performConversion(inputFile):
                             tokens = ["& !",translatedNames[variable][i]]+tokens
                     lines["["+propertyDestination+"_INIT]"].append(" ".join(tokens))
 
-                    # Trans constraint
+                    # Transition constraint for previous state -- only if using the "--thorougly mode"
+                    if thoroughly:
+                        lines["["+propertyDestination+"_TRANS]"].append(" ".join(tokens))
+
+                    # Trans constraint for next states
                     tokens = ["0"]
                     for i in xrange(0,numberAPNofBits[variable]):
                         if 2**i & limitDiff:
@@ -602,8 +606,21 @@ if __name__ == "__main__":
         print >>sys.stderr, "Error: Need input file parameter"
         sys.exit(1)
 
-    inputFile = sys.argv[1]
-    performConversion(inputFile)
+    inputFile = None
+    thoroughly = False
+    for parameter in sys.argv[1:]:
+        if parameter.startswith("-"):
+            if parameter=="--thorougly":
+                thoroughly = True
+            else:
+                print >>sys.stderr, "Error: did not understand parameter '"+parameter+"'"
+                sys.exit(1)
+        else:
+            if inputFile!=None:
+                print >>sys.stderr, "Error: more than one file name given."
+                sys.exit(1)
+            inputFile = parameter
+    performConversion(inputFile,thoroughly)
     print >>sys.stderr, translatedNames
 
 

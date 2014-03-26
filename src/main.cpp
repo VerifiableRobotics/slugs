@@ -46,6 +46,7 @@
 #include "extensionInteractiveStrategy.hpp"
 #include "extensionIROSfastslow.hpp"
 #include "extensionAnalyzeInitialPositions.hpp"
+#include "extensionAnalyzeAssumptions.hpp"
 
 //===================================================================================
 // List of command line arguments
@@ -62,7 +63,8 @@ const char *commandLineArguments[] = {
     "--fixedPointRecycling","Modifies the realizability checking algorithm to recycle previous innermost fixed points. Realizability checking should typically become faster this way.",
     "--interactiveStrategy","Opens an interactive shell after realizability checking to allow examining the properties of the generated strategy.",
     "--IROSfastslow","Uses fastslow semantics from IROS 2012 paper. Requires different input file format.",
-    "--analyzeInitialPositions","Performs an analysis of the set of starting positions in the realizability game."
+    "--analyzeInitialPositions","Performs an analysis of the set of starting positions in the realizability game.",
+    "--analyzeAssumptions","Checks which assumptions are actually needed and which assumptions are helpful (i.e., they sometimes reduce reactive distances to the goal)."
 };
 
 //===================================================================================
@@ -111,8 +113,8 @@ OptionCombination optionCombinations[] = {
     OptionCombination("--IROSfastslow --onlyRealizability",XIROSFS<GR1Context>::makeInstance),
     OptionCombination("--IROSfastslow --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<XIROSFS<GR1Context> >,false>::makeInstance),
     OptionCombination("--IROSfastslow --onlyRealizability --sysInitRoboticsSemantics",XRoboticsSemantics<XIROSFS<GR1Context> >::makeInstance),
-    OptionCombination("--analyzeInitialPositions", XAnalyzeInitialPositions<GR1Context>::makeInstance)
-    
+    OptionCombination("--analyzeInitialPositions", XAnalyzeInitialPositions<GR1Context>::makeInstance),
+    OptionCombination("--analyzeAssumptions", XAnalyzeAssumptions<GR1Context>::makeInstance)
 
     // TODO: Combination between BiasForAction and FixedPointRecycling is not supported yet but would make sense
 };
@@ -214,6 +216,9 @@ int main(int argc, const char **args) {
         return 1;
 
     } catch (const char *error) {
+        std::cerr << "Error: " << error << std::endl;
+        return 1;
+    } catch (std::string error) {
         std::cerr << "Error: " << error << std::endl;
         return 1;
     } catch (SlugsException e) {

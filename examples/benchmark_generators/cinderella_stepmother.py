@@ -81,6 +81,9 @@ e:0...%(nofBucketsMinusOne)d
 [ENV_TRANS]
 %(stepMotherRestrictionLine)s
 
+[ENV_INIT]
+%(envInit)s
+
 [SYS_INIT]
 %(sysInit)s
 
@@ -93,7 +96,8 @@ e:0...%(nofBucketsMinusOne)d
       'inLines': "\n".join(["x"+str(i)+":0..."+str(stepmotherPower) for i in xrange(0,nofBuckets)]),
       'outLines': "\n".join(["y"+str(i)+":0..."+str(bucketCapacity) for i in xrange(0,nofBuckets)]),
       'nofBucketsMinusOne': nofBuckets-1,
-      'stepMotherRestrictionLine': "+".join(["x"+str(i) for i in xrange(0,nofBuckets)])+" <= "+str(stepmotherPower),
+      'stepMotherRestrictionLine': "+".join(["x"+str(i)+"'" for i in xrange(0,nofBuckets)])+" <= "+str(stepmotherPower),
+      'envInit': "\n".join(["x"+str(i)+" = 0" for i in xrange(0,nofBuckets)]),
       'sysInit': "\n".join(["y"+str(i)+" = 0" for i in xrange(0,nofBuckets)]),
       'sysTransA': "\n".join(["!((e<="+str(i)+" & e+"+str(cinderellaPower)+" > "+str(i)+") | (e+"+str(cinderellaPower-1)+" >= "+str(i+nofBuckets)+")) -> y"+str(i)+"' = y"+str(i)+" + x"+str(i)+"'" for i in xrange(0,nofBuckets)]),
       'sysTransB': "\n".join(["((e<="+str(i)+" & e+"+str(cinderellaPower)+" > "+str(i)+") | (e+"+str(cinderellaPower-1)+" >= "+str(i+nofBuckets)+")) -> y"+str(i)+"' = x"+str(i)+"'" for i in xrange(0,nofBuckets)])
