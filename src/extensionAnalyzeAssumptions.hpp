@@ -34,6 +34,7 @@ protected:
 
     std::vector<BF> safetyEnvParts;
     std::vector<std::string> safetyEnvPartNames;
+    std::vector<std::string> livenessEnvPartNames;
 
     XAnalyzeAssumptions<T>(std::list<std::string> &filenames) : T(filenames) {}
 
@@ -137,6 +138,13 @@ protected:
                         allowedTypes.insert(PostOutput);
                         allowedTypes.insert(PostInput);
                         livenessAssumptions.push_back(parseBooleanFormula(currentLine,allowedTypes));
+                        if (currentPropertyName.length()>0) {
+                            livenessEnvPartNames.push_back(currentPropertyName);
+                        } else {
+                            std::ostringstream propertyName;
+                            propertyName << "Liveness Assumption " << livenessAssumptions.size();
+                            livenessEnvPartNames.push_back(propertyName.str());
+                        }
                     } else if (readMode==7) {
                         std::set<VariableType> allowedTypes;
                         allowedTypes.insert(PreInput);
@@ -159,7 +167,10 @@ protected:
 
         // Make sure that there is at least one liveness assumption and one liveness guarantee
         // The synthesis algorithm might be unsound otherwise
-        if (livenessAssumptions.size()==0) livenessAssumptions.push_back(mgr.constantTrue());
+        if (livenessAssumptions.size()==0) {
+            livenessAssumptions.push_back(mgr.constantTrue());
+            livenessEnvPartNames.push_back("Automatically added TRUE liveness assumption");
+        }
         if (livenessGuarantees.size()==0) livenessGuarantees.push_back(mgr.constantTrue());
     }
 
@@ -231,7 +242,7 @@ protected:
             return;
         }
 
-        // Now go through the safety assumptions and compute the reactive distances. Check if needed
+        // Now go through the safety assumptions and compute the reactive distances.
         BF oldSafetyEnv = safetyEnv;
         for (unsigned int i=0;i<safetyEnvParts.size();i++) {
             safetyEnv = mgr.constantTrue();
@@ -292,6 +303,64 @@ protected:
 
         }
         safetyEnv = oldSafetyEnv;
+
+        // Now go through the liveness assumptions and compute the reactive distances.
+        std::vector<BF> oldLivenessAssumptions = livenessAssumptions;
+        for (unsigned int i=0;i<livenessAssumptions.size();i++) {
+            safetyEnv = mgr.constantTrue();
+            livenessAssumptions.clear();
+            for (unsigned int j=0;j<livenessAssumptions.size();j++) {
+                if (i!=j) livenessAssumptions.push_back(oldLivenessAssumptions[j]);
+            }
+            std::cout << "\"" << livenessEnvPartNames.at(i) << "\" ";
+
+            std::vector<std::vector<BF> > newDistances;
+            BF newWinningPositions = computeReactiveDistancesAndWinningPositions(newDistances);
+
+            if (initEnv.Implies((newWinningPositions & initSys).ExistAbstract(varCubePreOutput)).UnivAbstract(varCubePreInput).isTrue()) {
+                // Not crucially needed
+                if (newWinningPositions < referenceWinningPositions) {
+                    if ((newWinningPositions & initEnv) < (referenceWinningPositions & initEnv)) {
+                        std::cout << "makes more positions winning, which helps for satisfying the GR(1) robotics semantics.\n";
+                    } else {
+                        std::cout << "makes more positions winning, but without any effect of the GR(1) robotics semantics.\n";
+                    }
+                } else {
+
+                    // Compare reactive distances
+                    bool foundANeed = false;
+                    for (unsigned int j=0;j<livenessGuarantees.size();j++) {
+                        bool neededHere = false;
+                        if (referenceDistances[j].size()!=newDistances[j].size()) {
+                            neededHere = true;
+                        } else {
+                            for (unsigned k=0;k<referenceDistances[j].size();k++) {
+                                if (referenceDistances[j][k]!=newDistances[j][k]) {
+                                    neededHere = true;
+                                }
+                            }
+                        }
+                        if (neededHere) {
+                            if (!foundANeed) {
+                                std::cout << "makes reaching the system goals ";
+                                foundANeed = true;
+                            } else {
+                                std::cout << ", ";
+                            }
+                            std::cout << j;
+                        }
+                    }
+                    if (foundANeed) {
+                        std::cout << " easier for the system.\n";
+                    } else {
+                        std::cout << "is superfluous.\n";
+                    }
+
+                }
+            } else {
+                std::cout << "is cruicially needed.\n";
+            }
+        }
     }
 
 
