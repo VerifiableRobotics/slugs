@@ -67,6 +67,20 @@ public:
         //=========================================================================================
         // Then, compute a symbolic strategy for the environment to enforce its liveness objectives
         //=========================================================================================
+        // 1. Step one: Compute Deadlock-avoiding strategy
+        BF nonDeadlockingStates = mgr.constantTrue();
+        BF oldNonDeadlockingStates = mgr.constantFalse();
+        BF nonDeadlockingTransitions;
+        while (nonDeadlockingStates!=oldNonDeadlockingStates) {
+            oldNonDeadlockingStates = nonDeadlockingStates;
+            nonDeadlockingTransitions = ((nonDeadlockingStates.SwapVariables(varVectorPre,varVectorPost) | !safetySys).UnivAbstract(varCubePostOutput) & safetyEnv);
+            nonDeadlockingStates = nonDeadlockingTransitions.ExistAbstract(varCubePostInput);
+        }
+        BF_newDumpDot(*this,nonDeadlockingTransitions,NULL,"/tmp/ndt.dot");
+        BF_newDumpDot(*this,nonDeadlockingStates,NULL,"/tmp/nds.dot");
+        BF_newDumpDot(*this,safetyEnv,NULL,"/tmp/se.dot");
+
+        // 2. Step two: Compute strategy to work towards
         std::vector<BF> environmentStrategyForAchievingTheLivenessAssumptions;
         for (unsigned int i=0;i<livenessAssumptions.size();i++) {
             BF winning = mgr.constantFalse();
@@ -74,7 +88,7 @@ public:
             BF moves = mgr.constantFalse();
             do {
                 oldWinning = winning;
-                BF newMoves = ((livenessAssumptions[i] | oldWinning.SwapVariables(varVectorPre,varVectorPost)) & safetyEnv).UnivAbstract(varCubePostOutput);
+                BF newMoves = ((livenessAssumptions[i] | oldWinning.SwapVariables(varVectorPre,varVectorPost)) & nonDeadlockingTransitions).UnivAbstract(varCubePostOutput);
                 winning = newMoves.ExistAbstract(varCubePostInput);
                 moves |= winning & !oldWinning & newMoves;
             } while (winning!=oldWinning);
@@ -95,12 +109,17 @@ public:
         environmentGoals.push_back(0);
         for (unsigned int i=0;(i<100) && !(trace.back().isFalse());i++) {
             BF currentPosition = trace.back();
+
             BF nextPosition = currentPosition & safetyEnv & positionalStrategiesForTheIndividualGoals[systemGoals.back()] & environmentStrategyForAchievingTheLivenessAssumptions[environmentGoals.back()];
             BF edge = determinize(nextPosition,postVars);
 
             std::ostringstream edgename;
             edgename << "/tmp/edge" << i << ".dot";
             BF_newDumpDot(*this,edge,"Pre Post",edgename.str().c_str());
+
+            std::ostringstream flexname;
+            flexname << "/tmp/flex" << i << ".dot";
+            BF_newDumpDot(*this,currentPosition,"Pre Post",flexname.str().c_str());
 
             // Sys Liveness progress
             if (edge < livenessGuarantees[systemGoals.back()]) {
@@ -124,7 +143,7 @@ public:
 
             // Compute next position
             assert(nextPosition < safetySys);
-            nextPosition = nextPosition.ExistAbstract(varCubePre).SwapVariables(varVectorPre,varVectorPost);
+            nextPosition = determinize(nextPosition.ExistAbstract(varCubePre).SwapVariables(varVectorPre,varVectorPost),preVars);
             trace.push_back(nextPosition);
 
             std::ostringstream npname;
@@ -194,20 +213,18 @@ public:
             std::vector<std::string> &thisLine = table.back();
             BF thisState = trace[runPart];
 
-            // System goal number
-            std::ostringstream systemGoalNumber;
-            systemGoalNumber << systemGoals[runPart];
-            if (systemGoalsSat[runPart]) systemGoalNumber << "+";
-            thisLine.push_back(systemGoalNumber.str());
-
-            thisLine.push_back("|");
-
             // Environment goal number
             std::ostringstream environmentGoalNumber;
             environmentGoalNumber << environmentGoals[runPart];
-            if (environmentGoalsSat[runPart]) environmentGoalNumber << "+";
+            environmentGoalNumber << ((environmentGoalsSat[runPart])?"+":" ");
             thisLine.push_back(environmentGoalNumber.str());
+            thisLine.push_back("|");
 
+            // System goal number
+            std::ostringstream systemGoalNumber;
+            systemGoalNumber << systemGoals[runPart];
+            systemGoalNumber << ((systemGoalsSat[runPart])?"+":" ");
+            thisLine.push_back(systemGoalNumber.str());
             thisLine.push_back("|");
 
             if (!(thisState.isFalse())) {
@@ -331,6 +348,9 @@ public:
             std::cout << "\n";
         }
         std::cout << "\n";
+
+        //
+
     }
 
 
