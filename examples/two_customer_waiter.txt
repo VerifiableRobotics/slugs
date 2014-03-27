@@ -69,6 +69,7 @@ RiceOrdered
 | ! & & & & & & | SakeOrdered' RiceOrdered' FoodObtained' ! Orderc1c2' ! bit0' ! bit1' bit2' bit3' deliver'
 | ! ! | & & & & & ! bit0' bit1' ! bit2' ! bit3' FoodObtained' Orderc1c2' & & & & & ! bit0' ! bit1' bit2' bit3' FoodObtained' ! Orderc1c2' ! deliver'
 | ! ! | SakeOrdered RiceOrdered ! deliver'
+| ! pickup' ! deliver'
 
 [SYS_LIVENESS]
 | ! & & RiceOrdered' rice_ready' ! FoodObtained' & & & ! bit0' ! bit1' ! bit2' bit3'

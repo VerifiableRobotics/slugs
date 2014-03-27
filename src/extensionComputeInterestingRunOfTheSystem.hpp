@@ -33,6 +33,7 @@ protected:
     using T::variables;
     using T::variableNames;
     using T::doesVariableInheritType;
+    using T::determinizeRandomized;
 
     BF currentPosition;
 
@@ -111,7 +112,7 @@ public:
             BF currentPosition = trace.back();
 
             BF nextPosition = currentPosition & safetyEnv & positionalStrategiesForTheIndividualGoals[systemGoals.back()] & environmentStrategyForAchievingTheLivenessAssumptions[environmentGoals.back()];
-            BF edge = determinize(nextPosition,postVars);
+            BF edge = determinizeRandomized(nextPosition,postVars);
 
             std::ostringstream edgename;
             edgename << "/tmp/edge" << i << ".dot";
@@ -143,7 +144,7 @@ public:
 
             // Compute next position
             assert(nextPosition < safetySys);
-            nextPosition = determinize(nextPosition.ExistAbstract(varCubePre).SwapVariables(varVectorPre,varVectorPost),preVars);
+            nextPosition = determinizeRandomized(nextPosition.ExistAbstract(varCubePre).SwapVariables(varVectorPre,varVectorPost),preVars);
             trace.push_back(nextPosition);
 
             std::ostringstream npname;
@@ -162,7 +163,6 @@ public:
         std::map<std::string,StructuredSlugsVariableGroup> variableGroups;
         std::map<unsigned int, std::string> masterVariables;
         std::set<unsigned int> variablesInSomeGroup;
-        unsigned int varPointer = 0;
         for (unsigned int i=0;i<variables.size();i++) {
             if (doesVariableInheritType(i,Pre)) {
                 size_t firstAt = variableNames[i].find_first_of('@');
@@ -174,7 +174,7 @@ public:
                         // Now check if this is the master variabe
                         if ((firstAt<variableNames[i].size()-2) && (variableNames[i][firstAt+1]=='0') && (variableNames[i][firstAt+2]=='.')) {
                             // Master variable found. Read the information from the master variable
-                            variableGroups[prefix].setMasterVariable(varPointer);
+                            variableGroups[prefix].setMasterVariable(i);
                             if (variableGroups[prefix].slaveVariables.size()>0) throw "Error: in the variable groups introduced by the structured slugs parser, a master variable must be listed before its slaves.";
                             // Parse min/max information
                             std::istringstream is(variableNames[i].substr(firstAt+3,std::string::npos));
@@ -188,7 +188,7 @@ public:
                             masterVariables[i] = prefix;
                         } else {
                             // Verify that slave variables are defined in the correct order
-                            variableGroups[prefix].slaveVariables.push_back(varPointer);
+                            variableGroups[prefix].slaveVariables.push_back(i);
                             std::istringstream is(variableNames[i].substr(firstAt+1,std::string::npos));
                             unsigned int number;
                             is >> number;
@@ -198,8 +198,6 @@ public:
                     }
                     variablesInSomeGroup.insert(i);
                 }
-                assert(variables[i]==preVars[varPointer]);
-                varPointer++;
             }
         }
 
@@ -286,6 +284,36 @@ public:
                         }
                     }
                 }
+
+                // Output Grouped
+                for (unsigned int i=0;i<variables.size();i++) {
+                    if (doesVariableInheritType(i,PreOutput)) {
+                        if (variablesInSomeGroup.count(i)!=0) {
+                            auto it = masterVariables.find(i);
+                            if (it!=masterVariables.end()) {
+
+                                // This is a master variable
+                                std::ostringstream valueStream;
+                                std::string key = it->second;
+                                valueStream << key;
+                                StructuredSlugsVariableGroup &group = variableGroups[key];
+                                unsigned int value = 0;
+                                if (!((thisState & variables[group.masterVariable]).isFalse())) value++;
+
+                                // Process slave variables
+                                unsigned int multiplyer=2;
+                                for (auto it = group.slaveVariables.begin();it!=group.slaveVariables.end();it++) {
+                                    if (!((thisState & variables[*it]).isFalse())) value += multiplyer;
+                                    multiplyer *= 2;
+                                }
+                                valueStream << "=" << (value+group.minValue);
+                                thisLine.push_back(valueStream.str());
+                            }
+                        }
+                    }
+                }
+
+
             } else {
                 thisLine.push_back("Env.Loses");
                 while (thisLine.size()!=table[0].size()) thisLine.push_back("");
@@ -348,9 +376,6 @@ public:
             std::cout << "\n";
         }
         std::cout << "\n";
-
-        //
-
     }
 
 

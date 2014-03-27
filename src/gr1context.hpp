@@ -79,6 +79,7 @@ public:
     virtual void checkRealizability();
     virtual void execute();
     static BF determinize(BF in, std::vector<BF> vars);
+    static BF determinizeRandomized(BF in, std::vector<BF> vars);
     virtual void init(std::list<std::string> &filenames);
     
     static GR1Context* makeInstance(std::list<std::string> &filenames) {

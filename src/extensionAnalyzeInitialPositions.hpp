@@ -124,9 +124,9 @@ protected:
                         } else if (minterm[varPointer] == 1) {
                             std::cout << " " << variableNames[i];
                         }
-                        assert(variables[i]==preVars[varPointer]);
-                        varPointer++;
                     }
+                    assert(variables[i]==preVars[varPointer]);
+                    varPointer++;
                 }
             }
 
