@@ -83,7 +83,8 @@ def createSpecificationReport(slugsFile):
     print "summary {"
     print "     font-size: 150%;"
     print "}"
-    print " .details {"
+    print "pre { white-space: pre-wrap; word-wrap: break-word; }"
+    print ".details {"
     print "      margin-left: 30px;"
     print "}"
     print "</style>"
@@ -209,6 +210,24 @@ def createSpecificationReport(slugsFile):
     print "<summary>5. Which assumptions are actually needed?</summary>"
     print "<pre class=\"details\">"
     command = slugsExecutableAndBasicOptions + " --analyzeAssumptions "+slugsCompiledFile+" > "+slugsReturnFile+" 2> "+slugsErrorFile
+    print >>sys.stderr, "Executing: "+command
+    retValue = os.system(command)
+    if (retValue!=0):
+        print >>sys.stderr, "Slugs failed!"
+        raise Exception("Could not build report")
+    with open(slugsReturnFile,"r") as f:
+        for line in f.readlines():
+            print cgi.escape(line),
+    print "</pre>"
+    print "</details>"
+
+    # =====================================================
+    # Example trace of the system
+    # =====================================================
+    print "<details>"
+    print "<summary>6. Example trace of the system</summary>"
+    print "<pre class=\"details\">"
+    command = slugsExecutableAndBasicOptions + " --computeInterestingRunOfTheSystem "+slugsCompiledFile+" > "+slugsReturnFile+" 2> "+slugsErrorFile
     print >>sys.stderr, "Executing: "+command
     retValue = os.system(command)
     if (retValue!=0):

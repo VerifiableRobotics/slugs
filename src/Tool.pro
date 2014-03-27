@@ -21,7 +21,8 @@ HEADERS += BFAbstractionLibrary/BF.h BFAbstractionLibrary/BFCudd.h gr1context.hp
     extensionComputeCNFFormOfTheSpecification.hpp extensionCounterstrategy.hpp extensionExtractExplicitCounterstrategy.hpp \
     extensionIncrementalSynthesis.hpp extensionFixedPointRecycling.hpp extensionInteractiveStrategy.hpp extensionIROSfastslow.hpp \
     extensionAnalyzeInitialPositions.hpp extensionAnalyzeAssumptions.hpp \
-    BFAbstractionLibrary/BFCuddMintermEnumerator.h
+    BFAbstractionLibrary/BFCuddMintermEnumerator.h \
+    extensionComputeInterestingRunOfTheSystem.hpp
 
 SOURCES += main.cpp BFAbstractionLibrary/bddDump.cpp BFAbstractionLibrary/BFCuddVarVector.cpp BFAbstractionLibrary/BFCudd.cpp BFAbstractionLibrary/BFCuddManager.cpp \
     BFAbstractionLibrary/BFCuddVarCube.cpp tools.cpp synthesisAlgorithm.cpp synthesisContextBasics.cpp variableManager.cpp \

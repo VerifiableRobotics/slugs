@@ -44,6 +44,8 @@ protected:
     using T::doesVariableInheritType;
     using T::varCubePreInput;
     using T::varCubePreOutput;
+    using T::varCubePostInput;
+    using T::safetyEnv;
 
     // Constructor
     XAnalyzeInitialPositions<T>(std::list<std::string> &filenames) : T(filenames) {}
@@ -107,7 +109,7 @@ protected:
 
         BFMintermEnumerator enumerator(pre,preVars,postVars);
         unsigned int nofPrinted = 0;
-        while ((nofPrinted++<3) && enumerator.hasNextMinterm()) {
+        while ((nofPrinted++<7) && enumerator.hasNextMinterm()) {
             std::vector<int> minterm;
             enumerator.getNextMinterm(minterm);
             std::cout << "-";
@@ -176,7 +178,6 @@ public:
         std::cout << "Number of initial input assignments that are allowed for the environment: " << nofAllowedInitialInputs << " out of " << nofInputs << std::endl;
         std::cout << "Number of initial input assignments that force the system to move to a losing position: " << nofInputsSystemLosing << " out of " << nofInputs << std::endl;
 
-
         std::cout << "\nSome cubes of winning positions: \n";
         printLargePreCubes(winningPositions);
         std::cout << "\nSome cubes of non-winning positions: \n";
@@ -195,6 +196,8 @@ public:
         printLargePreCubes(winningPositions & initEnv & initSys);
         std::cout << "\nSome cubes of non-winning positions satisfying the initialization assumptions & guarantees: \n";
         printLargePreCubes((!winningPositions) & initEnv & initSys);
+        std::cout << "\nSome positions from which the environment player cannot prevent to violate some safety assumptions:\n";
+        printLargePreCubes(winningPositions & !(safetyEnv.ExistAbstract(varCubePostInput)));
     }
 
     static GR1Context* makeInstance(std::list<std::string> &filenames) {

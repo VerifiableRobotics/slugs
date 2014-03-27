@@ -298,7 +298,7 @@ protected:
                     }
                 }
             } else {
-                std::cout << "is cruicially needed.\n";
+                std::cout << "is crucially needed.\n";
             }
 
         }
@@ -358,7 +358,7 @@ protected:
 
                 }
             } else {
-                std::cout << "is cruicially needed.\n";
+                std::cout << "is crucially needed.\n";
             }
         }
     }
