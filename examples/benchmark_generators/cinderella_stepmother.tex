@@ -81,7 +81,7 @@ In order to obtain a benchmark set for the \SyntComp, the water levels in the bu
 \item Boolean outputs of the system to be synthesized:
 \begin{enumerate}
 \item signals $\{\mathit{y}_{i,j}\}_{i \in \{1, \ldots, n\}, j \in \{1, \ldots, \lceil \log_2(k \cdot b+1) \rceil \}}$ that encode the amount of water in Cinderella's  buckets
-\item signals $e_1 \ldots e_{\lceil \log_2(n)\rceil}$ that encode which bucket (and its clockwise neighbor) Cinderella wants to empty
+\item signals $e_1 \ldots e_{\lceil \log_2(n)\rceil}$ that encode which bucket (and its $c$ clockwise neighbors) Cinderella wants to empty
 \end{enumerate}
 \end{itemize}
 
@@ -124,18 +124,18 @@ The tool \textsc{slugs} has been used in its version from the 21$^\mathrm{st}$ o
 %\renewcommand{\arraystretch}{1.2}
 \begin{tabular}{c|c|c||c|c}
 $n$ & $c$ & $(k \cdot b)/k$ & is realizable & \textsc{slugs} com- \\ & & $(=b)$ & & putation time\\ \hline \hline
-5 & 2 & $6/{4}$ & no &	0m0.943s \\ \hline
-5 & 2 & $7/{4}$ & yes & 0m2.018s \\ \hline
-5 & 3 & $12/{9}$ & no & 0m2.176s \\ \hline
-5 & 3 & $13/{9}$ & yes & 0m2.317s\\ \hline
-6 & 1 & $14/{5}$ & no & 7m25.831s \\ \hline
-6 & 1 & $15/{5}$ & yes & 3m54.455s \\ \hline
-6 & 1 & $29/{10}$ & ??? & ???? \\ \hline
-6 & 2 & 13/6 & no & 0m53.449s \\ \hline
-6 & 2 & 14/6 & yes &1m2.192s\\ \hline
-6 & 3 & 10/6 & no & 0m9.856s\\ \hline
-6 & 3 & 11/6 & yes & 0m2.616s \\ \hline
-7 & 1 & 33/10 & ??? & ?????
+5 & 2 & $6/{4}$ & no &	0.61s \\ \hline
+5 & 2 & $7/{4}$ & yes & 1.15s \\ \hline
+5 & 3 & $12/{9}$ & no & 1.23s \\ \hline
+5 & 3 & $13/{9}$ & yes & 1.80s\\ \hline
+6 & 1 & $14/{5}$ & no & 6m58.5s \\ \hline
+6 & 1 & $15/{5}$ & yes & 6m27.3s \\ \hline
+6 & 1 & $29/{10}$ & no & 68m34.8s \\ \hline
+6 & 2 & 13/6 & no & 20.35s \\ \hline
+6 & 2 & 14/6 & yes & 38.50s \\ \hline
+6 & 3 & 10/6 & no & 0.92s\\ \hline
+6 & 3 & 11/6 & yes & 0.82s \\ \hline
+7 & 1 & 33/10 & yes & 334m11.3s
 \end{tabular}
 \end{center}
 \caption{Parameter combinations used as benchmarks}
@@ -163,7 +163,14 @@ y4:0...6
 e:0...4
 
 [ENV_TRANS]
-x0+x1+x2+x3+x4 <= 4
+x0'+x1'+x2'+x3'+x4' <= 4
+
+[ENV_INIT]
+x0 = 0
+x1 = 0
+x2 = 0
+x3 = 0
+x4 = 0
 
 [SYS_INIT]
 y0 = 0
@@ -183,6 +190,7 @@ y4 = 0
 ((e<=2 & e+2 > 2) | (e+1 >= 7)) -> y2' = x2'
 ((e<=3 & e+2 > 3) | (e+1 >= 8)) -> y3' = x3'
 ((e<=4 & e+2 > 4) | (e+1 >= 9)) -> y4' = x4'
+
 \end{verbatim}
 }
 \caption{A structured \textsc{slugs} specification for the case of $n = 5$, $c = 2$, $b = 1.5$, and $k = 4$. The sections \texttt{[INPUT]} and \texttt{[OUTPUT]} contain declarations of the input and output atomic propositions. The structured \textsc{slugs} compiler allows to define multiple propositions to jointly represent an integer number in a single declaration. The section \texttt{[ENV\_TRANS]} represents the safety transition constraint assumptions, \texttt{[SYS\_TRANS]} represents the safety transition constraint guarantees, and \texttt{[SYS\_INIT]} represents the safety initialization guarantees.}

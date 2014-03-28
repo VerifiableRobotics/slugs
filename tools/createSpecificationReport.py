@@ -139,7 +139,7 @@ def createSpecificationReport(slugsFile):
     if realizable:
         print "<p>The specification is <B>realizable</B>.</p>"
         # Also check special robotics semantics        
-        command = slugsExecutableAndBasicOptions + " --onlyRealizability "+slugsCompiledFile+" > "+slugsReturnFile+" 2> "+slugsErrorFile
+        command = slugsExecutableAndBasicOptions + " --onlyRealizability --sysInitRoboticsSemantics "+slugsCompiledFile+" > "+slugsReturnFile+" 2> "+slugsErrorFile
         print >>sys.stderr, "Executing: "+command
         retValue = os.system(command)
         if (retValue!=0):
@@ -163,12 +163,29 @@ def createSpecificationReport(slugsFile):
         print "<p>The specification is <B>unrealizable</B>!</p>"
     print "</details>"
 
+    # =====================================================
+    # Winning positions
+    # =====================================================
+    print "<details>"
+    print "<summary>3. Assumption/Guarantee interaction analysis</summary>"
+    print "<pre class=\"details\">"
+    command = slugsExecutableAndBasicOptions + " --analyzeSafetyLivenessInteraction "+slugsCompiledFile+" > "+slugsReturnFile+" 2> "+slugsErrorFile
+    print >>sys.stderr, "Executing: "+command
+    retValue = os.system(command)
+    if (retValue!=0):
+        print >>sys.stderr, "Slugs failed!"
+        raise Exception("Could not build report")
+    with open(slugsReturnFile,"r") as f:
+        for line in f.readlines():
+            print cgi.escape(line),
+    print "</pre>"
+    print "</details>"
 
     # =====================================================
     # Winning positions
     # =====================================================
     print "<details>"
-    print "<summary>3. Winning States/Positions</summary>"
+    print "<summary>4. Winning States/Positions</summary>"
     print "<pre class=\"details\">"
     command = slugsExecutableAndBasicOptions + " --analyzeInitialPositions "+slugsCompiledFile+" > "+slugsReturnFile+" 2> "+slugsErrorFile
     print >>sys.stderr, "Executing: "+command
@@ -186,7 +203,7 @@ def createSpecificationReport(slugsFile):
     # Winning positions that can falsify the environment
     # =====================================================
     print "<details>"
-    print "<summary>4. States/Positions that are winning by environment falsification</summary>"
+    print "<summary>5. States/Positions that are winning by environment falsification</summary>"
     print "<pre class=\"details\">"
     slugsLines = readSlugsFile(slugsCompiledFile)
     slugsLines["[SYS_LIVENESS]"] = ["0"]
@@ -207,7 +224,7 @@ def createSpecificationReport(slugsFile):
     # Superfluous assumptions
     # =====================================================
     print "<details>"
-    print "<summary>5. Which assumptions are actually needed?</summary>"
+    print "<summary>6. Which assumptions are actually needed?</summary>"
     print "<pre class=\"details\">"
     command = slugsExecutableAndBasicOptions + " --analyzeAssumptions "+slugsCompiledFile+" > "+slugsReturnFile+" 2> "+slugsErrorFile
     print >>sys.stderr, "Executing: "+command
@@ -225,7 +242,7 @@ def createSpecificationReport(slugsFile):
     # Example trace of the system
     # =====================================================
     print "<details>"
-    print "<summary>6. Example trace of the system</summary>"
+    print "<summary>7. Example trace of the system</summary>"
     print "<pre class=\"details\">"
     command = slugsExecutableAndBasicOptions + " --computeInterestingRunOfTheSystem "+slugsCompiledFile+" > "+slugsReturnFile+" 2> "+slugsErrorFile
     print >>sys.stderr, "Executing: "+command
