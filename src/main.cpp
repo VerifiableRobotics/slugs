@@ -49,6 +49,7 @@
 #include "extensionAnalyzeAssumptions.hpp"
 #include "extensionComputeInterestingRunOfTheSystem.hpp"
 #include "extensionAnalyzeSafetyLivenessInteraction.hpp"
+#include "extensionAbstractWinningTraceGenerator.hpp"
 
 //===================================================================================
 // List of command line arguments
@@ -68,7 +69,8 @@ const char *commandLineArguments[] = {
     "--analyzeInitialPositions","Performs an analysis of the set of starting positions in the realizability game.",
     "--analyzeAssumptions","Checks which assumptions are actually needed and which assumptions are helpful (i.e., they sometimes reduce reactive distances to the goal).",
     "--analyzeSafetyLivenessInteraction","Analyzes how safety and liveness properties interact in the specification.",
-    "--computeInterestingRunOfTheSystem","Computes an interesting run of the synthesized system"
+    "--computeInterestingRunOfTheSystem","Computes an interesting run of the synthesized system",
+    "--computeAbstractWinningTrace","Computes an abstract trace that is winning for the system or the environment."
 };
 
 //===================================================================================
@@ -119,8 +121,9 @@ OptionCombination optionCombinations[] = {
     OptionCombination("--IROSfastslow --onlyRealizability --sysInitRoboticsSemantics",XRoboticsSemantics<XIROSFS<GR1Context> >::makeInstance),
     OptionCombination("--analyzeInitialPositions", XAnalyzeInitialPositions<GR1Context>::makeInstance),
     OptionCombination("--analyzeSafetyLivenessInteraction", XAnalyzeSafetyLivenessInteraction<GR1Context>::makeInstance),
-    OptionCombination("--analyzeAssumptions", XAnalyzeSafetyLivenessInteraction<GR1Context>::makeInstance),
-    OptionCombination("--computeInterestingRunOfTheSystem", XComputeInterestingRunOfTheSystem<GR1Context>::makeInstance)
+    OptionCombination("--analyzeAssumptions", XAnalyzeAssumptions<GR1Context>::makeInstance),
+    OptionCombination("--computeInterestingRunOfTheSystem", XComputeInterestingRunOfTheSystem<GR1Context>::makeInstance),
+    OptionCombination("--computeAbstractWinningTrace", XAbstractWinningTraceGenerator<GR1Context>::makeInstance)
 
     // TODO: Combination between BiasForAction and FixedPointRecycling is not supported yet but would make sense
 };

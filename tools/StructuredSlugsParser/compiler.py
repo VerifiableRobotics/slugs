@@ -437,10 +437,12 @@ def translateToSlugsFormat(tree):
 # applying the operations from right to left
 # ============================================
 def isValidRecursiveSlugsProperty(tokens):
+    if "$" in tokens:
+        return (True,"Found a '$' in the property.")
     stacksize = 0
     for i in xrange(len(tokens)-1,-1,-1):
         currentToken = tokens[i]
-        if currentToken=="|" or currentToken=="&":
+        if currentToken=="|" or currentToken=="&" or currentToken=="^":
             if stacksize<2:
                 return (False,"Rejected part due to stack underflow")
             stacksize -= 1

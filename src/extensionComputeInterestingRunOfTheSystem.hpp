@@ -256,10 +256,10 @@ public:
                                 if (!((thisState & variables[group.masterVariable]).isFalse())) value++;
 
                                 // Process slave variables
-                                unsigned int multiplyer=2;
+                                unsigned int multiplier=2;
                                 for (auto it = group.slaveVariables.begin();it!=group.slaveVariables.end();it++) {
-                                    if (!((thisState & variables[*it]).isFalse())) value += multiplyer;
-                                    multiplyer *= 2;
+                                    if (!((thisState & variables[*it]).isFalse())) value += multiplier;
+                                    multiplier *= 2;
                                 }
                                 valueStream << "=" << (value+group.minValue);
                                 thisLine.push_back(valueStream.str());
@@ -301,10 +301,10 @@ public:
                                 if (!((thisState & variables[group.masterVariable]).isFalse())) value++;
 
                                 // Process slave variables
-                                unsigned int multiplyer=2;
+                                unsigned int multiplier=2;
                                 for (auto it = group.slaveVariables.begin();it!=group.slaveVariables.end();it++) {
-                                    if (!((thisState & variables[*it]).isFalse())) value += multiplyer;
-                                    multiplyer *= 2;
+                                    if (!((thisState & variables[*it]).isFalse())) value += multiplier;
+                                    multiplier *= 2;
                                 }
                                 valueStream << "=" << (value+group.minValue);
                                 thisLine.push_back(valueStream.str());
@@ -315,7 +315,15 @@ public:
 
 
             } else {
-                thisLine.push_back("Env.Loses");
+                // Either the Environment or the system loses
+                BF newMoves = trace[runPart-1] & safetyEnv;
+                if (newMoves.isFalse()) {
+                    thisLine.push_back("Env.Loses");
+                } else {
+                    thisLine.push_back("Sys.Loses");
+                    BF_newDumpDot(*this,newMoves,NULL,"/tmp/newmoves.dot");
+                    BF_newDumpDot(*this,trace[runPart-1],NULL,"/tmp/thisState.dot");
+                }
                 while (thisLine.size()!=table[0].size()) thisLine.push_back("");
             }
 
@@ -383,12 +391,11 @@ public:
         checkRealizability();
         currentPosition = winningPositions & initEnv & initSys;
         if (currentPosition.isFalse()) {
-            std::cout << "No initial position that satisfies both the initialization assumptions and the initiazation guarantees.\n";
+            std::cout << "There is no position that is winning for the system and that satisfies both the initialization assumptions and the initialization guarantees.\n";
             return;
-        } else {
-            currentPosition = determinize(currentPosition,preVars);
-            computeRun();
         }
+        currentPosition = determinize(currentPosition,preVars);
+        computeRun();
     }
 
 

@@ -96,7 +96,7 @@ protected:
             std::cout << "|\n";
 
         }
-        std::cout << "+--------+----------+--------+----------++---------------------+--------------------+\n";
+        std::cout << "+--------+----------+--------+----------++---------------------+--------------------+\n\n";
 
 
         // Does Non-strict implication semantics make a difference?
@@ -121,18 +121,21 @@ protected:
             bool isWinningRoboticsSemantics = (initEnv & initSys).Implies(winningPositions).UnivAbstract(varCubePreOutput).UnivAbstract(varCubePreInput).isTrue();
 
 
-            std::cout << "\nWith a non-strict implication,\n";
+            std::cout << "With a non-strict implication,\n";
             if (isWinningTraditionalSemantics & !resultsClassicalSemantics[15]) {
                 std::cout << "- the specification becomes realizable in the non-robotics semantics,\n";
             } else {
                 std::cout << "- nothing changes in the non-robotics semantics,\n";
             }
             if (isWinningRoboticsSemantics & !resultsRoboticsSemantics[15]) {
-                std::cout << "- and the specification becomes realizable in the robotics semantics.\n";
+                std::cout << "- and the specification becomes realizable in the robotics semantics.\n\n";
             } else {
-                std::cout << "- and nothing changes in the non-robotics semantics, either.\n";
+                std::cout << "- and nothing changes in the non-robotics semantics, either.\n\n";
             }
         }
+
+        // Revert to old specification (without the extra bit for taking care of the strict implication)
+        safetySys = overallSafetySys;
 
         // How long does it take to lose/win if the safety-only spec can be won by driving the other player
         // into a deadlock?
@@ -143,22 +146,53 @@ protected:
             unsigned int round = 0;
             int roundFoundInitPos = -1;
             BF oldWinningPositions = !winningPositions;
-            while (winningPositions!=oldWinningPositions) {
+            while ((winningPositions!=oldWinningPositions) && (roundFoundInitPos==-1)) {
                 oldWinningPositions = winningPositions;
                 winningPositions |= (safetyEnv & (winningPositions.SwapVariables(varVectorPre,varVectorPost) | !safetySys).UnivAbstract(varCubePostOutput)).ExistAbstract(varCubePostInput);
                 round++;
-                if ((roundFoundInitPos) &&
-                        initEnv.Implies((winningPositions & initSys).ExistAbstract(varCubePreOutput)).UnivAbstract(varCubePreInput).isTrue()) {
+                if ((roundFoundInitPos==-1) &&
+                        ((!initSys) | (initEnv & winningPositions)).UnivAbstract(varCubePreOutput).ExistAbstract(varCubePreInput).isTrue()) {
                     roundFoundInitPos = round;
                 }
             }
 
             if (roundFoundInitPos>-1) {
                 std::cout << "Note that with only the safety assumptions and guarantees, the environment can falsify the system's specification within " << roundFoundInitPos << " steps.\n";
+                if ((initEnv & initSys & winningPositions).isFalse()) {
+                    std::cout << "However, there is no corresponding strategy that starts from a position that satisfies all initialization constraints\n";
+                }
             } else {
-                std::cout << "Note that with only the safety assumptions and guarantees, the environment can't' falsify the system's specification.\n";
+                std::cout << "Note that with only the safety assumptions and guarantees, the environment can't falsify the system's specification.\n";
             }
         }
+
+        // How long does it take to win if the safety-only spec can be won by driving the other player into a deadlock?
+        if (resultsClassicalSemantics[10]) {
+
+            // Winning for the system - the System can try to falsify now.
+            winningPositions = mgr.constantFalse();
+            unsigned int round = 0;
+            int roundFoundInitPos = -1;
+            BF oldWinningPositions = !winningPositions;
+            while (winningPositions!=oldWinningPositions) {
+                oldWinningPositions = winningPositions;
+                winningPositions |= (((safetySys & winningPositions.SwapVariables(varVectorPre,varVectorPost)) | (!safetyEnv))).ExistAbstract(varCubePostOutput).UnivAbstract(varCubePostInput);
+                round++;
+                if ((roundFoundInitPos==-1) &&
+                        initEnv.Implies((winningPositions & initSys).ExistAbstract(varCubePreOutput)).UnivAbstract(varCubePreInput).isTrue()) {
+                    roundFoundInitPos = round;
+                }
+            }
+
+            if (roundFoundInitPos>-1) {
+                std::cout << "Note that with only the safety assumptions and guarantees, the system can falsify the environment's specification within " << roundFoundInitPos << " steps.\n";
+            } else {
+                std::cout << "Note that with only the safety assumptions and guarantees, the system can't falsify the environment's specification.\n";
+            }
+        }
+
+
+
     }
 
 

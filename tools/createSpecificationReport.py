@@ -11,6 +11,8 @@ import subprocess, md5, time, cgi
 # =====================================================
 slugsExecutableAndBasicOptions = sys.argv[0][0:sys.argv[0].rfind("createSpecificationReport.py")]+"../src/slugs"
 slugsCompilerAndBasicOptions = sys.argv[0][0:sys.argv[0].rfind("createSpecificationReport.py")]+"StructuredSlugsParser/compiler.py --thorougly"
+uniformBoundedLengthCounterStrategyTool = sys.argv[0][0:sys.argv[0].rfind("createSpecificationReport.py")]+"computeBoundedLengthUniformSafetyCounterStrategy.py"
+
 slugsCompiledFile = "/tmp/check_"+str(os.getpid())+".slugsin"
 slugsModifiedFile = "/tmp/check_"+str(os.getpid())+".mod.slugsin"
 slugsReturnFile = "/tmp/check_"+str(os.getpid())+".slugsreturn"
@@ -175,9 +177,12 @@ def createSpecificationReport(slugsFile):
     if (retValue!=0):
         print >>sys.stderr, "Slugs failed!"
         raise Exception("Could not build report")
+    lengthOfSafetyCounterStrategy = None
     with open(slugsReturnFile,"r") as f:
         for line in f.readlines():
             print cgi.escape(line),
+            if line.strip().startswith("Note that with only the safety assumptions and guarantees, the environment can falsify the system's specification within "):
+                lengthOfSafetyCounterStrategy = int(line.strip().split(" ")[17])
     print "</pre>"
     print "</details>"
 
@@ -256,6 +261,25 @@ def createSpecificationReport(slugsFile):
     print "</pre>"
     print "</details>"
 
+    # =====================================================
+    # Example trace of the system
+    # =====================================================
+    if (lengthOfSafetyCounterStrategy!=None):
+        print "<details>"
+        print "<summary>7b. Quasi-uniform counter-strategy</summary>"
+        print "<pre class=\"details\">"
+        # Note that in the following command, we have to add +1 because the number of states in a trace ist the number of transitions plus 1
+        command = slugsExecutableAndBasicOptions + " --computeAbstractWinningTrace "+slugsCompiledFile+" > "+slugsReturnFile+" 2> "+slugsErrorFile
+        print >>sys.stderr, "Executing: "+command
+        retValue = os.system(command)
+        if (retValue!=0):
+            print >>sys.stderr, uniformBoundedLengthCounterStrategyTool+" failed!"
+            raise Exception("Could not build report")
+        with open(slugsReturnFile,"r") as f:
+            for line in f.readlines():
+                print cgi.escape(line),
+        print "</pre>"
+        print "</details>"
 
     # =====================================================
     # Close up HTML File
