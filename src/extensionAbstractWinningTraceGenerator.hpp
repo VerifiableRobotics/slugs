@@ -61,7 +61,7 @@ protected:
             bool isHline = false;
             unsigned int searchCol = 0;
             while (searchCol<table.size()) {
-                std::cerr << "S: " << searchCol << "," << line << " , " << table[searchCol].size() << ": " << table[searchCol][0] << std::endl;
+                // std::cerr << "S: " << searchCol << "," << line << " , " << table[searchCol].size() << ": " << table[searchCol][0] << std::endl;
                 if ((table[searchCol].size()==1) && (table[searchCol][0]==STRING_FOR_TABLE_LINE)) {
                     searchCol++;
                 } else {
@@ -88,7 +88,7 @@ protected:
                         std::cout << "|";
                     } else {
                         std::cout << " ";
-                        std::cerr << "U: " << column << "," << line << " , " << table[column].size() << std::endl;
+                        // std::cerr << "U: " << column << "," << line << " , " << table[column].size() << std::endl;
                         std::cout << table[column][line];
                         for (unsigned int i=0;i<columnSizes[column]-table[column][line].length();i++) std::cout << " ";
                         std::cout << " ";
@@ -100,33 +100,48 @@ protected:
     }
 
 
-    void computeCounterAbstractCounterStrategyTrace() {
+    void computeAbstractStrategyTrace(bool environmentShouldWin) {
 
-        // Losing for the system - the environment can try to falsify now.
         BF winningPositions = mgr.constantFalse();
         unsigned int round = 0;
         int roundFoundInitPos = -1;
         BF oldWinningPositions = !winningPositions;
         std::vector<BF> distances;
-        while ((winningPositions!=oldWinningPositions) && (roundFoundInitPos==-1)) {
-            distances.push_back(winningPositions);
-            oldWinningPositions = winningPositions;
-            winningPositions |= (safetyEnv & (winningPositions.SwapVariables(varVectorPre,varVectorPost) | !safetySys).UnivAbstract(varCubePostOutput)).ExistAbstract(varCubePostInput);
-            round++;
-            if ((roundFoundInitPos==-1) &&
-                    ((!initSys) | (initEnv & winningPositions)).UnivAbstract(varCubePreOutput).ExistAbstract(varCubePreInput).isTrue()) {
-                roundFoundInitPos = round;
+        if (environmentShouldWin) {
+            // Losing for the system - the environment can try to falsify now.
+            while ((winningPositions!=oldWinningPositions) && (roundFoundInitPos==-1)) {
+                distances.push_back(winningPositions);
+                oldWinningPositions = winningPositions;
+                winningPositions |= (safetyEnv & (winningPositions.SwapVariables(varVectorPre,varVectorPost) | !safetySys).UnivAbstract(varCubePostOutput)).ExistAbstract(varCubePostInput);
+                round++;
+                if ((roundFoundInitPos==-1) &&
+                        ((!initSys) | (initEnv & winningPositions)).UnivAbstract(varCubePreOutput).ExistAbstract(varCubePreInput).isTrue()) {
+                    roundFoundInitPos = round;
+                }
+            }
+        } else {
+            // Losing for the environment - the system can try to falsify now.
+            while ((winningPositions!=oldWinningPositions) && (roundFoundInitPos==-1)) {
+                distances.push_back(winningPositions);
+                oldWinningPositions = winningPositions;
+                winningPositions |= (safetyEnv.Implies((safetySys & winningPositions.SwapVariables(varVectorPre,varVectorPost))).ExistAbstract(varCubePostOutput)).UnivAbstract(varCubePostInput);
+                if (winningPositions.isFalse()) std::cerr << "Still nothing!\n";
+                round++;
+                if ((roundFoundInitPos==-1) &&
+                        initEnv.Implies(initSys & winningPositions).ExistAbstract(varCubePreOutput).UnivAbstract(varCubePreInput).isTrue()) {
+                    roundFoundInitPos = round;
+                }
             }
         }
         BF_newDumpDot(*this,winningPositions,NULL,"/tmp/winningPos.dot");
-        std::cerr << "RoundWinningPos: " << roundFoundInitPos << std::endl;
+        // std::cerr << "RoundWinningPos: " << roundFoundInitPos << std::endl;
 
         // Debugging output
-        for (unsigned int i=0;i<distances.size();i++) {
-            std::ostringstream fn;
-            fn << "/tmp/distancesUnoptimized" << i << ".dot";
-            BF_newDumpDot(*this,distances[i],NULL,fn.str());
-        }
+        //for (unsigned int i=0;i<distances.size();i++) {
+        //    std::ostringstream fn;
+        //    fn << "/tmp/distancesUnoptimized" << i << ".dot";
+        //    BF_newDumpDot(*this,distances[i],NULL,fn.str());
+        // }
 
         // Compute abstract trace that is as concrete as possible!
         if (roundFoundInitPos>-1) {
@@ -144,9 +159,9 @@ protected:
                 bool madeChange = true;
                 while (madeChange) {
                     madeChange = false;
-                    std::cerr << "Iterating!\n";
+                    // std::cerr << "Iterating!\n";
                     for (int i=distances.size()-2;i>=0;i--) {
-                        std::cerr << "i: " << i << std::endl;
+                        // std::cerr << "i: " << i << std::endl;
                         // Try for every variable to restrict it to one value
                         for (unsigned int j=0;j<preVars.size();j++) {
                             // Iterate over the possible values
@@ -164,25 +179,41 @@ protected:
                                     throw "Should not happen!";
                                 }
 
-                                BF newPre = (safetyEnv & (candidatePost.SwapVariables(varVectorPre,varVectorPost) | !safetySys).UnivAbstract(varCubePostOutput)).ExistAbstract(varCubePostInput);
+                                BF newPre;
+                                if (environmentShouldWin) {
+                                    newPre = (safetyEnv & (candidatePost.SwapVariables(varVectorPre,varVectorPost) | !safetySys).UnivAbstract(varCubePostOutput)).ExistAbstract(varCubePostInput);
+                                } else {
+                                    newPre = (safetyEnv.Implies((safetySys & candidatePost.SwapVariables(varVectorPre,varVectorPost))).ExistAbstract(varCubePostOutput)).UnivAbstract(varCubePostInput);
+                                }
                                 if ((newPre >= candidatePre) && (candidatePost != distances[i])) {
                                     madeChange = true;
                                     distances[i] = candidatePost;
-                                    std::cerr << "Made change!\n";
+                                    // std::cerr << "Made change!\n";
                                 }
                             }
                         }
                     }
                 }
+            } else {
+                std::cout << "There is no strategy for the ";
+                if (environmentShouldWin) {
+                    std::cout << "environment";
+                } else {
+                    std::cout << "system";
+                }
+                std::cout << " environment to win in finite time from an initial position.\n\n";
+                return;
             }
+        } else {
+            return; // Can't win because the other player is winning.
         }
 
         // Debugging output
-        for (unsigned int i=0;i<distances.size();i++) {
-            std::ostringstream fn;
-            fn << "/tmp/distancesOptimized" << i << ".dot";
-            BF_newDumpDot(*this,distances[i],NULL,fn.str());
-        }
+        // for (unsigned int i=0;i<distances.size();i++) {
+        //     std::ostringstream fn;
+        //    fn << "/tmp/distancesOptimized" << i << ".dot";
+        //    BF_newDumpDot(*this,distances[i],NULL,fn.str());
+        // }
 
 
         // Make and print table (indexing: first column, then row)
@@ -208,7 +239,7 @@ protected:
                     auto it = masterVariables.find(i);
                     if (it!=masterVariables.end()) {
                         firstCol.push_back(it->second);
-                        std::cerr << "V: " << it->second << std::endl;
+                        // std::cerr << "V: " << it->second << std::endl;
                     }
                 }
             }
@@ -227,13 +258,13 @@ protected:
                     auto it = masterVariables.find(i);
                     if (it!=masterVariables.end()) {
                         firstCol.push_back(it->second);
-                        std::cerr << "V: " << it->second << std::endl;
+                        // std::cerr << "V: " << it->second << std::endl;
                     }
                 }
             }
         }
         firstCol.push_back(STRING_FOR_TABLE_LINE); // Horizontal line
-        std::cerr << "UX: " << firstCol.size() << std::endl;
+        // std::cerr << "UX: " << firstCol.size() << std::endl;
 
         // Make Double-vertical lines
         tableCells.push_back(std::vector<std::string>()); tableCells.back().push_back(STRING_FOR_TABLE_LINE);
@@ -375,8 +406,12 @@ protected:
             tableCells.push_back(std::vector<std::string>()); tableCells.back().push_back(STRING_FOR_TABLE_LINE);
         }
 
-        std::cout << "Abstract countertrace:\n";
+        if (environmentShouldWin)
+            std::cout << "Abstract countertrace:\n";
+        else
+            std::cout << "Abstract trace:\n";
         printTable(tableCells);
+        std::cout << "\n";
     }
 
 
@@ -433,7 +468,8 @@ public:
         }
 
         // Now the real work can be done.
-        computeCounterAbstractCounterStrategyTrace();
+        computeAbstractStrategyTrace(true);
+        computeAbstractStrategyTrace(false);
     }
 
 };
