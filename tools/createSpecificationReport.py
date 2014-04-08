@@ -177,12 +177,14 @@ def createSpecificationReport(slugsFile):
     if (retValue!=0):
         print >>sys.stderr, "Slugs failed!"
         raise Exception("Could not build report")
-    lengthOfSafetyCounterStrategy = None
+    lengthOfStrategyToDriveTheOtherPlayerIntoADeadEnd = None
     with open(slugsReturnFile,"r") as f:
         for line in f.readlines():
             print cgi.escape(line),
             if line.strip().startswith("Note that with only the safety assumptions and guarantees, the environment can falsify the system's specification within "):
-                lengthOfSafetyCounterStrategy = int(line.strip().split(" ")[17])
+                lengthOfStrategyToDriveTheOtherPlayerIntoADeadEnd = int(line.strip().split(" ")[17])
+            if line.strip().startswith("Note that with only the safety assumptions and guarantees, the system can falsify the environment's specification within "):
+                lengthOfStrategyToDriveTheOtherPlayerIntoADeadEnd = int(line.strip().split(" ")[17])
     print "</pre>"
     print "</details>"
 
@@ -262,11 +264,12 @@ def createSpecificationReport(slugsFile):
     print "</details>"
 
     # =====================================================
-    # Example trace of the system
+    # Computing an abstract trace-like strategy that
+    # wins in finite time
     # =====================================================
-    if (lengthOfSafetyCounterStrategy!=None):
+    if (lengthOfStrategyToDriveTheOtherPlayerIntoADeadEnd!=None):
         print "<details>"
-        print "<summary>7b. Quasi-uniform counter-strategy</summary>"
+        print "<summary>7b. Quasi-uniform strategy for the winning player to win in finite time</summary>"
         print "<pre class=\"details\">"
         # Note that in the following command, we have to add +1 because the number of states in a trace ist the number of transitions plus 1
         command = slugsExecutableAndBasicOptions + " --computeAbstractWinningTrace "+slugsCompiledFile+" > "+slugsReturnFile+" 2> "+slugsErrorFile
