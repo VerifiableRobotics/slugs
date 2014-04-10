@@ -474,8 +474,6 @@ def performConversion(inputFile,thoroughly):
         line = line.strip()
         if line == "":
             pass
-        elif line.startswith("#"):
-            pass
         elif line.startswith("["):
             mode = line
             # if not mode in lines:
@@ -492,6 +490,8 @@ def performConversion(inputFile,thoroughly):
     translatedIOLines = {"[INPUT]":[],"[OUTPUT]":[]}
     for variableType in ["[INPUT]","[OUTPUT]"]: 
         for line in lines[variableType]:
+            if line.startswith("#"):
+                translatedIOLines[variableType].append(line.strip())
             if "'" in line:
                 print >>sys.stderr, "Error with atomic signal name "+line+": the name must not contain any \"'\" characters"
                 raise Exception("Translation error")
@@ -544,12 +544,12 @@ def performConversion(inputFile,thoroughly):
                             tokens = ["| !",translatedNames[variable][i]]+tokens
                         else:
                             tokens = ["& !",translatedNames[variable][i]]+tokens
-                    lines["["+propertyDestination+"_INIT]"].append("## "+str(minValue)+"<="+variable+"<="+str(maxValue))
+                    lines["["+propertyDestination+"_INIT]"].append("## Variable limits: "+str(minValue)+"<="+variable+"<="+str(maxValue))
                     lines["["+propertyDestination+"_INIT]"].append(" ".join(tokens))
 
                     # Transition constraint for previous state -- only if using the "--thorougly mode"
                     if thoroughly:
-                        lines["["+propertyDestination+"_TRANS]"].append("## "+str(minValue)+"<="+variable+"<="+str(maxValue))
+                        lines["["+propertyDestination+"_TRANS]"].append("## Variable limits: "+str(minValue)+"<="+variable+"<="+str(maxValue))
                         lines["["+propertyDestination+"_TRANS]"].append(" ".join(tokens))
 
                     # Trans constraint for next states
@@ -559,7 +559,7 @@ def performConversion(inputFile,thoroughly):
                             tokens = ["| !",translatedNames[variable][i]+"'"]+tokens
                         else:
                             tokens = ["& !",translatedNames[variable][i]+"'"]+tokens
-                    lines["["+propertyDestination+"_TRANS]"].append("## "+str(minValue)+"<="+variable+"'<="+str(maxValue))
+                    lines["["+propertyDestination+"_TRANS]"].append("##  Variable limits: "+str(minValue)+"<="+variable+"'<="+str(maxValue))
                     lines["["+propertyDestination+"_TRANS]"].append(" ".join(tokens))
 
             else:

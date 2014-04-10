@@ -14,7 +14,7 @@ private:
     BF remainingMinterms;
     std::tr1::unordered_set<int> primaryVarIndices;
 public:
-    BFMintermEnumerator(BF bf, std::vector<BF> const &_primaryVariables, std::vector<BF> const &_secondaryVariables);
+    BFMintermEnumerator(BF bf, BF careSet, std::vector<BF> const &_primaryVariables, std::vector<BF> const &_secondaryVariables);
     bool hasNextMinterm();
     void getNextMinterm(std::vector<int> &resultStorageSpace);
 };

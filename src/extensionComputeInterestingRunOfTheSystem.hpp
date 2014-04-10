@@ -77,9 +77,9 @@ public:
             nonDeadlockingTransitions = ((nonDeadlockingStates.SwapVariables(varVectorPre,varVectorPost) | !safetySys).UnivAbstract(varCubePostOutput) & safetyEnv);
             nonDeadlockingStates = nonDeadlockingTransitions.ExistAbstract(varCubePostInput);
         }
-        BF_newDumpDot(*this,nonDeadlockingTransitions,NULL,"/tmp/ndt.dot");
-        BF_newDumpDot(*this,nonDeadlockingStates,NULL,"/tmp/nds.dot");
-        BF_newDumpDot(*this,safetyEnv,NULL,"/tmp/se.dot");
+        //BF_newDumpDot(*this,nonDeadlockingTransitions,NULL,"/tmp/ndt.dot");
+        //BF_newDumpDot(*this,nonDeadlockingStates,NULL,"/tmp/nds.dot");
+        //BF_newDumpDot(*this,safetyEnv,NULL,"/tmp/se.dot");
 
         // 2. Step two: Compute strategy to work towards
         std::vector<BF> environmentStrategyForAchievingTheLivenessAssumptions;
@@ -114,13 +114,13 @@ public:
             BF nextPosition = currentPosition & safetyEnv & positionalStrategiesForTheIndividualGoals[systemGoals.back()] & environmentStrategyForAchievingTheLivenessAssumptions[environmentGoals.back()];
             BF edge = determinizeRandomized(nextPosition,postVars);
 
-            std::ostringstream edgename;
-            edgename << "/tmp/edge" << i << ".dot";
-            BF_newDumpDot(*this,edge,"Pre Post",edgename.str().c_str());
+            //std::ostringstream edgename;
+            //edgename << "/tmp/edge" << i << ".dot";
+            //BF_newDumpDot(*this,edge,"Pre Post",edgename.str().c_str());
 
-            std::ostringstream flexname;
-            flexname << "/tmp/flex" << i << ".dot";
-            BF_newDumpDot(*this,currentPosition,"Pre Post",flexname.str().c_str());
+            //std::ostringstream flexname;
+            //flexname << "/tmp/flex" << i << ".dot";
+            //BF_newDumpDot(*this,currentPosition,"Pre Post",flexname.str().c_str());
 
             // Sys Liveness progress
             if (edge < livenessGuarantees[systemGoals.back()]) {
@@ -147,9 +147,9 @@ public:
             nextPosition = determinizeRandomized(nextPosition.ExistAbstract(varCubePre).SwapVariables(varVectorPre,varVectorPost),preVars);
             trace.push_back(nextPosition);
 
-            std::ostringstream npname;
-            npname << "/tmp/np" << i << ".dot";
-            BF_newDumpDot(*this,nextPosition,NULL,npname.str().c_str());
+            //std::ostringstream npname;
+            //npname << "/tmp/np" << i << ".dot";
+            //BF_newDumpDot(*this,nextPosition,NULL,npname.str().c_str());
         }
 
         systemGoalsSat.push_back(false);
@@ -321,8 +321,8 @@ public:
                     thisLine.push_back("Env.Loses");
                 } else {
                     thisLine.push_back("Sys.Loses");
-                    BF_newDumpDot(*this,newMoves,NULL,"/tmp/newmoves.dot");
-                    BF_newDumpDot(*this,trace[runPart-1],NULL,"/tmp/thisState.dot");
+                    //BF_newDumpDot(*this,newMoves,NULL,"/tmp/newmoves.dot");
+                    //BF_newDumpDot(*this,trace[runPart-1],NULL,"/tmp/thisState.dot");
                 }
                 while (thisLine.size()!=table[0].size()) thisLine.push_back("");
             }
@@ -398,12 +398,9 @@ public:
         computeRun();
     }
 
-
     static GR1Context* makeInstance(std::list<std::string> &filenames) {
         return new XComputeInterestingRunOfTheSystem<T>(filenames);
     }
-
-
 };
 
 

@@ -130,7 +130,7 @@ protected:
             if (isWinningRoboticsSemantics & !resultsRoboticsSemantics[15]) {
                 std::cout << "- and the specification becomes realizable in the robotics semantics.\n\n";
             } else {
-                std::cout << "- and nothing changes in the non-robotics semantics, either.\n\n";
+                std::cout << "- and nothing changes in the robotics semantics, either.\n\n";
             }
         }
 

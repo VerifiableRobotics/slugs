@@ -188,39 +188,40 @@ protected:
                  BF livetransitions = livenessGuarantees[j] & (nu2.getValue().SwapVariables(varVectorPre,varVectorPost));
 
                  BFFixedPoint mu1(mgr.constantFalse());
+                 int round = 0;
                  for (;!mu1.isFixedPointReached();) {
+                     round++;
 
+                     // Update the set of transitions that lead closer to the goal.
                      livetransitions |= mu1.getValue().SwapVariables(varVectorPre,varVectorPost);
-
-                     // Added a bias for action here.
-                     BFFixedPoint mu1b(mu1.getValue());
-                     for (;!mu1b.isFixedPointReached();) {
-                         BF foundPaths = livetransitions | (mu1b.getValue().SwapVariables(varVectorPre,varVectorPost));
-                         foundPaths &= safetySys;
-                         distanceStorage[j].push_back(foundPaths);
-                         mu1b.update(safetyEnv.Implies(foundPaths).ExistAbstract(varCubePostOutput).UnivAbstract(varCubePostInput));
-                     }
 
                      // Iterate over the liveness assumptions. Store the positions that are found to be winning for *any*
                      // of them into the variable 'goodForAnyLivenessAssumption'.
-                     BF goodForAnyLivenessAssumption = mu1b.getValue();
+                     BF goodForAnyLivenessAssumption = mu1.getValue();
                      for (unsigned int i=0;i<livenessAssumptions.size();i++) {
 
+                         // Prepare the variable 'foundPaths' that contains the transitions that stay within the inner-most
+                         // greatest fixed point or get closer to the goal. Only used for strategy extraction
                          BF foundPaths = mgr.constantTrue();
 
+                         // Inner-most greatest fixed point. The corresponding variable in the paper would be 'X'.
                          BFFixedPoint nu0(mgr.constantTrue());
                          for (;!nu0.isFixedPointReached();) {
 
+                             // Compute a set of paths that are safe to take - used for the enforceable predecessor operator ('cox')
                              foundPaths = livetransitions | (nu0.getValue().SwapVariables(varVectorPre,varVectorPost) & !(livenessAssumptions[i]));
                              foundPaths &= safetySys;
 
+                             // Update the inner-most fixed point with the result of applying the enforcable predecessor operator
                              nu0.update(safetyEnv.Implies(foundPaths).ExistAbstract(varCubePostOutput).UnivAbstract(varCubePostInput));
                          }
 
-                        goodForAnyLivenessAssumption |= nu0.getValue();
-                        distanceStorage[j].push_back(foundPaths);
+                         // Update the set of positions that are winning for some liveness assumption
+                         goodForAnyLivenessAssumption |= nu0.getValue();
+
                      }
                      mu1.update(goodForAnyLivenessAssumption);
+                     distanceStorage[j].push_back(mu1.getValue());
                  }
                  nextContraintsForGoals &= mu1.getValue();
              }
@@ -273,9 +274,11 @@ protected:
                             bool neededHere = false;
                             if (referenceDistances[j].size()!=newDistances[j].size()) {
                                 neededHere = true;
+                                assert(referenceDistances[j].size()<newDistances[j].size());
                             } else {
                                 for (unsigned k=0;k<referenceDistances[j].size();k++) {
                                     if (referenceDistances[j][k]!=newDistances[j][k]) {
+                                        assert(newDistances[j][k]<=referenceDistances[j][k]);
                                         neededHere = true;
                                     }
                                 }
@@ -300,16 +303,18 @@ protected:
             } else {
                 std::cout << "is crucially needed.\n";
             }
-
         }
         safetyEnv = oldSafetyEnv;
 
         // Now go through the liveness assumptions and compute the reactive distances.
         std::vector<BF> oldLivenessAssumptions = livenessAssumptions;
-        for (unsigned int i=0;i<livenessAssumptions.size();i++) {
+        for (unsigned int i=0;i<oldLivenessAssumptions.size();i++) {
+
+            //if (i==1) throw "Aaargh!";
+
             safetyEnv = mgr.constantTrue();
             livenessAssumptions.clear();
-            for (unsigned int j=0;j<livenessAssumptions.size();j++) {
+            for (unsigned int j=0;j<oldLivenessAssumptions.size();j++) {
                 if (i!=j) livenessAssumptions.push_back(oldLivenessAssumptions[j]);
             }
             std::cout << "\"" << livenessEnvPartNames.at(i) << "\" ";
@@ -332,9 +337,11 @@ protected:
                     for (unsigned int j=0;j<livenessGuarantees.size();j++) {
                         bool neededHere = false;
                         if (referenceDistances[j].size()!=newDistances[j].size()) {
+                            assert(referenceDistances[j].size()<newDistances[j].size());
                             neededHere = true;
                         } else {
                             for (unsigned k=0;k<referenceDistances[j].size();k++) {
+                                assert(newDistances[j][k]<=referenceDistances[j][k]);
                                 if (referenceDistances[j][k]!=newDistances[j][k]) {
                                     neededHere = true;
                                 }

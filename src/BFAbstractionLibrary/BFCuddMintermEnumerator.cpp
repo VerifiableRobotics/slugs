@@ -2,7 +2,7 @@
 #include <tr1/unordered_map>
 #include <queue>
 
-BFMintermEnumerator::BFMintermEnumerator(BF bf, std::vector<BF> const &_primaryVariables, std::vector<BF> const &_secondaryVariables) :
+BFMintermEnumerator::BFMintermEnumerator(BF bf, BF careSet, std::vector<BF> const &_primaryVariables, std::vector<BF> const &_secondaryVariables) :
     primaryVariables(_primaryVariables), secondaryVariables(_secondaryVariables), remainingMinterms(bf) {
 
     assert(secondaryVariables.size()==primaryVariables.size());
@@ -13,6 +13,9 @@ BFMintermEnumerator::BFMintermEnumerator(BF bf, std::vector<BF> const &_primaryV
         BF case2 = remainingMinterms & !secondaryVariables[i];
         remainingMinterms = case1 | case2;
     }
+
+    // Only generate solutions later that are in the care set
+    remainingMinterms &= careSet;
 
     //! What are pre variables, what are post variables?
     for (unsigned int i=0;i<primaryVariables.size();i++) {

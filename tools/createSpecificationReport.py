@@ -30,8 +30,6 @@ def readSlugsFile(slugsFile):
         line = line.strip()
         if line == "":
             pass
-        elif line.startswith("#"):
-            pass
         elif line.startswith("["):
             mode = line
             # if not mode in lines:
@@ -72,7 +70,12 @@ def createSpecificationReport(slugsFile):
     print >>sys.stderr, "Executing: "+command
     retValue = os.system(command)
     if (retValue!=0):
+        print >>sys.stderr, "================================================"
         print >>sys.stderr, "Slugs compilation failed!"
+        print >>sys.stderr, "================================================\n"
+        with open(slugsErrorFile,"r") as errorFile:
+            for line in errorFile.readlines():
+                sys.stderr.write(line)
         raise SlugsException("Could not build report")
 
     # =====================================================
