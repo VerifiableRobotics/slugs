@@ -27,6 +27,7 @@ protected:
     using T::variableNames;
     using T::varVectorPre;
     using T::varVectorPost;
+    using T::varCubePre;
     using T::varCubePostInput;
     using T::varCubePostOutput;
     using T::varCubePreInput;
@@ -174,16 +175,36 @@ protected:
         if (livenessGuarantees.size()==0) livenessGuarantees.push_back(mgr.constantTrue());
     }
 
-    /** This function computes the reactive distances of the positions in the game */
+    // Storage space for a general winning strategy.
+    // First index is the liveness guarantee number,
+    // the second one is the iteration of the middle fixed point.
+    // The strategy is overapproximative in the sense that it may needlessly switch
+    // between liveness goals being waiting for. This strictly speaking makes it
+    // incorrect, but in this way, we operapproximate any winning strategy that a
+    // GR(1) tool could compute. It we obtain with this plugin the information
+    // that a liveness assumption is not needed in any strategy, then this thus
+    // holds for any order of the liveness assumptions.
+    std::vector<std::vector<BF> > overapproximativeWinningStrategy;
+
+    /**
+     * @brief This function computes the reactive distances of the positions in the game.
+     *        It also stores a general strategy into the WinningStategy Storage
+     * @param distanceStorage Where the reactive distances of the positions
+     *        that are found to be winning are to be stored
+     * @return the winning positions
+     */
     BF computeReactiveDistancesAndWinningPositions(std::vector<std::vector<BF> > &distanceStorage) {
         BFFixedPoint nu2(mgr.constantTrue());
         for (;!nu2.isFixedPointReached();) {
 
+            overapproximativeWinningStrategy.clear();
             distanceStorage.clear();
             distanceStorage.resize(livenessGuarantees.size());
             BF nextContraintsForGoals = mgr.constantTrue();
 
             for (unsigned int j=0;j<livenessGuarantees.size();j++) {
+
+                overapproximativeWinningStrategy.push_back(std::vector<BF>());
 
                  BF livetransitions = livenessGuarantees[j] & (nu2.getValue().SwapVariables(varVectorPre,varVectorPost));
 
@@ -198,6 +219,7 @@ protected:
                      // Iterate over the liveness assumptions. Store the positions that are found to be winning for *any*
                      // of them into the variable 'goodForAnyLivenessAssumption'.
                      BF goodForAnyLivenessAssumption = mu1.getValue();
+                     BF allFoundPaths = mgr.constantFalse();
                      for (unsigned int i=0;i<livenessAssumptions.size();i++) {
 
                          // Prepare the variable 'foundPaths' that contains the transitions that stay within the inner-most
@@ -218,10 +240,12 @@ protected:
 
                          // Update the set of positions that are winning for some liveness assumption
                          goodForAnyLivenessAssumption |= nu0.getValue();
+                         allFoundPaths |= foundPaths;
 
                      }
                      mu1.update(goodForAnyLivenessAssumption);
                      distanceStorage[j].push_back(mu1.getValue());
+                     overapproximativeWinningStrategy.back().push_back(allFoundPaths);
                  }
                  nextContraintsForGoals &= mu1.getValue();
              }
@@ -242,6 +266,43 @@ protected:
             std::cout << "Starting with an unrealizable specification --> Analyzing the assumptions does not make sense.\n";
             return;
         }
+
+        // Compute the set of reachable positions in any strategy that could be the outcome of a
+        // GR(1) synthesis process.
+        std::vector<BF> goalStrategies;
+        for (unsigned int i=0;i<livenessGuarantees.size();i++) {
+            BF casesCovered = mgr.constantFalse();
+            BF strategy = mgr.constantFalse();
+            for (auto it = overapproximativeWinningStrategy[i].begin();it!=overapproximativeWinningStrategy[i].end();it++) {
+                BF newCases = it->ExistAbstract(varCubePostOutput) & !casesCovered;
+                strategy |= newCases & *it;
+                casesCovered |= newCases;
+            }
+            goalStrategies.push_back(strategy);
+            BF_newDumpDot(*this,strategy,"PreInput PreOutput PostInput PostOutput","/tmp/generalStrategy.dot");
+        }
+
+        // Now compute the set of reachable positions
+        BF transitionPoints = initEnv & initSys;
+        BFFixedPoint mu(initEnv & initSys);
+        for (;!mu.isFixedPointReached();) {
+            BF all = mu.getValue();
+            for (unsigned int i=0;i<livenessGuarantees.size();i++) {
+                BFFixedPoint muInner(transitionPoints);
+                for (;!muInner.isFixedPointReached();) {
+                    BF nextTransitions = muInner.getValue() & goalStrategies[i];
+                    transitionPoints |= (nextTransitions & livenessGuarantees[i]).ExistAbstract(varCubePre).SwapVariables(varVectorPre,varVectorPost);
+                    muInner.update(muInner.getValue() | nextTransitions.ExistAbstract(varCubePre).SwapVariables(varVectorPre,varVectorPost));
+                }
+                all |= muInner.getValue();
+            }
+            mu.update(all);
+        }
+        BF reachablePositionsInMostGeneralStrategy = mu.getValue();
+        BF_newDumpDot(*this,mu.getValue(),NULL,"/tmp/testing.dot");
+        BF_newDumpDot(*this,transitionPoints,NULL,"/tmp/tps.dot");
+
+
 
         // Now go through the safety assumptions and compute the reactive distances.
         BF oldSafetyEnv = safetyEnv;
@@ -272,14 +333,16 @@ protected:
                         bool foundANeed = false;
                         for (unsigned int j=0;j<livenessGuarantees.size();j++) {
                             bool neededHere = false;
-                            if (referenceDistances[j].size()!=newDistances[j].size()) {
-                                neededHere = true;
-                                assert(referenceDistances[j].size()<newDistances[j].size());
-                            } else {
-                                for (unsigned k=0;k<referenceDistances[j].size();k++) {
-                                    if (referenceDistances[j][k]!=newDistances[j][k]) {
-                                        assert(newDistances[j][k]<=referenceDistances[j][k]);
-                                        neededHere = true;
+                            bool neededInMostGeneralStrategy = false;
+
+                            assert(referenceDistances[j].size()<=newDistances[j].size());
+                            for (unsigned k=0;k<newDistances[j].size();k++) {
+                                BF ref = referenceDistances[j][std::min(referenceDistances[j].size()-1,k)];
+                                if (ref!=newDistances[j][k]) {
+                                    assert(newDistances[j][k]<=ref);
+                                    neededHere = true;
+                                    if (!(ref & !newDistances[j][k] & reachablePositionsInMostGeneralStrategy).isFalse()) {
+                                        neededInMostGeneralStrategy = true;
                                     }
                                 }
                             }
@@ -291,6 +354,7 @@ protected:
                                     std::cout << ", ";
                                 }
                                 std::cout << j;
+                                if (!neededInMostGeneralStrategy) std::cout << " (but not in most general stategy)";
                             }
                         }
                         if (foundANeed) {
@@ -336,14 +400,16 @@ protected:
                     bool foundANeed = false;
                     for (unsigned int j=0;j<livenessGuarantees.size();j++) {
                         bool neededHere = false;
-                        if (referenceDistances[j].size()!=newDistances[j].size()) {
-                            assert(referenceDistances[j].size()<newDistances[j].size());
-                            neededHere = true;
-                        } else {
-                            for (unsigned k=0;k<referenceDistances[j].size();k++) {
-                                assert(newDistances[j][k]<=referenceDistances[j][k]);
-                                if (referenceDistances[j][k]!=newDistances[j][k]) {
-                                    neededHere = true;
+                        bool neededInMostGeneralStrategy = false;
+
+                        assert(referenceDistances[j].size()<=newDistances[j].size());
+                        for (unsigned k=0;k<newDistances[j].size();k++) {
+                            BF ref = referenceDistances[j][std::min(referenceDistances[j].size()-1,k)];
+                            if (ref!=newDistances[j][k]) {
+                                assert(newDistances[j][k]<=ref);
+                                neededHere = true;
+                                if (!(ref & !newDistances[j][k] & reachablePositionsInMostGeneralStrategy).isFalse()) {
+                                    neededInMostGeneralStrategy = true;
                                 }
                             }
                         }
@@ -355,6 +421,7 @@ protected:
                                 std::cout << ", ";
                             }
                             std::cout << j;
+                            if (!neededInMostGeneralStrategy) std::cout << " (but not in most general stategy)";
                         }
                     }
                     if (foundANeed) {
