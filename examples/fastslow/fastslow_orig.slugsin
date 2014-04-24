@@ -30,11 +30,11 @@ camera
 
 # ad hoc
 
-! person'
-| ! goal & & & & & ! stop_r1' ! stop_r2' ! stop_r4' ! stop_r5' ! stop_r7' ! stop_r8'
-& & & ! stop_r2' ! stop_r4' ! stop_r5' ! stop_r7'
-| start ! stop_r1'
-| r6 ! stop_r8'
+#! person'
+#| ! goal & & & & & ! stop_r1' ! stop_r2' ! stop_r4' ! stop_r5' ! stop_r7' ! stop_r8'
+#& & & ! stop_r2' ! stop_r4' ! stop_r5' ! stop_r7'
+#| start ! stop_r1'
+#| r6 ! stop_r8'
 
 
 # mutex on stop signs
