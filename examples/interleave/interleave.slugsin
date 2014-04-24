@@ -1,0 +1,121 @@
+#======================================
+# Interleaved turn-taking
+#======================================
+
+[INPUT]
+person
+stop_r1
+stop_r2
+stop_r4
+stop_r5
+stop_r7
+stop_r8
+
+[OUTPUT_B]
+wave
+camera
+
+[OUTPUT_A]
+r1
+r2
+r3
+r4
+r5
+r6
+r7
+r8
+start
+goal
+
+
+
+[ENV_TRANS]
+
+# ad hoc
+
+#! person'
+#| ! goal & & & & & ! stop_r1' ! stop_r2' ! stop_r4' ! stop_r5' ! stop_r7' ! stop_r8'
+#& & & ! stop_r1' ! stop_r4' ! stop_r5' ! stop_r7'
+#| start ! stop_r1'
+#| r6 ! stop_r8'
+
+
+# mutex on stop signs
+| ! stop_r1' & & & & ! stop_r2' ! stop_r4' ! stop_r5' ! stop_r7' ! stop_r8'
+| ! stop_r2' & & & & ! stop_r1' ! stop_r4' ! stop_r5' ! stop_r7' ! stop_r8'
+| ! stop_r4' & & & & ! stop_r1' ! stop_r2' ! stop_r5' ! stop_r7' ! stop_r8'
+| ! stop_r5' & & & & ! stop_r1' ! stop_r2' ! stop_r4' ! stop_r7' ! stop_r8'
+| ! stop_r7' & & & & ! stop_r1'  ! stop_r2' ! stop_r4' ! stop_r5' ! stop_r8'
+| ! stop_r8' & & & & ! stop_r1'  ! stop_r2' ! stop_r4' ! stop_r5' ! stop_r7'
+
+
+# you won't see a stop sign where you are
+| ! stop_r1' ! r1
+| ! stop_r2' ! r2
+| ! stop_r4' ! r4
+| ! stop_r5' ! r5
+| ! stop_r7' ! r7
+| ! stop_r8' ! r8
+
+[ENV_LIVENESS]
+
+
+[ENV_INIT]
+! person
+! stop_r1
+! stop_r2
+! stop_r4
+! stop_r5
+! stop_r7
+! stop_r8
+
+[SYS_TRANS]
+
+# topology
+| ! start | | start' r1' r2'
+| ! r1 | | | r1' start' r2' r3'
+| ! r2 | | | r2' start' r1' r3'
+| ! r3 | | | | r3' r1' r2' r4' r5'
+| ! r4 | | | r4' r3' r5' r6'
+| ! r5 | | | r5' r3' r4' r6'
+| ! r6 | | | | r6' r4' r5' r7' r8'
+| ! r7 | | | r7' r6' r8' goal'
+| ! r8 | | | r8' r6' r7' goal'
+| ! goal | | goal' r7' r8'
+
+# mutex
+| ! start' & & & & & & & & ! r1' ! r2' ! r3' ! r4' ! r5' ! r6' ! r7' ! r8' ! goal'
+| ! r1' & & & & & & & & ! start' ! r2' ! r3' ! r4' ! r5' ! r6' ! r7' ! r8' ! goal'
+| ! r2' & & & & & & & & ! start' ! r1' ! r3' ! r4' ! r5' ! r6' ! r7' ! r8' ! goal'
+| ! r3' & & & & & & & & ! start' ! r1' ! r2' ! r4' ! r5' ! r6' ! r7' ! r8' ! goal'
+| ! r4' & & & & & & & & ! start' ! r1' ! r2' ! r3' ! r5' ! r6' ! r7' ! r8' ! goal'
+| ! r5' & & & & & & & & ! start' ! r1' ! r2' ! r3' ! r4' ! r6' ! r7' ! r8' ! goal'
+| ! r6' & & & & & & & & ! start' ! r1' ! r2' ! r3' ! r4' ! r5' ! r7' ! r8' ! goal'
+| ! r7' & & & & & & & & ! start' ! r1' ! r2' ! r3' ! r4' ! r5' ! r6' ! r8' ! goal'
+| ! r8' & & & & & & & & ! start' ! r1' ! r2' ! r3' ! r4' ! r5' ! r6' ! r7' ! goal'
+| ! goal' & & & & & & & & ! start' ! r1' ! r2' ! r3' ! r4' ! r5' ! r6' ! r7' ! r8'
+
+# response to stop signs
+| ! stop_r1' ! r1'
+| ! stop_r2' ! r2'
+| ! stop_r4' ! r4'
+| ! stop_r5' ! r5'
+| ! stop_r7' ! r7'
+| ! stop_r8' ! r8'
+
+# response to person with camera
+| ! & person' ! r3 camera'
+| ! r3 ! camera'
+#| ! camera | r3' camera'
+
+# waving
+| ! r6 wave'
+
+[SYS_LIVENESS]
+| | | | | | & stop_r1 ! stop_r1' & stop_r2 ! stop_r2' & stop_r4 ! stop_r4' & stop_r5 ! stop_r5' & stop_r7 ! stop_r7' & stop_r8 ! stop_r8' goal'
+
+[SYS_INIT]
+& & & & & & & & & start ! r1 ! r2 ! r3 ! r4 ! r5 ! r6 ! r7 ! r8 ! goal
+! camera
+! wave
+

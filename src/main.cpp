@@ -45,6 +45,7 @@
 #include "extensionFixedPointRecycling.hpp"
 #include "extensionInteractiveStrategy.hpp"
 #include "extensionIROSfastslow.hpp"
+#include "extensionInterleave.hpp"
 #include "extensionAnalyzeInitialPositions.hpp"
 #include "extensionAnalyzeAssumptions.hpp"
 #include "extensionComputeInterestingRunOfTheSystem.hpp"
@@ -66,6 +67,7 @@ const char *commandLineArguments[] = {
     "--fixedPointRecycling","Modifies the realizability checking algorithm to recycle previous innermost fixed points. Realizability checking should typically become faster this way.",
     "--interactiveStrategy","Opens an interactive shell after realizability checking to allow examining the properties of the generated strategy.",
     "--IROSfastslow","Uses fastslow semantics from IROS 2012 paper. Requires different input file format.",
+    "--Interleave","Interleaves the turn-taking. Requires different input file format.",
     "--analyzeInitialPositions","Performs an analysis of the set of starting positions in the realizability game.",
     "--analyzeAssumptions","Checks which assumptions are actually needed and which assumptions are helpful (i.e., they sometimes reduce reactive distances to the goal).",
     "--analyzeSafetyLivenessInteraction","Analyzes how safety and liveness properties interact in the specification.",
@@ -119,6 +121,10 @@ OptionCombination optionCombinations[] = {
     OptionCombination("--IROSfastslow --onlyRealizability",XIROSFS<GR1Context>::makeInstance),
     OptionCombination("--IROSfastslow --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<XIROSFS<GR1Context> >,false>::makeInstance),
     OptionCombination("--IROSfastslow --onlyRealizability --sysInitRoboticsSemantics",XRoboticsSemantics<XIROSFS<GR1Context> >::makeInstance),
+    OptionCombination("--Interleave",XExtractExplicitStrategy<XInterleave<GR1Context>,false>::makeInstance),
+    OptionCombination("--Interleave --onlyRealizability",XInterleave<GR1Context>::makeInstance),
+    OptionCombination("--Interleave --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<XInterleave<GR1Context> >,false>::makeInstance),
+    OptionCombination("--Interleave --onlyRealizability --sysInitRoboticsSemantics",XRoboticsSemantics<XInterleave<GR1Context> >::makeInstance),
     OptionCombination("--analyzeInitialPositions", XAnalyzeInitialPositions<GR1Context>::makeInstance),
     OptionCombination("--analyzeSafetyLivenessInteraction", XAnalyzeSafetyLivenessInteraction<GR1Context>::makeInstance),
     OptionCombination("--analyzeAssumptions", XAnalyzeAssumptions<GR1Context>::makeInstance),
