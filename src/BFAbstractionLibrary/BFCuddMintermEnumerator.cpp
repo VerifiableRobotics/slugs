@@ -1,5 +1,5 @@
 #include "BF.h"
-#include <tr1/unordered_map>
+#include <unordered_map>
 #include <queue>
 
 BFMintermEnumerator::BFMintermEnumerator(BF bf, BF careSet, std::vector<BF> const &_primaryVariables, std::vector<BF> const &_secondaryVariables) :
@@ -60,7 +60,7 @@ void BFMintermEnumerator::getNextMinterm(std::vector<int> &resultStorageSpace) {
     DdNode *root = remainingMinterms.getCuddNode();
 
     //! Find next minterm
-    std::tr1::unordered_map<DdNode*,std::pair<int,DdNode *> > bestPredecessor;
+    std::unordered_map<DdNode*,std::pair<int,DdNode *> > bestPredecessor;
     std::priority_queue<NodeOrderPair> todo;
     todo.push(NodeOrderPair(ddMgr,root));
     bestPredecessor[root] = std::pair<int,DdNode*>(0,(DdNode*)((size_t)-1));
@@ -76,7 +76,7 @@ void BFMintermEnumerator::getNextMinterm(std::vector<int> &resultStorageSpace) {
             if (current.getNode() == Cudd_ReadOne(ddMgr)) {
 
                 // Ok, let's compute a cube!
-                std::tr1::unordered_set<int> cube;
+                std::unordered_set<int> cube;
                 DdNode *currentSucc = current.getNode();
                 std::pair<int,DdNode*> currentPred = bestPredecessor[current.getNode()];
                 while (currentPred.second!=(DdNode*)((size_t)-1)) {

@@ -5,14 +5,14 @@
 #error This header file should be included indirectly by BF.h
 #endif
 
-#include <tr1/unordered_set>
+#include <unordered_set>
 
 class BFMintermEnumerator {
 private:
     std::vector<BF> const &primaryVariables;
     std::vector<BF> const &secondaryVariables;
     BF remainingMinterms;
-    std::tr1::unordered_set<int> primaryVarIndices;
+    std::unordered_set<int> primaryVarIndices;
 public:
     BFMintermEnumerator(BF bf, BF careSet, std::vector<BF> const &_primaryVariables, std::vector<BF> const &_secondaryVariables);
     bool hasNextMinterm();
