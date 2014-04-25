@@ -12,7 +12,6 @@
 #define BFCUDDINLINES_H_
 
 #include <cuddInt.h>
-#include <tr1/functional_hash.h>
 
 inline BFBdd BFBddManager::constantTrue() const {
 	return BFBdd(this, Cudd_ReadOne(mgr));
@@ -85,15 +84,5 @@ inline BFBdd BFBddManager::multiOr(const std::vector<BFBdd> &parts) const {
 	return BFBdd(this, soFar);
 }
 
-// Hash function
-namespace std {
-    namespace tr1 {
-        template<> struct hash<BFBdd> {
-            std::size_t operator()(const BFBdd &b) const {
-                return b.getHashCode();
-            }
-        };
-    }
-}
 
 #endif /* BFCUDDINLINES_H_ */
