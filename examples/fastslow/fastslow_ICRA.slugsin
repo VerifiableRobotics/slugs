@@ -42,11 +42,11 @@ camera
 
 # ad hoc
 
-| c_start' ! person'
-| ! goal & & & & & ! stop_r1' ! stop_r2' ! stop_r4' ! stop_r5' ! stop_r7' ! stop_r8'
-& & & ! stop_r2' ! stop_r4' ! stop_r5' ! stop_r7'
-| c_start ! stop_r1'
-| c_r6 ! stop_r8'
+#| c_start' ! person'
+#| ! goal & & & & & ! stop_r1' ! stop_r2' ! stop_r4' ! stop_r5' ! stop_r7' ! stop_r8'
+#& & & ! stop_r2' ! stop_r4' ! stop_r5' ! stop_r7'
+#| c_start ! stop_r1'
+#| c_r6 ! stop_r8'
 
 
 # reasonable completion
@@ -121,6 +121,13 @@ camera
 | ! stop_r7' & & & & ! stop_r1'  ! stop_r2' ! stop_r4' ! stop_r5' ! stop_r8'
 | ! stop_r8' & & & & ! stop_r1'  ! stop_r2' ! stop_r4' ! stop_r5' ! stop_r7'
 
+# you won't see a stop sign where you are
+| ! stop_r1' ! c_r1'
+| ! stop_r2' ! c_r2'
+| ! stop_r4' ! c_r4'
+| ! stop_r5' ! c_r5'
+| ! stop_r7' ! c_r7'
+| ! stop_r8' ! c_r8'
 
 [ENV_LIVENESS]
 | | | | | | | | | | & start c_start' & start ! start' | & r1 c_r1' & r1 ! r1' | & r2 c_r2' & r2 ! r2' | & r3 c_r3' & r3 ! r3' | & r4 c_r4' & r4 ! r4' | & r5 c_r5' & r5 ! r5' | & r6 c_r6' & r6 ! r6' | & r7 c_r7' & r7 ! r7' | & r8 c_r8' & r8 ! r8' | & goal c_goal' & goal ! goal'
@@ -166,12 +173,12 @@ camera
 | ! goal' & & & & & & & & ! start' ! r1' ! r2' ! r3' ! r4' ! r5' ! r6' ! r7' ! r8'
 
 # response to stop signs
-| ! stop_r1' ! r1'
-| ! stop_r2' ! r2'
-| ! stop_r4' ! r4'
-| ! stop_r5' ! r5'
-| ! stop_r7' ! r7'
-| ! stop_r8' ! r8'
+| ! stop_r1' ! c_r1'
+| ! stop_r2' ! c_r2'
+| ! stop_r4' ! c_r4'
+| ! stop_r5' ! c_r5'
+| ! stop_r7' ! c_r7'
+| ! stop_r8' ! c_r8'
 
 # response to person with camera
 | ! & person' ! c_r3 camera'

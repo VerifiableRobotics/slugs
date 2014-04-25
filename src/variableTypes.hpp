@@ -67,6 +67,9 @@ typedef enum {
 
     // Variables used in "extensionIROSfastslow.hpp"
     PreOutputFast, PreOutputSlow, PostOutputFast, PostOutputSlow,
+    
+    // Variables used in "extensionInterleave.hpp"
+    PreOutputBefore, PreOutputAfter, PostOutputBefore, PostOutputAfter,
 
     // Dummy parameters used for internal reasons. Must be last in the enum
     NoneVariableType
@@ -84,8 +87,12 @@ REGISTER_VARIABLE_TYPE_STRING(PreOutputFast,"PreInputFast")
 REGISTER_VARIABLE_TYPE_STRING(PreOutputSlow,"PreInputSlow")
 REGISTER_VARIABLE_TYPE_STRING(PostOutputFast,"PostInputFast")
 REGISTER_VARIABLE_TYPE_STRING(PostOutputSlow,"PostInputSlow")
+REGISTER_VARIABLE_TYPE_STRING(PreOutputBefore,"PreInputBefore")
+REGISTER_VARIABLE_TYPE_STRING(PreOutputAfter,"PreInputAfter")
+REGISTER_VARIABLE_TYPE_STRING(PostOutputBefore,"PostInputBefore")
+REGISTER_VARIABLE_TYPE_STRING(PostOutputAfter,"PostInputAfter")
 
-//! Variable hierarchy. Allows to include subgrouped variablen when computing variable
+//! Variable hierarchy. Allows to include subgrouped variables when computing variable
 //! vectors and cubes
 REGISTER_VARIABLE_TYPE_HIERARCHY(Pre,NoneVariableType)
 REGISTER_VARIABLE_TYPE_HIERARCHY(Post,NoneVariableType)
@@ -97,6 +104,10 @@ REGISTER_VARIABLE_TYPE_HIERARCHY(PreOutputFast,PreOutput)
 REGISTER_VARIABLE_TYPE_HIERARCHY(PreOutputSlow,PreOutput)
 REGISTER_VARIABLE_TYPE_HIERARCHY(PostOutputFast,PostOutput)
 REGISTER_VARIABLE_TYPE_HIERARCHY(PostOutputSlow,PostOutput)
+REGISTER_VARIABLE_TYPE_HIERARCHY(PreOutputBefore,PreOutput)
+REGISTER_VARIABLE_TYPE_HIERARCHY(PreOutputAfter,PreOutput)
+REGISTER_VARIABLE_TYPE_HIERARCHY(PostOutputBefore,PostOutput)
+REGISTER_VARIABLE_TYPE_HIERARCHY(PostOutputAfter,PostOutput)
 
 
 
