@@ -1,0 +1,22 @@
+[INPUT]
+r
+
+[OUTPUT]
+counter:0...3
+x:0...15
+y:0...15
+
+[ENV_TRANS]
+(! r | ! r')
+
+[SYS_TRANS]
+x'<=x+1
+y'<=y+1
+x<=x'+1
+y<=y'+1
+r -> counter'=counter+1
+(! r) -> counter'=counter
+
+[SYS_INIT]
+# TODO: Why doesn't it work without?
+counter=0

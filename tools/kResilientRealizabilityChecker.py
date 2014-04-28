@@ -55,25 +55,31 @@ if len(sys.argv)>2:
         sys.exit(1)
 
 
-# Read Spec file
+# Read Spec file -- Treat variable limit lines as strict
 specFile = open(specFile,"r")
 mode = ""
 lines = {"[ENV_TRANS]":[],"[ENV_INIT]":[],"[INPUT]":[],"[OUTPUT]":[],"[SYS_TRANS]":[],"[SYS_INIT]":[],"[ENV_LIVENESS]":[],"[SYS_LIVENESS]":[] }
+essentialEnvTrans = []
+nextIsVariableLimits = False
 
 for line in specFile.readlines():
     line = line.strip()
     if line == "":
         pass
     elif line.startswith("#"):
-        pass
+        if line.startswith("## Variable limits"):
+            nextIsVariableLimits = True
     elif line.startswith("["):
         mode = line
         # if not mode in lines:
         #    lines[mode] = []
     else:
-        lines[mode].append(line)
+        if nextIsVariableLimits and mode=="[ENV_TRANS]":
+            essentialEnvTrans.append(line)
+        else:
+            lines[mode].append(line)
+        nextIsVariableLimits = False
 specFile.close()
-print lines
 
 # ==================================
 # Timing
@@ -107,7 +113,7 @@ def DebugKeyboard(banner="Debugger started (CTRL-D to quit)"):
 basepath =  os.path.realpath(__file__)
 basepath = basepath[0:basepath.rfind("/")]
 basepath = basepath + "/../src/slugs"
-print basepath
+print >>sys.stderr,"Base path: "+basepath
 
 
 # ==================================
@@ -130,10 +136,10 @@ def getFrontierSetInLatticeRecurse(oracleFunction,startingPoint,resultStoragePla
 
     # Dominated?
     toBeChecked = True
-    print "Working on: "+str(startingPoint)
+    print >>sys.stderr, "Working on: "+str(startingPoint)
     for a in resultStoragePlace:
         if startingPoint.isLeqThan(a):
-            print "Found "+str(startingPoint)+" to be small than "+str(a)
+            print >>sys.stderr,"Found "+str(startingPoint)+" to be small than "+str(a)
             toBeChecked = False
     # Known already?
     for a in solutionsKnownAlready:
@@ -147,10 +153,10 @@ def getFrontierSetInLatticeRecurse(oracleFunction,startingPoint,resultStoragePla
     # Compute successors and recurse!
     foundGreaterElement = False
     for a in startingPoint.getSuccessors():
-        print "Recursing from "+str(startingPoint)+" into "+str(a)
+        print >>sys.stderr,"Recursing from "+str(startingPoint)+" into "+str(a)
         newElementFound = getFrontierSetInLatticeRecurse(oracleFunction,a,resultStoragePlace,cachedOracleFalseElements,doneStoragePlace,solutionsKnownAlready)
         foundGreaterElement = foundGreaterElement or newElementFound 
-    print "Return from recursion: "+str(startingPoint)
+    print >>sys.stderr,"Return from recursion: "+str(startingPoint)
     # Store this in if we did not find a greater element and it is not dominated by something that we have already
     if not foundGreaterElement: 
         for a in resultStoragePlace:
@@ -176,7 +182,7 @@ inftyRobustSolutions = []
 def checkInftyRobustImplementability(whichAssumptionsAreRobustified):
     global sumTimeSlugs
     global nofSlugsCalls
-    print "checkInftyRobustImplementability: "+str(whichAssumptionsAreRobustified)
+    print >>sys.stderr,"checkInftyRobustImplementability: "+str(whichAssumptionsAreRobustified)
     tempdir = tempfile.mkdtemp("slugsRobust")
     tempfilename = tempdir+"/spec.txt"
     tempfileData = open(tempfilename,"w")
@@ -186,6 +192,8 @@ def checkInftyRobustImplementability(whichAssumptionsAreRobustified):
             tempfileData.write(a+"\n")
         tempfileData.write("\n")
     tempfileData.write("[ENV_TRANS]\n")
+    for line in essentialEnvTrans:
+        tempfileData.write(line+"\n")
     envTrans = lines["[ENV_TRANS]"]
     sysPrefix = ""
     for i in xrange(0,len(envTrans)):
@@ -210,7 +218,7 @@ def checkInftyRobustImplementability(whichAssumptionsAreRobustified):
     output = process.stderr
     realizable = None
     for line in output:
-        print "l: "+line.strip()
+        print >>sys.stderr,"l: "+line.strip()
         line = line.strip()
         if line == "RESULT: Specification is realizable.":
             realizable = True
@@ -222,7 +230,7 @@ def checkInftyRobustImplementability(whichAssumptionsAreRobustified):
         sys.exit(1)
     sumTimeSlugs += time.time()-startTime
     nofSlugsCalls += 1
-    print "Slugs Computation time: "+str(time.time()-startTime)
+    print >>sys.stderr,"Slugs Computation time: "+str(time.time()-startTime)
 
     # Clean it up!
     os.unlink(tempfilename)
@@ -314,6 +322,8 @@ def writeMixedRobustSpecification(whichAssumptionsAreRobustified,filename):
 
     # ENV_TRANS (basic cases & preparing data structures)
     tempfileData.write("\n[ENV_TRANS]\n")
+    for line in essentialEnvTrans:
+        tempfileData.write(line+"\n")
     envTrans = lines["[ENV_TRANS]"]
     sysPrefix = ""
     casesMasked = []
@@ -360,10 +370,8 @@ def writeMixedRobustSpecification(whichAssumptionsAreRobustified,filename):
                 if pos<0:
                     return "1"
                 if (reference & (1 << pos))>0:
-                    # print "Roomba!"
                     return "| ! _ResilienceCounter_"+str(pos)+"' "+recurseSmaller(reference,pos-1)
                 else:
-                    # print "Aaah!"
                     return "& ! _ResilienceCounter_"+str(pos)+"' "+recurseSmaller(reference,pos-1)
             selectorPrefix = "| "+selectorPrefix+" "+recurseSmaller(toValue,nofCounterBits-1)
 
@@ -388,7 +396,7 @@ def writeMixedRobustSpecification(whichAssumptionsAreRobustified,filename):
 def checkMixedRobustImplementability(whichAssumptionsAreRobustified):
     global sumTimeSlugs
     global nofSlugsCalls
-    print "Oracle Call: " + str(whichAssumptionsAreRobustified)
+    print >>sys.stderr,"Oracle Call: " + str(whichAssumptionsAreRobustified)
     tempdir = tempfile.mkdtemp("slugsRobust")
     tempfilename = tempdir+"/spec.txt"
 
@@ -402,7 +410,7 @@ def checkMixedRobustImplementability(whichAssumptionsAreRobustified):
     output = process.stderr
     realizable = None
     for line in output:
-        print "l: "+line.strip()
+        print >>sys.stderr,"l: "+line.strip()
         line = line.strip()
         if line == "RESULT: Specification is realizable.":
             realizable = True
@@ -410,7 +418,7 @@ def checkMixedRobustImplementability(whichAssumptionsAreRobustified):
             realizable = False
     sumTimeSlugs += time.time()-startTime
     nofSlugsCalls += 1
-    print "Slugs Computation time: "+str(time.time()-startTime)
+    print >>sys.stderr,"Slugs Computation time: "+str(time.time()-startTime)
 
     # Debug check
     # if str(whichAssumptionsAreRobustified)=="(0, 0, 1, 3)":
@@ -462,7 +470,7 @@ def findMixedRobustSolutions(inftyRobustSolutions):
                 newVec = list(self.vec)
                 newVec[len(newVec)-1] += 1
                 results.append(MixedLatticeElement(self.setOfInftyResilientSolutions,newVec))
-            print "Super-Elements of "+str(self.vec)+": "+str(results)
+            print >>sys.stderr,"Super-Elements of "+str(self.vec)+": "+str(results)
             return results
         def isLeqThan(self,other):
             result = True
@@ -482,28 +490,42 @@ def findMixedRobustSolutions(inftyRobustSolutions):
 #======================================
 # Main part of the program
 #======================================
-print "========================================="
-print "Analysing cases for \\infty-resilience.\n"
-print "========================================="
+print >>sys.stderr,"========================================="
+print >>sys.stderr,"Assumptions considered"
+print >>sys.stderr,"========================================="
 for a in lines["[ENV_TRANS]"]:
-    print " - "+a[0:50]
+    print >>sys.stderr," - "+a[0:50]
 
 inftyRobustSolutions = findInftyRobustSolutions()
 if len(inftyRobustSolutions)==0:
     print "Result: Our specification is absolutely unrealizable, so the script stops here."
     sys.exit(1)
-print "========================================="
-print "Result: "+str( inftyRobustSolutions )
-print "========================================="
-print "Analysing cases for Mixed resilience.\n"
-print "========================================="
+print >>sys.stderr,"========================================="
+print >>sys.stderr,"Result: "+str( inftyRobustSolutions )
+print >>sys.stderr,"========================================="
+print >>sys.stderr,"Analysing cases for Mixed resilience.\n"
+print >>sys.stderr,"========================================="
 mixedRobustSolutions = findMixedRobustSolutions(inftyRobustSolutions)
-print "========================================="
-print "Result: "+str( mixedRobustSolutions )
+print >>sys.stderr,"========================================="
+print "Error-resilience levels achievable:"
+for a in mixedRobustSolutions:
+    print "-",
+    for i,x in enumerate(a.vec):
+        if i==len(a.vec)-1:
+            print "k="+str(x)
+        else:
+            if x==0:
+                print "none,",
+            elif x==1:
+                print "some,",
+            elif x==2:
+                print "any, ",
+            else:
+                print "(ERROR: Cannot interpret resilience level)"
 
-print "# Slugs calls: "+str(nofSlugsCalls)
-print "Total time spent with Slugs (seconds): "+str(sumTimeSlugs)
-print "Average Slugs time (seconds): "+str(sumTimeSlugs/nofSlugsCalls)
+print >>sys.stderr,"# Slugs calls: "+str(nofSlugsCalls)
+print "\nTotal time spent with the Slugs GR(1) synthesis tool (seconds): "+str(sumTimeSlugs)
+print >>sys.stderr,"Average Slugs time (seconds): "+str(sumTimeSlugs/nofSlugsCalls)
 
 #======================================
 # Write optimal specs

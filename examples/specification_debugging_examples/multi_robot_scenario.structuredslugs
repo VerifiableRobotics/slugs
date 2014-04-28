@@ -1,0 +1,56 @@
+[INPUT]
+srx:0...7
+sry:0...4
+
+[OUTPUT]
+mrx:0...7
+mry:0...4
+
+[SYS_TRANS]
+mrx+1>=mrx'
+mrx'+1>=mrx
+mry+1>=mry'
+mry'+1>=mry
+
+# Master must not try to enforce a collision
+mrx'!=srx' | mry'!=sry'
+
+## no Collisions with the obstacles (part 1)
+mrx'!=4 | mry'<4
+
+## no Collisions with the obstacles (part 2)
+mrx'>3 | mry'!=1
+
+[ENV_TRANS]
+srx+1>=srx'
+srx'+1>=srx
+sry+1>=sry'
+sry'+1>=sry
+
+## Slave must not try to enforce a collision
+mrx!=srx' | mry!=sry'
+
+## no Collisions with the obstacles (part 1)
+srx'!=4 | sry'<4
+
+## no Collisions with the obstacles (part 2)
+srx'>3 | sry'!=1
+
+[SYS_LIVENESS]
+mrx=0 & mry=4
+mrx=7 & mry=4
+
+[ENV_LIVENESS]
+# Add "| (srx<5 & sry=0)" in order to prevent the system from cornering the slave robot
+srx'!=srx | sry'!=sry | srx>mrx+1 | mrx>srx+1 | sry>mry+1 | mry>sry+1 
+
+[SYS_INIT]
+mrx = 0
+mry = 4
+
+[ENV_INIT]
+srx = 7
+sry = 0
+
+[ENV_TRANS]
+

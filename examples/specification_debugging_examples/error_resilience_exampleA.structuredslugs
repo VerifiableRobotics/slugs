@@ -1,0 +1,43 @@
+[INPUT]
+x:0...9
+y:0...5
+moveit
+
+[OUTPUT]
+ready
+left
+right
+up
+down
+inmove
+
+[ENV_INIT]
+x = 9
+y = 5
+! moveit
+
+[SYS_INIT]
+! inmove
+! ready
+! left
+! right
+! up
+! down
+
+[ENV_TRANS]
+x' <= x+1 & x <= x'+1 & y' <= y+1 & y <= y'+1
+((down & y>0) -> (y'+1 = y)) & ((up & y<5) -> (y' = y+1)) & (down | up | y'=y)
+((left & x>0) -> (x'+1 = x)) & ((right & x<9) -> (x' = x+1)) & (left | right | x'=x)
+ready | !moveit
+
+[SYS_TRANS]
+| ! up' ! down'
+| ! left' ! right'
+moveit -> inmove'
+inmove -> (inmove' | x' = 2 & y' = 3)
+x = 0 -> y<=1
+y = 5 -> x>=5
+x = 4 -> y<=1
+
+[SYS_LIVENESS]
+!inmove | x' = 2 & y' = 3

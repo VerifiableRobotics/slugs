@@ -11,7 +11,9 @@ import subprocess, md5, time, cgi
 # =====================================================
 slugsExecutableAndBasicOptions = sys.argv[0][0:sys.argv[0].rfind("createSpecificationReport.py")]+"../src/slugs"
 slugsCompilerAndBasicOptions = sys.argv[0][0:sys.argv[0].rfind("createSpecificationReport.py")]+"StructuredSlugsParser/compiler.py --thorougly"
+kResilienceChecker = sys.argv[0][0:sys.argv[0].rfind("createSpecificationReport.py")]+"kResilientRealizabilityChecker.py"
 uniformBoundedLengthCounterStrategyTool = sys.argv[0][0:sys.argv[0].rfind("createSpecificationReport.py")]+"computeBoundedLengthUniformSafetyCounterStrategy.py"
+analyzeStuckAtConstantTool = sys.argv[0][0:sys.argv[0].rfind("createSpecificationReport.py")]+"analyzeStuckAtConstant.py"
 
 slugsCompiledFile = "/tmp/check_"+str(os.getpid())+".slugsin"
 slugsModifiedFile = "/tmp/check_"+str(os.getpid())+".mod.slugsin"
@@ -35,7 +37,11 @@ def readSlugsFile(slugsFile):
             # if not mode in lines:
             #    lines[mode] = []
         else:
-            lines[mode].append(line)
+            if mode=="" and line.startswith("#"):
+                # Initial comments
+                pass
+            else:
+                lines[mode].append(line)
     specFile.close()
     return lines
 
@@ -280,6 +286,43 @@ def createSpecificationReport(slugsFile):
         retValue = os.system(command)
         if (retValue!=0):
             print >>sys.stderr, uniformBoundedLengthCounterStrategyTool+" failed!"
+            raise Exception("Could not build report")
+        with open(slugsReturnFile,"r") as f:
+            for line in f.readlines():
+                print cgi.escape(line),
+        print "</pre>"
+        print "</details>"
+
+    # =====================================================
+    # Error resilience analysis
+    # =====================================================
+    print "<details>"
+    print "<summary>8. The Effect of Stuck-at-0/1 Faults</summary>"
+    print "<pre class=\"details\">"
+    command = analyzeStuckAtConstantTool+" "+slugsCompiledFile+" > "+slugsReturnFile+" 2> "+slugsErrorFile
+    print >>sys.stderr, "Executing: "+command
+    retValue = os.system(command)
+    if (retValue!=0):
+        print >>sys.stderr, "Slugs/analyzeStuckAtConstantTool failed!"
+        raise Exception("Could not build report")
+    with open(slugsReturnFile,"r") as f:
+        for line in f.readlines():
+            print cgi.escape(line),
+    print "</pre>"
+    print "</details>"
+    
+    # =====================================================
+    # Error resilience analysis
+    # =====================================================
+    if realizable:
+        print "<details>"
+        print "<summary>9. Achievable Error-resilience levels</summary>"
+        print "<pre class=\"details\">"
+        command = kResilienceChecker+" "+slugsCompiledFile+" > "+slugsReturnFile+" 2> "+slugsErrorFile
+        print >>sys.stderr, "Executing: "+command
+        retValue = os.system(command)
+        if (retValue!=0):
+            print >>sys.stderr, "Slugs/kRelienceChecker failed!"
             raise Exception("Could not build report")
         with open(slugsReturnFile,"r") as f:
             for line in f.readlines():

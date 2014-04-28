@@ -479,7 +479,12 @@ def performConversion(inputFile,thoroughly):
             # if not mode in lines:
             #    lines[mode] = []
         else:
-            lines[mode].append(line)
+            if mode=="" and line.startswith("#"):
+                # Initial comments
+                pass
+            else:
+                lines[mode].append(line)
+
     specFile.close()
 
     # ---------------------------------------    
@@ -559,7 +564,7 @@ def performConversion(inputFile,thoroughly):
                             tokens = ["| !",translatedNames[variable][i]+"'"]+tokens
                         else:
                             tokens = ["& !",translatedNames[variable][i]+"'"]+tokens
-                    lines["["+propertyDestination+"_TRANS]"].append("##  Variable limits: "+str(minValue)+"<="+variable+"'<="+str(maxValue))
+                    lines["["+propertyDestination+"_TRANS]"].append("## Variable limits: "+str(minValue)+"<="+variable+"'<="+str(maxValue))
                     lines["["+propertyDestination+"_TRANS]"].append(" ".join(tokens))
 
             else:

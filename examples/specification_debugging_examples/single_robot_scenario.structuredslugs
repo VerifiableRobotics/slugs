@@ -1,0 +1,54 @@
+[INPUT]
+door1
+door2
+
+[OUTPUT]
+mrx:0...7
+mry:0...5
+
+[SYS_TRANS]
+mrx+1>=mrx'
+mrx'+1>=mrx
+mry+1>=mry'
+mry'+1>=mry
+
+## no Collisions with the obstacles (part 1)
+mrx'!=1 | mry'>4 | mry'<2
+
+## no Collisions with the obstacles (part 2)
+mry'!=4 | mrx'<3 | mrx'>6
+
+## no Collisions with the obstacles (part 3)
+mry'!=3 | mrx'<6 | mrx'>6
+
+## no Collisions with the obstacles (part 4)
+mry'!=2 | mrx'<3 | mrx'>3
+
+## no Collisions with the obstacles (part 4)
+mry'!=1 | mrx'<3 | mrx'>5
+
+## no Collisions with the door 1
+mry'!=5 | mrx'!=3 | door1'
+
+## no Collisions with the door 2
+mry'!=0 | mrx'!=4 | door2'
+
+[ENV_TRANS]
+
+[SYS_LIVENESS]
+mrx'=0 & mry'=0
+mrx'=7 & mry'=0
+
+[ENV_LIVENESS]
+## Door1 is infinitely often open
+door1'
+
+## Door2 is infinitely often open
+door2'
+
+[SYS_INIT]
+mrx = 0
+mry = 0
+
+[ENV_INIT]
+
