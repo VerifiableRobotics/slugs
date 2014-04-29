@@ -310,13 +310,35 @@ def createSpecificationReport(slugsFile):
             print cgi.escape(line),
     print "</pre>"
     print "</details>"
-    
-    # =====================================================
-    # Error resilience analysis
-    # =====================================================
+
+    # ==============================================================================
+    # From here onwards: analyses that only make sense for realizable specifications
+    # ==============================================================================
     if realizable:
+
+        # =====================================================
+        # Input/Output Signal Order analysis
+        # =====================================================
         print "<details>"
-        print "<summary>9. Achievable Error-resilience levels</summary>"
+        print "<summary>9. Input/Output Signal Analysis</summary>"
+        print "<pre class=\"details\">"
+        command = slugsExecutableAndBasicOptions + " --analyzeInterleaving "+slugsCompiledFile+" > "+slugsReturnFile+" 2> "+slugsErrorFile
+        print >>sys.stderr, "Executing: "+command
+        retValue = os.system(command)
+        if (retValue!=0):
+            print >>sys.stderr, "Slugs/analyzeStuckAtConstantTool failed!"
+            raise Exception("Could not build report")
+        with open(slugsReturnFile,"r") as f:
+            for line in f.readlines():
+                print cgi.escape(line),
+        print "</pre>"
+        print "</details>"    
+
+        # =====================================================
+        # Error resilience analysis
+        # =====================================================
+        print "<details>"
+        print "<summary>10. Achievable Error-resilience levels</summary>"
         print "<pre class=\"details\">"
         command = kResilienceChecker+" "+slugsCompiledFile+" > "+slugsReturnFile+" 2> "+slugsErrorFile
         print >>sys.stderr, "Executing: "+command

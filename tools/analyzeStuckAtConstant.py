@@ -189,9 +189,12 @@ def analyzeStuckAtConstant(slugsFile):
                 print "Fixing the value of the "+text+" "+variable+" to ",
                 for i,x in enumerate(nonDifferenceCausingValues):
                     if i>0:
-                        sys.stdout.write(", ")
+                        if len(nonDifferenceCausingValues)<=2:
+                            sys.stdout.write(" ")
+                        else:
+                            sys.stdout.write(", ")
                     if (i==len(nonDifferenceCausingValues)-1) and i>0:
-                        sys.stdout.write("and ")
+                        sys.stdout.write("or ")
                     sys.stdout.write(x)
                 print " does not change this fact."
 
