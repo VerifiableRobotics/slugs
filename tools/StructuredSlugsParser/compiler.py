@@ -437,6 +437,7 @@ def translateToSlugsFormat(tree):
 # applying the operations from right to left
 # ============================================
 def isValidRecursiveSlugsProperty(tokens):
+    tokens = [a for a in tokens if a!=""]
     if "$" in tokens:
         return (True,"Found a '$' in the property.")
     stacksize = 0

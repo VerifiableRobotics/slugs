@@ -299,7 +299,7 @@ def createSpecificationReport(slugsFile):
     print "<details>"
     print "<summary>8. The Effect of Stuck-at-0/1 Faults</summary>"
     print "<pre class=\"details\">"
-    command = analyzeStuckAtConstantTool+" "+slugsCompiledFile+" > "+slugsReturnFile+" 2> "+slugsErrorFile
+    command = analyzeStuckAtConstantTool+" "+slugsFile+" > "+slugsReturnFile+" 2> "+slugsErrorFile
     print >>sys.stderr, "Executing: "+command
     retValue = os.system(command)
     if (retValue!=0):
