@@ -44,7 +44,7 @@ protected:
 
         // Obtain column sizes
         std::vector<unsigned int> columnSizes;
-        unsigned int nofLines = 0;
+        size_t nofLines = 0;
         for (auto it = table.begin();it!=table.end();it++) {
             size_t maximum = 0;
             nofLines = std::max(nofLines,it->size());

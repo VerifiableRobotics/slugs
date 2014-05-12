@@ -334,7 +334,7 @@ public:
         // Print table for the run
         //===========================
         // Compute column lengths
-        std::vector<unsigned int> maxLengths;
+        std::vector<size_t> maxLengths;
         maxLengths.push_back(8);
         maxLengths.push_back(1);
         maxLengths.push_back(8);

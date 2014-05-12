@@ -403,7 +403,7 @@ protected:
                         bool neededInMostGeneralStrategy = false;
 
                         assert(referenceDistances[j].size()<=newDistances[j].size());
-                        for (unsigned k=0;k<newDistances[j].size();k++) {
+                        for (size_t k=0;k<newDistances[j].size();k++) {
                             BF ref = referenceDistances[j][std::min(referenceDistances[j].size()-1,k)];
                             if (ref!=newDistances[j][k]) {
                                 assert(newDistances[j][k]<=ref);
