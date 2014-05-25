@@ -6,9 +6,9 @@ QMAKE_CFLAGS_RELEASE += -g \
     $$BDDFLAGS
 QMAKE_CXXFLAGS_RELEASE += -g -std=gnu++0x \
     $$BDDFLAGS
-QMAKE_CFLAGS_DEBUG += -g -Wextra \
+QMAKE_CFLAGS_DEBUG += -g -Wall -Wextra \
     $$BDDFLAGS
-QMAKE_CXXFLAGS_DEBUG += -g -Wextra -std=gnu++0x \
+QMAKE_CXXFLAGS_DEBUG += -g -std=gnu++0x -Wall -Wextra \
     $$BDDFLAGS
 
 TEMPLATE = app \
@@ -25,7 +25,8 @@ HEADERS += BFAbstractionLibrary/BF.h BFAbstractionLibrary/BFCudd.h gr1context.hp
     extensionComputeInterestingRunOfTheSystem.hpp \
     extensionAnalyzeSafetyLivenessInteraction.hpp \
     extensionAbstractWinningTraceGenerator.hpp \
-    extensionInterleave.hpp
+    extensionInterleave.hpp \
+    extensionPermissiveExplicitStrategy.hpp
 
 SOURCES += main.cpp BFAbstractionLibrary/bddDump.cpp BFAbstractionLibrary/BFCuddVarVector.cpp BFAbstractionLibrary/BFCudd.cpp BFAbstractionLibrary/BFCuddManager.cpp \
     BFAbstractionLibrary/BFCuddVarCube.cpp tools.cpp synthesisAlgorithm.cpp synthesisContextBasics.cpp variableManager.cpp \

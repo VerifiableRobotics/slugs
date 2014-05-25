@@ -51,6 +51,7 @@
 #include "extensionComputeInterestingRunOfTheSystem.hpp"
 #include "extensionAnalyzeSafetyLivenessInteraction.hpp"
 #include "extensionAbstractWinningTraceGenerator.hpp"
+#include "extensionPermissiveExplicitStrategy.hpp"
 
 //===================================================================================
 // List of command line arguments
@@ -72,7 +73,8 @@ const char *commandLineArguments[] = {
     "--analyzeAssumptions","Checks which assumptions are actually needed and which assumptions are helpful (i.e., they sometimes reduce reactive distances to the goal).",
     "--analyzeSafetyLivenessInteraction","Analyzes how safety and liveness properties interact in the specification.",
     "--computeInterestingRunOfTheSystem","Computes an interesting run of the synthesized system",
-    "--computeAbstractWinningTrace","Computes an abstract trace that is winning for the system or the environment."
+    "--computeAbstractWinningTrace","Computes an abstract trace that is winning for the system or the environment.",
+    "--extractExplicitPermissiveStrategy","Computes an explicit-state permissive strategy."
 };
 
 //===================================================================================
@@ -129,7 +131,8 @@ OptionCombination optionCombinations[] = {
     OptionCombination("--analyzeSafetyLivenessInteraction", XAnalyzeSafetyLivenessInteraction<GR1Context>::makeInstance),
     OptionCombination("--analyzeAssumptions", XAnalyzeAssumptions<GR1Context>::makeInstance),
     OptionCombination("--computeInterestingRunOfTheSystem", XComputeInterestingRunOfTheSystem<GR1Context>::makeInstance),
-    OptionCombination("--computeAbstractWinningTrace", XAbstractWinningTraceGenerator<GR1Context>::makeInstance)
+    OptionCombination("--computeAbstractWinningTrace", XAbstractWinningTraceGenerator<GR1Context>::makeInstance),
+    OptionCombination("--extractExplicitPermissiveStrategy", XExtractPermissiveExplicitStrategy<GR1Context>::makeInstance)
 
     // TODO: Combination between BiasForAction and FixedPointRecycling is not supported yet but would make sense
 };

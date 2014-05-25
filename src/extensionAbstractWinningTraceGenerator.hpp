@@ -25,6 +25,9 @@ protected:
     using T::variables;
     using T::variableNames;
     using T::doesVariableInheritType;
+    using T::postInputVars;
+
+    SlugsVarCube varCubePre{PreInput,PreOutput,this};
 
     const std::string STRING_FOR_TABLE_LINE{"\x01"};
 
@@ -206,6 +209,12 @@ protected:
             }
         } else {
             return; // Can't win because the other player is winning.
+        }
+
+        // Replace the last element in case of an environment-winning strategy -- we should have the last input here then,
+        // provided that it is well-defined.
+        if ((distances.size()>1) && (environmentShouldWin)) {
+           distances[0] = determinize(((safetyEnv & !safetySys) | !distances[1]).UnivAbstract(varCubePostOutput).UnivAbstract(varCubePre),postInputVars).SwapVariables(varVectorPre,varVectorPost);
         }
 
         // Debugging output
