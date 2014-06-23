@@ -26,7 +26,9 @@ HEADERS += BFAbstractionLibrary/BF.h BFAbstractionLibrary/BFCudd.h gr1context.hp
     extensionAnalyzeSafetyLivenessInteraction.hpp \
     extensionAbstractWinningTraceGenerator.hpp \
     extensionInterleave.hpp \
-    extensionPermissiveExplicitStrategy.hpp
+    extensionPermissiveExplicitStrategy.hpp \
+    extensionIncompleteInformationEstimatorSynthesis.hpp \
+    extensionNondeterministicMotion.hpp
 
 SOURCES += main.cpp BFAbstractionLibrary/bddDump.cpp BFAbstractionLibrary/BFCuddVarVector.cpp BFAbstractionLibrary/BFCudd.cpp BFAbstractionLibrary/BFCuddManager.cpp \
     BFAbstractionLibrary/BFCuddVarCube.cpp tools.cpp synthesisAlgorithm.cpp synthesisContextBasics.cpp variableManager.cpp \

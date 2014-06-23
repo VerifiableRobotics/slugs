@@ -127,6 +127,21 @@ public:
         types.insert(t2);
         varMgr->varCubesToConstruct[&cube] = types;
     }
+    SlugsVarCube(VariableType t1, VariableType t2, VariableType t3, SlugsVariableManager *varMgr) {
+        std::set<int> types;
+        types.insert(t1);
+        types.insert(t2);
+        types.insert(t3);
+        varMgr->varCubesToConstruct[&cube] = types;
+    }
+    SlugsVarCube(VariableType t1, VariableType t2, VariableType t3, VariableType t4, SlugsVariableManager *varMgr) {
+        std::set<int> types;
+        types.insert(t1);
+        types.insert(t2);
+        types.insert(t3);
+        types.insert(t4);
+        varMgr->varCubesToConstruct[&cube] = types;
+    }
     operator BFVarCube& () {return cube;}
     size_t size() { return cube.size(); }
 };

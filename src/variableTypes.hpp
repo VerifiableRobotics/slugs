@@ -71,6 +71,14 @@ typedef enum {
     // Variables used in "extensionInterleave.hpp"
     PreOutputBefore, PreOutputAfter, PostOutputBefore, PostOutputAfter,
 
+    // Variables used in "IncompleteInformationEstimatorSynthesis.hpp"
+    ObservablePre, ObservablePost, ControllablePre, ControllablePost,
+    UnobservablePre, UnobservablePost, EstimationPre, EstimationPost,
+
+    // Variables used in extensionNondeterministicMotion.hpp
+    PreMotionState, PostMotionState, PreOtherOutput, PostOtherOutput,
+    PreMotionControlOutput, PostMotionControlOutput,
+
     // Dummy parameters used for internal reasons. Must be last in the enum
     NoneVariableType
 
@@ -91,6 +99,20 @@ REGISTER_VARIABLE_TYPE_STRING(PreOutputBefore,"PreOutputBefore")
 REGISTER_VARIABLE_TYPE_STRING(PreOutputAfter,"PreOutputAfter")
 REGISTER_VARIABLE_TYPE_STRING(PostOutputBefore,"PostOutputBefore")
 REGISTER_VARIABLE_TYPE_STRING(PostOutputAfter,"PostOutputAfter")
+REGISTER_VARIABLE_TYPE_STRING(ObservablePre,"ObservablePre")
+REGISTER_VARIABLE_TYPE_STRING(ObservablePost,"ObservablePost")
+REGISTER_VARIABLE_TYPE_STRING(UnobservablePre,"UnobservablePre")
+REGISTER_VARIABLE_TYPE_STRING(UnobservablePost,"UnobservablePost")
+REGISTER_VARIABLE_TYPE_STRING(EstimationPre,"EstimationPre")
+REGISTER_VARIABLE_TYPE_STRING(EstimationPost,"EstimationPost")
+REGISTER_VARIABLE_TYPE_STRING(ControllablePre,"ControllablePre")
+REGISTER_VARIABLE_TYPE_STRING(ControllablePost,"ControllablePost")
+REGISTER_VARIABLE_TYPE_STRING(PreMotionState,"PreMotionState")
+REGISTER_VARIABLE_TYPE_STRING(PostMotionState,"PostMotionState")
+REGISTER_VARIABLE_TYPE_STRING(PreOtherOutput,"PreOtherOutput")
+REGISTER_VARIABLE_TYPE_STRING(PostOtherOutput,"PostOtherOutput")
+REGISTER_VARIABLE_TYPE_STRING(PreMotionControlOutput,"PreMotionControlOutput")
+REGISTER_VARIABLE_TYPE_STRING(PostMotionControlOutput,"PostMotionControlOutput")
 
 //! Variable hierarchy. Allows to include subgrouped variables when computing variable
 //! vectors and cubes
@@ -109,19 +131,22 @@ REGISTER_VARIABLE_TYPE_HIERARCHY(PreOutputAfter,PreOutput)
 REGISTER_VARIABLE_TYPE_HIERARCHY(PostOutputBefore,PostOutput)
 REGISTER_VARIABLE_TYPE_HIERARCHY(PostOutputAfter,PostOutput)
 
+// Variables used in "IncompleteInformationEstimatorSynthesis.hpp"
+REGISTER_VARIABLE_TYPE_HIERARCHY(ObservablePre,PreInput)
+REGISTER_VARIABLE_TYPE_HIERARCHY(ObservablePost,PostInput)
+REGISTER_VARIABLE_TYPE_HIERARCHY(UnobservablePre,PreInput)
+REGISTER_VARIABLE_TYPE_HIERARCHY(UnobservablePost,PostInput)
+REGISTER_VARIABLE_TYPE_HIERARCHY(EstimationPre,PreOutput)
+REGISTER_VARIABLE_TYPE_HIERARCHY(EstimationPost,PostOutput)
+REGISTER_VARIABLE_TYPE_HIERARCHY(ControllablePre,ObservablePre)
+REGISTER_VARIABLE_TYPE_HIERARCHY(ControllablePost,ObservablePost)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+// Variables used in extensionNondeterministicMotion.hpp
+REGISTER_VARIABLE_TYPE_HIERARCHY(PreMotionState,Pre)
+REGISTER_VARIABLE_TYPE_HIERARCHY(PostMotionState,Post)
+REGISTER_VARIABLE_TYPE_HIERARCHY(PreOtherOutput,PreOutput)
+REGISTER_VARIABLE_TYPE_HIERARCHY(PostOtherOutput,PostOutput)
+REGISTER_VARIABLE_TYPE_HIERARCHY(PreMotionControlOutput,PreOutput)
+REGISTER_VARIABLE_TYPE_HIERARCHY(PostMotionControlOutput,PostOutput)
 
 #endif

@@ -52,6 +52,8 @@
 #include "extensionAnalyzeSafetyLivenessInteraction.hpp"
 #include "extensionAbstractWinningTraceGenerator.hpp"
 #include "extensionPermissiveExplicitStrategy.hpp"
+#include "extensionIncompleteInformationEstimatorSynthesis.hpp"
+#include "extensionNondeterministicMotion.hpp"
 
 //===================================================================================
 // List of command line arguments
@@ -74,7 +76,9 @@ const char *commandLineArguments[] = {
     "--analyzeSafetyLivenessInteraction","Analyzes how safety and liveness properties interact in the specification.",
     "--computeInterestingRunOfTheSystem","Computes an interesting run of the synthesized system",
     "--computeAbstractWinningTrace","Computes an abstract trace that is winning for the system or the environment.",
-    "--extractExplicitPermissiveStrategy","Computes an explicit-state permissive strategy."
+    "--extractExplicitPermissiveStrategy","Computes an explicit-state permissive strategy.",
+    "--computeIncompleteInformationEstimator","Computes a imcomplete-information state estimation controller.",
+    "--nonDeterministicMotion","Computes a controller using an non-deterministic motion abstraction."
 };
 
 //===================================================================================
@@ -132,7 +136,12 @@ OptionCombination optionCombinations[] = {
     OptionCombination("--analyzeAssumptions", XAnalyzeAssumptions<GR1Context>::makeInstance),
     OptionCombination("--computeInterestingRunOfTheSystem", XComputeInterestingRunOfTheSystem<GR1Context>::makeInstance),
     OptionCombination("--computeAbstractWinningTrace", XAbstractWinningTraceGenerator<GR1Context>::makeInstance),
-    OptionCombination("--extractExplicitPermissiveStrategy", XExtractPermissiveExplicitStrategy<GR1Context>::makeInstance)
+    OptionCombination("--extractExplicitPermissiveStrategy", XExtractPermissiveExplicitStrategy<GR1Context>::makeInstance),
+    OptionCombination("--computeIncompleteInformationEstimator", XIncompleteInformationEstimatorSynthesis<GR1Context>::makeInstance),
+    OptionCombination("--nonDeterministicMotion",XNonDeterministicMotion<GR1Context,false>::makeInstance),
+    OptionCombination("--nonDeterministicMotion --sysInitRoboticsSemantics",XNonDeterministicMotion<GR1Context,true>::makeInstance)
+
+
 
     // TODO: Combination between BiasForAction and FixedPointRecycling is not supported yet but would make sense
 };
