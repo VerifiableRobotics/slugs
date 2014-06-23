@@ -214,27 +214,6 @@ public:
         robotBDD = mgr.readBDDFromFile(robotFileName.c_str(),varsBDDread);
 
 
-        // Create a new liveness assumption that says that always eventually, if an action/pre-state
-        // combination may lead to a different position, then it is taken
-        BF prePostMotionStatesDifferent = mgr.constantFalse();
-        for (uint i=0;i<preMotionStateVars.size();i++) {
-            prePostMotionStatesDifferent |= (preMotionStateVars[i] ^ postMotionStateVars[i]);
-        }
-        BF preMotionInputCombinationsThatCanChangeState = (prePostMotionStatesDifferent & robotBDD).ExistAbstract(varCubePostMotionState);
-        BF newLivenessAssumption = (!preMotionInputCombinationsThatCanChangeState) | prePostMotionStatesDifferent;
-        livenessAssumptions.push_back(newLivenessAssumption);
-        if (!(newLivenessAssumption.isTrue())) {
-            std::cerr << "Note: Added a liveness assumption that always eventually, we are moving if an action is taken at allows moving.\n";
-        }
-        BF_newDumpDot(*this,newLivenessAssumption,"PreMotionState PostMotionControlOutput PostMotionState","/tmp/changeMotionStateLivenessAssumption.dot");
-
-        // Make sure that there is at least one liveness assumption and one liveness guarantee
-        // The synthesis algorithm might be unsound otherwise
-        if (livenessGuarantees.size()==0) livenessGuarantees.push_back(mgr.constantTrue());
-        if (livenessAssumptions.size()==0) livenessAssumptions.push_back(mgr.constantTrue());
-
-        BF_newDumpDot(*this,robotBDD,"PreMotionState PostMotionControlOutput PostMotionState","/tmp/sometestbdd.dot");
-
     }
 
     void checkRealizability() {
@@ -339,11 +318,36 @@ public:
         realizable = result.isTrue();
     }
 
+    void addAutomaticallyGeneratedLivenessAssumption() {
+
+        // Create a new liveness assumption that says that always eventually, if an action/pre-state
+        // combination may lead to a different position, then it is taken
+        BF prePostMotionStatesDifferent = mgr.constantFalse();
+        for (uint i=0;i<preMotionStateVars.size();i++) {
+            prePostMotionStatesDifferent |= (preMotionStateVars[i] ^ postMotionStateVars[i]);
+        }
+        BF preMotionInputCombinationsThatCanChangeState = (prePostMotionStatesDifferent & robotBDD).ExistAbstract(varCubePostMotionState);
+        BF newLivenessAssumption = (!preMotionInputCombinationsThatCanChangeState) | prePostMotionStatesDifferent;
+        livenessAssumptions.push_back(newLivenessAssumption);
+        if (!(newLivenessAssumption.isTrue())) {
+            std::cerr << "Note: Added a liveness assumption that always eventually, we are moving if an action is taken at allows moving.\n";
+        }
+        BF_newDumpDot(*this,newLivenessAssumption,"PreMotionState PostMotionControlOutput PostMotionState","/tmp/changeMotionStateLivenessAssumption.dot");
+
+        // Make sure that there is at least one liveness assumption and one liveness guarantee
+        // The synthesis algorithm might be unsound otherwise
+        if (livenessGuarantees.size()==0) livenessGuarantees.push_back(mgr.constantTrue());
+        if (livenessAssumptions.size()==0) livenessAssumptions.push_back(mgr.constantTrue());
+
+        BF_newDumpDot(*this,robotBDD,"PreMotionState PostMotionControlOutput PostMotionState","/tmp/sometestbdd.dot");
+    }
+
 
     /**
      * @brief This function orchestrates the execution of slugs when this plugin is used.
      */
     void execute() {
+        addAutomaticallyGeneratedLivenessAssumption();
         checkRealizability();
         if (realizable) {
             std::cerr << "RESULT: Specification is realizable.\n";
