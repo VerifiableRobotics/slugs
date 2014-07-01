@@ -211,6 +211,8 @@ protected:
         BF oldReachableStates = mgr.constantFalse();
         BF allSafetyConstraints = safetyEnv & safetySys;
 
+        BF_newDumpDot(*this,reachableStates,NULL,"/tmp/reactStart.dot");
+
         // Classical algorithm
         while (reachableStates!=oldReachableStates) {
             std::cerr << ".";
@@ -218,6 +220,10 @@ protected:
             BF newStates = reachableStates.AndAbstract(allSafetyConstraints,varCubePre).SwapVariables(varVectorPre,varVectorPost);
             //assert(newStates == (reachableStates & safetyEnv & safetySys).ExistAbstract(varCubePre).SwapVariables(varVectorPre,varVectorPost));
             reachableStates |= newStates;
+        }
+
+        if (reachableStates.isFalse()) {
+            std::cerr << "=========\nWARNING!\n=========\nThere is no initial state in the estimator model.\n\n";
         }
 
         // Focussed algorithm
@@ -243,6 +249,8 @@ protected:
 
         // Compute the Estimator
         strategy = ((!reachableStates) | (!safetyEnv) | safetySys).UnivAbstract(varCubeUnobservables);
+
+        mgr.setReorderingMaxBlowup(1.03f);
 
         // BF_newDumpDot(*this,strategy,NULL,
         //              "/tmp/strat.dot");
@@ -290,12 +298,13 @@ protected:
 
         // Compute assumptions for the environment:
         // 1. New reachable states
+        BF combined = safetyEnv & safetySys & strategy;
         std::cerr << "...computing assumptions...\n";
         reachableStates = initSys & initEnv;
         oldReachableStates = mgr.constantFalse();
         while (reachableStates!=oldReachableStates) {
             oldReachableStates = reachableStates;
-            reachableStates |= (reachableStates & safetyEnv & safetySys & strategy).ExistAbstract(varCubePre).SwapVariables(varVectorPre,varVectorPost);
+            reachableStates |= (reachableStates & combined).ExistAbstract(varCubePre).SwapVariables(varVectorPre,varVectorPost);
         }
         BF_newDumpDot(*this,reachableStates,NULL,"/tmp/reachable2.dot");
         BF environmentAssumption = (reachableStates & safetyEnv).ExistAbstract(varCubeEverythingButEstimatorPreAndObservables);

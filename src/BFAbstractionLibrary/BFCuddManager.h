@@ -31,6 +31,7 @@ public:
 	~BFBddManager();
 
 	void setAutomaticOptimisation(bool enable);
+    void setReorderingMaxBlowup(float reorderingMaxBlowup);
 	BFBddVarCube computeCube(const BFBdd * vars, const int * phase, int n) const;
 	BFBddVarCube computeCube(const std::vector<BFBdd> &vars) const;
 	BFBddVarVector computeVarVector(const std::vector<BFBdd> &vars) const;

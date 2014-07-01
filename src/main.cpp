@@ -228,6 +228,10 @@ int main(int argc, const char **args) {
                 // Found the combination - then instantiate context and perform synthesis.
                 GR1Context *context = (*(optionCombinations[i].factory))(filenames);
                 context->init(filenames);
+
+                // If after the "init" function chain of the context, there are
+                // some yet unused file names, then too many have been provided to the
+                // user.
                 if (filenames.size()>0) {
                     std::cerr << "Error: You provided too many file names!\n";
                     return 1;

@@ -29,6 +29,8 @@ nuSMVReturnFile = "/tmp/fuzz_"+str(os.getpid())+".nusmvreturn"
 nuSMVErrorStreamFile = "/tmp/fuzz_"+str(os.getpid())+".nusmverrorstream"
 slugsTranslatorScript = "./translateFromLTLMopLTLFormatToSlugsFormat.py"
 nuSMVTranslatorScript = "./makeNuSMVInstanceToTestAutomatonFileAgainstSlugsSpecification.py"
+uniformCounterExample
+counterExampleTraceGeneratorScript = "./computeBoundedLengthUniformSafetyCounterStrategy.py"
 NuSMVExecutable = "./NuSMV"
 slugsExecutableAndBasicOptions = "../src/slugs " + " ".join(sys.argv[2:])
 
@@ -169,6 +171,16 @@ def fuzzOnce():
                     print "Test failed!: "+line
                     raise Exception("Fuzzing Aborted")
             nusmvReturn.close()
+
+    else:
+        retValue = os.system("timeout 120s "+NuSMVExecutable + " "+nuSMVFile+" > "+nuSMVReturnFile+" 2> "+nuSMVErrorStreamFile)
+
+        # Check if a counter-example can be computed
+
+
+
+
+No abstract
 
 
 # =====================================================

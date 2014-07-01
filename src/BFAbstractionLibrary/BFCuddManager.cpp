@@ -52,6 +52,14 @@ void BFBddManager::setAutomaticOptimisation(bool enable) {
 }
 
 /**
+ * @brief Sets the maximum blowup due to variable reordering in the BDD during the optimization of the variable ordering.
+ * @param reorderingMaxBlowup
+ */
+void BFBddManager::setReorderingMaxBlowup(float reorderingMaxBlowup) {
+    Cudd_SetMaxGrowth(mgr, reorderingMaxBlowup);
+}
+
+/**
  * Some statistics printing function
  */
 void BFBddManager::printStats() {
@@ -138,3 +146,4 @@ BFBdd BFBddManager::readBDDFromFile(const char *filename, std::vector<BFBdd> &va
     delete[] idMatcher;    
     return BFBdd(this,node);   
 }
+

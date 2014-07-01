@@ -57,12 +57,10 @@ public:
             throw "Error: At least two file names are needed when using the supplied options!";
         }
 
-        if (filenames.size()>2) {
-            throw "Error: Precisely two file names are needed when using the supplied options, but more than two were found!";
-        }
-
         std::string specFileName = *(filenames.begin());
-        std::string robotFileName = *(++filenames.begin());
+        filenames.pop_front();
+        std::string robotFileName = *(filenames.begin());
+        filenames.pop_front();
 
         std::ifstream inFile(specFileName.c_str());
         if (inFile.fail()) throw "Error: Cannot open input file";

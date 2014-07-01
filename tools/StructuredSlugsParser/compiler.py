@@ -469,7 +469,7 @@ def isValidRecursiveSlugsProperty(tokens):
 def performConversion(inputFile,thoroughly):
     specFile = open(inputFile,"r")
     mode = ""
-    lines = {"[ENV_TRANS]":[],"[ENV_INIT]":[],"[INPUT]":[],"[OUTPUT]":[],"[SYS_TRANS]":[],"[SYS_INIT]":[],"[ENV_LIVENESS]":[],"[SYS_LIVENESS]":[] }
+    lines = {"[ENV_TRANS]":[],"[ENV_INIT]":[],"[INPUT]":[],"[OUTPUT]":[],"[SYS_TRANS]":[],"[SYS_INIT]":[],"[ENV_LIVENESS]":[],"[SYS_LIVENESS]":[],"[OBSERVABLE_INPUT]":[],"[UNOBSERVABLE_INPUT]":[],"[CONTROLLABLE_INPUT]":[] }
 
     for line in specFile.readlines():
         line = line.strip()
@@ -493,8 +493,8 @@ def performConversion(inputFile,thoroughly):
     # Create information along the way that
     # encodes the possible values
     # ---------------------------------------    
-    translatedIOLines = {"[INPUT]":[],"[OUTPUT]":[]}
-    for variableType in ["[INPUT]","[OUTPUT]"]: 
+    translatedIOLines = {"[INPUT]":[],"[OUTPUT]":[],"[OBSERVABLE_INPUT]":[],"[UNOBSERVABLE_INPUT]":[],"[CONTROLLABLE_INPUT]":[]}
+    for variableType in ["[INPUT]","[OUTPUT]","[OBSERVABLE_INPUT]","[UNOBSERVABLE_INPUT]","[CONTROLLABLE_INPUT]"]: 
         for line in lines[variableType]:
             if line.startswith("#"):
                 translatedIOLines[variableType].append(line.strip())
@@ -542,7 +542,7 @@ def performConversion(inputFile,thoroughly):
                 limitDiff = maxValue - minValue + 1 # +1 because the range is inclusive 
                 if (2**numberAPNofBits[variable]) != limitDiff:
 
-                    propertyDestination = "ENV" if variableType=="[INPUT]" else "SYS"
+                    propertyDestination = "ENV" if variableType.endswith("INPUT]") else "SYS"
                     # Init constraint
                     tokens = ["0"]
                     for i in xrange(0,numberAPNofBits[variable]):
@@ -578,11 +578,12 @@ def performConversion(inputFile,thoroughly):
     # ---------------------------------------    
     # Output new input/output lines
     # ---------------------------------------    
-    for variableType in ["[INPUT]","[OUTPUT]"]: 
-        print variableType
-        for a in translatedIOLines[variableType]:
-            print a
-        print ""
+    for variableType in ["[INPUT]","[OUTPUT]","[OBSERVABLE_INPUT]","[UNOBSERVABLE_INPUT]","[CONTROLLABLE_INPUT]"]: 
+        if len(translatedIOLines[variableType])>0:
+            print variableType
+            for a in translatedIOLines[variableType]:
+                print a
+            print ""
 
     # ---------------------------------------    
     # Go through the properties and translate

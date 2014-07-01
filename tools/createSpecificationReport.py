@@ -173,6 +173,7 @@ def createSpecificationReport(slugsFile):
     else:
         print "<p>The specification is <B>unrealizable</B>!</p>"
     print "</details>"
+    sys.stdout.flush()
 
     # =====================================================
     # Winning positions
@@ -196,6 +197,7 @@ def createSpecificationReport(slugsFile):
                 lengthOfStrategyToDriveTheOtherPlayerIntoADeadEnd = int(line.strip().split(" ")[17])
     print "</pre>"
     print "</details>"
+    sys.stdout.flush()
 
     # =====================================================
     # Winning positions
@@ -214,6 +216,7 @@ def createSpecificationReport(slugsFile):
             print cgi.escape(line),
     print "</pre>"
     print "</details>"
+    sys.stdout.flush()
 
     # =====================================================
     # Winning positions that can falsify the environment
@@ -235,6 +238,7 @@ def createSpecificationReport(slugsFile):
             print cgi.escape(line),
     print "</pre>"
     print "</details>"
+    sys.stdout.flush()
 
     # =====================================================
     # Superfluous assumptions
@@ -253,6 +257,7 @@ def createSpecificationReport(slugsFile):
             print cgi.escape(line),
     print "</pre>"
     print "</details>"
+    sys.stdout.flush()
 
     # =====================================================
     # Example trace of the system
@@ -271,6 +276,7 @@ def createSpecificationReport(slugsFile):
             print cgi.escape(line),
     print "</pre>"
     print "</details>"
+    sys.stdout.flush()
 
     # =====================================================
     # Computing an abstract trace-like strategy that
@@ -292,6 +298,7 @@ def createSpecificationReport(slugsFile):
                 print cgi.escape(line),
         print "</pre>"
         print "</details>"
+        sys.stdout.flush()
 
     # =====================================================
     # Error resilience analysis
@@ -310,6 +317,7 @@ def createSpecificationReport(slugsFile):
             print cgi.escape(line),
     print "</pre>"
     print "</details>"
+    sys.stdout.flush()
 
     # ==============================================================================
     # From here onwards: analyses that only make sense for realizable specifications
@@ -332,7 +340,8 @@ def createSpecificationReport(slugsFile):
             for line in f.readlines():
                 print cgi.escape(line),
         print "</pre>"
-        print "</details>"    
+        print "</details>"
+        sys.stdout.flush()   
 
         # =====================================================
         # Error resilience analysis
@@ -351,12 +360,13 @@ def createSpecificationReport(slugsFile):
                 print cgi.escape(line),
         print "</pre>"
         print "</details>"
+        sys.stdout.flush()
 
     # =====================================================
     # Close up HTML File
     # =====================================================
     print "</body></html>"
-
+    sys.stdout.flush()
     
 
 # =====================================================
