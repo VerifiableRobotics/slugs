@@ -125,6 +125,7 @@ def createSpecificationReport(slugsFile):
                 print cgi.escape(line),
     print "</pre>"
     print "</details>"
+    sys.stdout.flush()
 
     # =====================================================
     # Print Realizability report
@@ -149,6 +150,7 @@ def createSpecificationReport(slugsFile):
         raise SlugsException("Fatal error")
     if realizable:
         print "<p>The specification is <B>realizable</B>.</p>"
+        sys.stdout.flush()
         # Also check special robotics semantics        
         command = slugsExecutableAndBasicOptions + " --onlyRealizability --sysInitRoboticsSemantics "+slugsCompiledFile+" > "+slugsReturnFile+" 2> "+slugsErrorFile
         print >>sys.stderr, "Executing: "+command

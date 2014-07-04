@@ -32,6 +32,7 @@ protected:
     using T::varVectorPre;
     using T::varVectorPost;
     using T::varCubePostOutput;
+    using T::varCubePostInput;
     using T::determinize;
     using T::doesVariableInheritType;
 
@@ -107,13 +108,17 @@ public:
         // Prepare positional strategies for the individual goals
         std::vector<BF> positionalStrategiesForTheIndividualGoals(livenessGuarantees.size());
         for (unsigned int i=0;i<livenessGuarantees.size();i++) {
-            BF casesCovered = mgr.constantFalse();
+            BF statesCovered = mgr.constantFalse();
+            BF stateInputsCovered = mgr.constantFalse();
             BF strategy = mgr.constantFalse();
+
+            // Change: collect transitions as long as a state is not "fixed".
             for (auto it = strategyDumpingData.begin();it!=strategyDumpingData.end();it++) {
                 if (it->first == i) {
-                    BF newCases = it->second.ExistAbstract(varCubePostOutput) & !casesCovered;
-                    strategy |= newCases & it->second;
-                    casesCovered |= newCases;
+                    BF newCases = it->second.ExistAbstract(varCubePostOutput) & (!statesCovered);
+                    strategy |= (!statesCovered) & it->second;
+                    stateInputsCovered |= newCases;
+                    statesCovered = (!safetyEnv | stateInputsCovered).UnivAbstract(varCubePostInput);
                 }
             }
             positionalStrategiesForTheIndividualGoals[i] = strategy;
