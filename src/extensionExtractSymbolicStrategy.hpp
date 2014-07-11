@@ -138,8 +138,6 @@ public:
 
         mgr.writeBDDToFile(filename.c_str(),fileExtraHeader.str(),combinedStrategy,variables,variableNames);
 
-        std::cout << "Yoyo dat!\n";
-
     }
 
     static GR1Context* makeInstance(std::list<std::string> &filenames) {
