@@ -54,12 +54,14 @@
 #include "extensionPermissiveExplicitStrategy.hpp"
 #include "extensionIncompleteInformationEstimatorSynthesis.hpp"
 #include "extensionNondeterministicMotion.hpp"
+#include "extensionExtractSymbolicStrategy.hpp"
 
 //===================================================================================
 // List of command line arguments
 //===================================================================================
 const char *commandLineArguments[] = {
     "--onlyRealizability","Use this parameter if no synthesized system should be computed, but only the realizability/unrealizability result is to be computed. If this option is *not* given, an automaton is computed. In case of realizability, the synthesized controller is printed to an output file name if it is given, and to stdout otherwise.",
+    "--symbolicStrategy","Extract a symbolic (BDD-based) strategy.",
     "--sysInitRoboticsSemantics","In standard GR(1) synthesis, a specification is called realizable if for every initial input proposition valuation that is allowed by the initialization contraints, there is some suitable output proposition valuation. In the modified semantics for robotics applications, the controller has to be fine with any admissible initial position in the game.",
     "--computeWeakenedSafetyAssumptions","Extract a minimal conjunctive normal form Boolean formula that represents some minimal CNF for a set of safety assumptions that leads to realiazability and is a weakened form of the safety assumptions given. Requires the option '--onlyRealizability' to be given as well.",
     "--biasForAction","Extract controllers that rely on the liveness assumptions being satisfies as little as possible.",
@@ -99,10 +101,14 @@ const char *commandLineArguments[] = {
 struct OptionCombination { std::string params; GR1Context* (*factory)(std::list<std::string> &l); OptionCombination(std::string _p, GR1Context* (*_f)(std::list<std::string> &l)) : params(_p), factory(_f) {} };
 OptionCombination optionCombinations[] = {
     OptionCombination("",XExtractExplicitStrategy<GR1Context,false>::makeInstance),
+    OptionCombination("--symbolicStrategy",XExtractSymbolicStrategy<GR1Context,false>::makeInstance),
     OptionCombination("--simpleRecovery",XExtractExplicitStrategy<GR1Context,true>::makeInstance),
+    OptionCombination("--simpleRecovery --symbolicStrategy",XExtractSymbolicStrategy<GR1Context,true>::makeInstance),
     OptionCombination("--onlyRealizability",GR1Context::makeInstance),
     OptionCombination("--sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<GR1Context>,false>::makeInstance),
     OptionCombination("--simpleRecovery --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<GR1Context>,true>::makeInstance),
+    OptionCombination("--symbolicStrategy --sysInitRoboticsSemantics",XExtractSymbolicStrategy<XRoboticsSemantics<GR1Context>,false>::makeInstance),
+    OptionCombination("--simpleRecovery ---symbolicStrategy -sysInitRoboticsSemantics",XExtractSymbolicStrategy<XRoboticsSemantics<GR1Context>,true>::makeInstance),
     OptionCombination("--onlyRealizability --sysInitRoboticsSemantics",XRoboticsSemantics<GR1Context>::makeInstance),
     OptionCombination("--computeWeakenedSafetyAssumptions --onlyRealizability",XComputeWeakenedSafetyAssumptions<GR1Context>::makeInstance),
     OptionCombination("--computeWeakenedSafetyAssumptions --onlyRealizability --sysInitRoboticsSemantics",XComputeWeakenedSafetyAssumptions<XRoboticsSemantics<GR1Context> >::makeInstance),
@@ -110,6 +116,10 @@ OptionCombination optionCombinations[] = {
     OptionCombination("--biasForAction --simpleRecovery",XExtractExplicitStrategy<XBiasForAction<GR1Context>,true>::makeInstance),
     OptionCombination("--biasForAction --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<XBiasForAction<GR1Context> >,false>::makeInstance),
     OptionCombination("--biasForAction --simpleRecovery --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<XBiasForAction<GR1Context> >,true>::makeInstance),
+    OptionCombination("--biasForAction --symbolicStrategy",XExtractSymbolicStrategy<XBiasForAction<GR1Context>,false>::makeInstance),
+    OptionCombination("--biasForAction --simpleRecovery --symbolicStrategy",XExtractSymbolicStrategy<XBiasForAction<GR1Context>,true>::makeInstance),
+    OptionCombination("--biasForAction --symbolicStrategy --sysInitRoboticsSemantics",XExtractSymbolicStrategy<XRoboticsSemantics<XBiasForAction<GR1Context> >,false>::makeInstance),
+    OptionCombination("--biasForAction --simpleRecovery --symbolicStrategy --sysInitRoboticsSemantics",XExtractSymbolicStrategy<XRoboticsSemantics<XBiasForAction<GR1Context> >,true>::makeInstance),
     OptionCombination("--computeCNFFormOfTheSpecification --sysInitRoboticsSemantics",XComputeCNFFormOfTheSpecification<GR1Context>::makeInstance),
     OptionCombination("--counterStrategy",XExtractExplicitCounterStrategy<XCounterStrategy<GR1Context,false> >::makeInstance),
     OptionCombination("--counterStrategy --sysInitRoboticsSemantics",XExtractExplicitCounterStrategy<XCounterStrategy<GR1Context,true> >::makeInstance),
@@ -119,18 +129,21 @@ OptionCombination optionCombinations[] = {
     OptionCombination("--fixedPointRecycling --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<XFixedPointRecycling<GR1Context> >,false>::makeInstance),
     OptionCombination("--fixedPointRecycling --simpleRecovery --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<XFixedPointRecycling<GR1Context> >,true>::makeInstance),
     OptionCombination("--fixedPointRecycling --onlyRealizability --sysInitRoboticsSemantics",XRoboticsSemantics<XFixedPointRecycling<GR1Context> >::makeInstance),
+    OptionCombination("--fixedPointRecycling --symbolicStrategy",XExtractSymbolicStrategy<XFixedPointRecycling<GR1Context>,false>::makeInstance),
+    OptionCombination("--fixedPointRecycling --simpleRecovery --symbolicStrategy",XExtractSymbolicStrategy<XFixedPointRecycling<GR1Context>,true>::makeInstance),
+    OptionCombination("--fixedPointRecycling --symbolicStrategy --sysInitRoboticsSemantics",XExtractSymbolicStrategy<XRoboticsSemantics<XFixedPointRecycling<GR1Context> >,false>::makeInstance),
+    OptionCombination("--fixedPointRecycling --simpleRecovery --symbolicStrategy --sysInitRoboticsSemantics",XExtractSymbolicStrategy<XRoboticsSemantics<XFixedPointRecycling<GR1Context> >,true>::makeInstance),
     OptionCombination("--computeWeakenedSafetyAssumptions --fixedPointRecycling --onlyRealizability",XComputeWeakenedSafetyAssumptions<XFixedPointRecycling<GR1Context> >::makeInstance),
     OptionCombination("--computeWeakenedSafetyAssumptions --fixedPointRecycling --onlyRealizability --sysInitRoboticsSemantics",XComputeWeakenedSafetyAssumptions<XRoboticsSemantics<XFixedPointRecycling<GR1Context> > >::makeInstance),
     OptionCombination("--computeCNFFormOfTheSpecification --fixedPointRecycling --sysInitRoboticsSemantics",XComputeCNFFormOfTheSpecification<XFixedPointRecycling<GR1Context> >::makeInstance),
     OptionCombination("--interactiveStrategy",XInteractiveStrategy<GR1Context>::makeInstance),
     OptionCombination("--IROSfastslow",XExtractExplicitStrategy<XIROSFS<GR1Context>,false>::makeInstance),
     OptionCombination("--IROSfastslow --onlyRealizability",XIROSFS<GR1Context>::makeInstance),
-    OptionCombination("--IROSfastslow --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<XIROSFS<GR1Context> >,false>::makeInstance),
+    OptionCombination("--IROSfastslow --sysInitRoboticsSeantics",XExtractExplicitStrategy<XRoboticsSemantics<XIROSFS<GR1Context> >,false>::makeInstance),
     OptionCombination("--IROSfastslow --onlyRealizability --sysInitRoboticsSemantics",XRoboticsSemantics<XIROSFS<GR1Context> >::makeInstance),
+    OptionCombination("--IROSfastslow --symbolicStrategy",XExtractSymbolicStrategy<XIROSFS<GR1Context>,false>::makeInstance),
+    OptionCombination("--IROSfastslow --symbolicStrategy --sysInitRoboticsSemantics",XExtractSymbolicStrategy<XRoboticsSemantics<XIROSFS<GR1Context> >,false>::makeInstance),
     OptionCombination("--analyzeInterleaving",XInterleave<GR1Context>::makeInstance),
-    //OptionCombination("--Interleave --onlyRealizability",XInterleave<GR1Context>::makeInstance),
-    //OptionCombination("--Interleave --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<XInterleave<GR1Context> >,false>::makeInstance),
-    //OptionCombination("--Interleave --onlyRealizability --sysInitRoboticsSemantics",XRoboticsSemantics<XInterleave<GR1Context> >::makeInstance),
     OptionCombination("--analyzeInitialPositions", XAnalyzeInitialPositions<GR1Context>::makeInstance),
     OptionCombination("--analyzeSafetyLivenessInteraction", XAnalyzeSafetyLivenessInteraction<GR1Context>::makeInstance),
     OptionCombination("--analyzeAssumptions", XAnalyzeAssumptions<GR1Context>::makeInstance),
@@ -140,9 +153,6 @@ OptionCombination optionCombinations[] = {
     OptionCombination("--computeIncompleteInformationEstimator", XIncompleteInformationEstimatorSynthesis<GR1Context>::makeInstance),
     OptionCombination("--nonDeterministicMotion",XNonDeterministicMotion<GR1Context,false>::makeInstance),
     OptionCombination("--nonDeterministicMotion --sysInitRoboticsSemantics",XNonDeterministicMotion<GR1Context,true>::makeInstance)
-
-
-
     // TODO: Combination between BiasForAction and FixedPointRecycling is not supported yet but would make sense
 };
 

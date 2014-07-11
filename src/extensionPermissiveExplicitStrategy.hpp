@@ -118,7 +118,7 @@ public:
                     BF newCases = it->second.ExistAbstract(varCubePostOutput) & (!statesCovered);
                     strategy |= (!statesCovered) & it->second;
                     stateInputsCovered |= newCases;
-                    statesCovered = (!safetyEnv | stateInputsCovered).UnivAbstract(varCubePostInput);
+                    statesCovered = ((!safetyEnv) | stateInputsCovered).UnivAbstract(varCubePostInput);
                 }
             }
             positionalStrategiesForTheIndividualGoals[i] = strategy;

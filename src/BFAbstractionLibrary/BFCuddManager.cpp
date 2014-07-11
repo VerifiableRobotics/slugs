@@ -147,3 +147,45 @@ BFBdd BFBddManager::readBDDFromFile(const char *filename, std::vector<BFBdd> &va
     return BFBdd(this,node);   
 }
 
+void BFBddManager::writeBDDToFile(const char *filename, std::string fileprefix, BFBdd bdd, std::vector<BFBdd> &vars, std::vector<std::string> variableNames) const {
+
+    FILE *file = fopen (filename,"w");
+    if (file == NULL){
+        std::ostringstream os;
+        os << "Error in BFBddManager::writeBDDToFile(const char *filename, std::vector<BFBdd> &vars, std::vector<std::string> variableNames) - Could not write a BDD from to file '" << filename << "'.";
+        throw std::runtime_error(os.str().c_str());
+    }
+    if (fileprefix.size() != fwrite(fileprefix.c_str(),1,fileprefix.size(),file)) {
+        throw "Error: Unable to write prefix string to file.";
+    }
+
+    int *idMatcher = new int[vars.size()];
+    for (unsigned int i=0;i<vars.size();i++) {
+        idMatcher[i] = vars[i].readNodeIndex();
+    }
+
+    const char* varNamesChar[vars.size()];
+    for (unsigned int i=0;i<vars.size();i++) {
+        varNamesChar[i] = variableNames[i].c_str();
+    }
+
+    int storeReturnValue = Dddmp_cuddBddStore(
+      mgr,
+      NULL,
+      bdd.getCuddNode(),
+      (char**)varNamesChar, // char ** varnames, IN: array of variable names (or NULL)
+      idMatcher,
+      DDDMP_MODE_TEXT,
+      // DDDMP_VARNAMES,
+      DDDMP_VARIDS,
+      NULL,
+      file
+    );
+
+    delete[] idMatcher;
+    fclose(file);
+
+    if (storeReturnValue!=DDDMP_SUCCESS) throw "Error: Unable to write BDD to file.";
+
+}
+

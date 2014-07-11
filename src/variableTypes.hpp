@@ -79,6 +79,9 @@ typedef enum {
     PreMotionState, PostMotionState, PreOtherOutput, PostOtherOutput,
     PreMotionControlOutput, PostMotionControlOutput,
 
+    // Variables used in extensionExtractSymbolicStrategy.hpp
+    SymbolicStrategyCounterVar,
+
     // Dummy parameters used for internal reasons. Must be last in the enum
     NoneVariableType
 
@@ -113,6 +116,7 @@ REGISTER_VARIABLE_TYPE_STRING(PreOtherOutput,"PreOtherOutput")
 REGISTER_VARIABLE_TYPE_STRING(PostOtherOutput,"PostOtherOutput")
 REGISTER_VARIABLE_TYPE_STRING(PreMotionControlOutput,"PreMotionControlOutput")
 REGISTER_VARIABLE_TYPE_STRING(PostMotionControlOutput,"PostMotionControlOutput")
+REGISTER_VARIABLE_TYPE_STRING(SymbolicStrategyCounterVar,"SymbolicStrategyCounterVariable")
 
 //! Variable hierarchy. Allows to include subgrouped variables when computing variable
 //! vectors and cubes
@@ -148,5 +152,8 @@ REGISTER_VARIABLE_TYPE_HIERARCHY(PreOtherOutput,PreOutput)
 REGISTER_VARIABLE_TYPE_HIERARCHY(PostOtherOutput,PostOutput)
 REGISTER_VARIABLE_TYPE_HIERARCHY(PreMotionControlOutput,PreOutput)
 REGISTER_VARIABLE_TYPE_HIERARCHY(PostMotionControlOutput,PostOutput)
+
+// Variables used in extensionExtractSymbolicStrategy.hpp
+REGISTER_VARIABLE_TYPE_HIERARCHY(SymbolicStrategyCounterVar,NoneVariableType)
 
 #endif
