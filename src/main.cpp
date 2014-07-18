@@ -55,6 +55,7 @@
 #include "extensionIncompleteInformationEstimatorSynthesis.hpp"
 #include "extensionNondeterministicMotion.hpp"
 #include "extensionExtractSymbolicStrategy.hpp"
+#include "extensionTwoDimensionalCost.hpp"
 
 //===================================================================================
 // List of command line arguments
@@ -80,7 +81,8 @@ const char *commandLineArguments[] = {
     "--computeAbstractWinningTrace","Computes an abstract trace that is winning for the system or the environment.",
     "--extractExplicitPermissiveStrategy","Computes an explicit-state permissive strategy.",
     "--computeIncompleteInformationEstimator","Computes a imcomplete-information state estimation controller.",
-    "--nonDeterministicMotion","Computes a controller using an non-deterministic motion abstraction."
+    "--nonDeterministicMotion","Computes a controller using an non-deterministic motion abstraction.",
+    "--twoDimensionalCost","Computes a controller that optimizes for waiting and action cost at the same time."
 };
 
 //===================================================================================
@@ -152,7 +154,16 @@ OptionCombination optionCombinations[] = {
     OptionCombination("--extractExplicitPermissiveStrategy", XExtractPermissiveExplicitStrategy<GR1Context>::makeInstance),
     OptionCombination("--computeIncompleteInformationEstimator", XIncompleteInformationEstimatorSynthesis<GR1Context>::makeInstance),
     OptionCombination("--nonDeterministicMotion",XNonDeterministicMotion<GR1Context,false>::makeInstance),
-    OptionCombination("--nonDeterministicMotion --sysInitRoboticsSemantics",XNonDeterministicMotion<GR1Context,true>::makeInstance)
+    OptionCombination("--nonDeterministicMotion --sysInitRoboticsSemantics",XNonDeterministicMotion<GR1Context,true>::makeInstance),
+    OptionCombination("--twoDimensionalCost",XExtractExplicitStrategy<XTwoDimensionalCost<GR1Context>,false>::makeInstance),
+    OptionCombination("--simpleRecovery --twoDimensionalCost",XExtractExplicitStrategy<XTwoDimensionalCost<GR1Context>,true>::makeInstance),
+    OptionCombination("--symbolicStrategy --twoDimensionalCost",XExtractSymbolicStrategy<XTwoDimensionalCost<GR1Context>,false>::makeInstance),
+    OptionCombination("--simpleRecovery --symbolicStrategy --twoDimensionalCost",XExtractSymbolicStrategy<XTwoDimensionalCost<GR1Context>,true>::makeInstance),
+    OptionCombination("--sysInitRoboticsSemantics --twoDimensionalCost",XExtractExplicitStrategy<XTwoDimensionalCost<XRoboticsSemantics<GR1Context> >,false>::makeInstance),
+    OptionCombination("--simpleRecovery --sysInitRoboticsSemantics --twoDimensionalCost",XExtractExplicitStrategy<XTwoDimensionalCost<XRoboticsSemantics<GR1Context> >,true>::makeInstance),
+    OptionCombination("--symbolicStrategy --sysInitRoboticsSemantics --twoDimensionalCost",XExtractSymbolicStrategy<XTwoDimensionalCost<XRoboticsSemantics<GR1Context> >,false>::makeInstance),
+    OptionCombination("--simpleRecovery --symbolicStrategy --sysInitRoboticsSemantics --twoDimensionalCost",XExtractSymbolicStrategy<XTwoDimensionalCost<XRoboticsSemantics<GR1Context> >,true>::makeInstance)
+
     // TODO: Combination between BiasForAction and FixedPointRecycling is not supported yet but would make sense
 };
 

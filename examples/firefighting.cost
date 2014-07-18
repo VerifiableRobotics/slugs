@@ -1,0 +1,12 @@
+1 0 <
+# The first line must always represent the cost factors for waiting and delay cost.
+
+# Some cost assignments.
+2.2 & & bit0 ! bit0' ! carrying_item'
+2.2 & & ! bit0 bit0' ! carrying_item'
+2.2 & & bit1 ! bit1' ! carrying_item'
+2.2 & & ! bit1 bit1' ! carrying_item'
+2.2 & & bit2 ! bit2' ! carrying_item'
+2.2 & & ! bit2 bit2' ! carrying_item'
+1.0 carrying_item'
+
