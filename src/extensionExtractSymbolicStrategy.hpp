@@ -130,7 +130,7 @@ public:
         fileExtraHeader << "# Num goals: " << livenessGuarantees.size() << "\n";
         fileExtraHeader << "# Variable names:\n";
         for (unsigned int i=0;i<variables.size();i++) {
-            fileExtraHeader << "       " << i << ": " << variableNames[i] << "\n";
+            fileExtraHeader << "#\t" << i << ": " << variableNames[i] << "\n";
         }
         fileExtraHeader << "#\n# For information about the DDDMP format, please see:\n";
         fileExtraHeader << "#    http://www.cs.uleth.ca/~rice/cudd_docs/dddmp/dddmpAllFile.html#dddmpDump.c\n#\n";
