@@ -1,0 +1,9 @@
+1 0 <
+# The first line must always represent the cost factors for waiting and delay cost.
+
+# Some cost assignments.
+2.2 & x' ! y' 
+2.1 & x' y'
+1.1 & ! x' ! y'
+1.0 & ! x' y'
+

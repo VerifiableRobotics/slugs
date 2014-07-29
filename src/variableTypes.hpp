@@ -82,6 +82,10 @@ typedef enum {
     // Variables used in extensionExtractSymbolicStrategy.hpp
     SymbolicStrategyCounterVar,
 
+    // Variables used in extensionTwoDimensionalCost.hpp
+    CurrentLivenessAssumptionCounterPre, CurrentLivenessAssumptionCounterPost, IsInftyCostPre,
+    IsInftyCostPost,
+
     // Dummy parameters used for internal reasons. Must be last in the enum
     NoneVariableType
 
@@ -117,6 +121,11 @@ REGISTER_VARIABLE_TYPE_STRING(PostOtherOutput,"PostOtherOutput")
 REGISTER_VARIABLE_TYPE_STRING(PreMotionControlOutput,"PreMotionControlOutput")
 REGISTER_VARIABLE_TYPE_STRING(PostMotionControlOutput,"PostMotionControlOutput")
 REGISTER_VARIABLE_TYPE_STRING(SymbolicStrategyCounterVar,"SymbolicStrategyCounterVariable")
+REGISTER_VARIABLE_TYPE_STRING(CurrentLivenessAssumptionCounterPost, "CurrentLivenessAssumptionCounterPost")
+REGISTER_VARIABLE_TYPE_STRING(IsInftyCostPost,"IsInftyCostPost")
+REGISTER_VARIABLE_TYPE_STRING(CurrentLivenessAssumptionCounterPre, "CurrentLivenessAssumptionCounterPre")
+REGISTER_VARIABLE_TYPE_STRING(IsInftyCostPre,"IsInftyCostPre")
+
 
 //! Variable hierarchy. Allows to include subgrouped variables when computing variable
 //! vectors and cubes
@@ -155,5 +164,12 @@ REGISTER_VARIABLE_TYPE_HIERARCHY(PostMotionControlOutput,PostOutput)
 
 // Variables used in extensionExtractSymbolicStrategy.hpp
 REGISTER_VARIABLE_TYPE_HIERARCHY(SymbolicStrategyCounterVar,NoneVariableType)
+
+// Variables used in extensionTwoDimensionalCost.hpp
+REGISTER_VARIABLE_TYPE_HIERARCHY(CurrentLivenessAssumptionCounterPre, PreOutput)
+REGISTER_VARIABLE_TYPE_HIERARCHY(IsInftyCostPre,PreOutput)
+REGISTER_VARIABLE_TYPE_HIERARCHY(CurrentLivenessAssumptionCounterPost, PostOutput)
+REGISTER_VARIABLE_TYPE_HIERARCHY(IsInftyCostPost,PostOutput)
+
 
 #endif

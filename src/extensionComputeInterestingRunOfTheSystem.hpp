@@ -79,7 +79,6 @@ public:
         }
         //BF_newDumpDot(*this,nonDeadlockingTransitions,NULL,"/tmp/ndt.dot");
         //BF_newDumpDot(*this,nonDeadlockingStates,NULL,"/tmp/nds.dot");
-        //BF_newDumpDot(*this,safetyEnv,NULL,"/tmp/se.dot");
 
         // 2. Step two: Compute strategy to work towards
         std::vector<BF> environmentStrategyForAchievingTheLivenessAssumptions;
@@ -89,12 +88,17 @@ public:
             BF moves = mgr.constantFalse();
             do {
                 oldWinning = winning;
-                BF newMoves = ((livenessAssumptions[i] | oldWinning.SwapVariables(varVectorPre,varVectorPost)) & nonDeadlockingTransitions).UnivAbstract(varCubePostOutput);
+                BF newMoves = (((livenessAssumptions[i] | oldWinning.SwapVariables(varVectorPre,varVectorPost)) & nonDeadlockingTransitions) | (!safetySys)).UnivAbstract(varCubePostOutput);
                 winning = newMoves.ExistAbstract(varCubePostInput);
                 moves |= winning & !oldWinning & newMoves;
             } while (winning!=oldWinning);
+            BF_newDumpDot(*this,winning,NULL,"/tmp/uga.dot");
+            BF_newDumpDot(*this,moves,NULL,"/tmp/moves.dot");
             environmentStrategyForAchievingTheLivenessAssumptions.push_back(moves | !winning);
         }
+
+
+
 
         //====================
         // Compute Runs
