@@ -234,6 +234,7 @@ public:
         // ===================================
         // Computation of the winning strategy
         // ===================================
+        strategyDumpingData.clear();
         for (unsigned int livenessGoal=0;livenessGoal<livenessGuarantees.size();livenessGoal++) {
             std::cerr << "Processing liveness objective number " << livenessGoal << std::endl;
 
@@ -246,6 +247,7 @@ public:
             todo.insert(MK_COST_TUPLE(1,std::numeric_limits<double>::infinity()));
 
             BF positionsAlreadyFoundToBeWinning = mgr.constantFalse();
+            BF transitionsAlreadyFoundToBeWinning = mgr.constantFalse();
 
             std::map<TwoDimensionalCostNotionTuple,BF> winningTransitionsFound;
             std::map<TwoDimensionalCostNotionTuple,BF> winningPositionsFound;
@@ -279,62 +281,84 @@ public:
                         BF allowedEndingTransitions = mgr.constantFalse();
                         for (auto it = transitionCosts.begin();it!=transitionCosts.end();it++) {
                             if (MK_COST_TUPLE(0,it->first)<=currentTuple) {
-                                allowedEndingTransitions |= it->second & livenessGuarantees[livenessGoal];
+                                allowedEndingTransitions |= it->second & safetySys & livenessGuarantees[livenessGoal];
                             }
                         }
 
-                        BF_newDumpDot(*this,allowedEndingTransitions,NULL,filename.str()+"allowed1.dot");
+                        //BF_newDumpDot(*this,allowedEndingTransitions,NULL,filename.str()+"allowed1.dot");
 
                         // .... and add the allowed transitions to positions that are already know to be winning ...
                         for (auto it = transitionCosts.begin();it!=transitionCosts.end();it++) {
                             double allowedActionCost = currentTuple.getActionCost() - it->first;
                             // Numeric correction
                             allowedActionCost = std::nextafter(allowedActionCost,std::numeric_limits<double>::max());
+                            std::cerr << "Allowed Action Cost: " << allowedActionCost << std::endl;
                             auto winningStateFinder = winningPositionsFound.upper_bound(MK_COST_TUPLE(currentTuple.getWaitingCost(),allowedActionCost));
                             if (winningStateFinder != winningPositionsFound.begin()) {
                                 // The upper bound is not quite what we need, rather the element before it
                                 winningStateFinder--;
-                                allowedEndingTransitions |= winningStateFinder->second.SwapVariables(varVectorPre,varVectorPost) & it->second;
+                                std::cerr << "Found some transitions...\n";
+                                allowedEndingTransitions |= safetySys & winningStateFinder->second.SwapVariables(varVectorPre,varVectorPost) & it->second;
                             }
                         }
 
-                        BF_newDumpDot(*this,allowedEndingTransitions,NULL,filename.str()+"allowed2.dot");
+                        //BF_newDumpDot(*this,allowedEndingTransitions,NULL,filename.str()+"allowed2.dot");
 
 
                         // Waiting cost 0
                         BF winningPositionsOld = mgr.constantTrue();
                         BF winningPositionsNew = mgr.constantFalse();
+                        BF oldPositionsWinning = positionsAlreadyFoundToBeWinning;
                         while (winningPositionsNew!=winningPositionsOld) {
                             winningPositionsOld = winningPositionsNew;
-                            BF newWinningTransitions = (allowedEndingTransitions | (transitionCosts[0.0] & winningPositionsNew.SwapVariables(varVectorPre,varVectorPost)));
+                            BF newWinningTransitions = (allowedEndingTransitions | (transitionCosts[0.0] & safetySys & winningPositionsNew.SwapVariables(varVectorPre,varVectorPost)));
                             winningPositionsNew = newWinningTransitions.ExistAbstract(varCubePostOutput).UnivAbstract(varCubePostInput);
                             strategyDumpingData.push_back(std::pair<int,BF>(livenessGoal,newWinningTransitions & preTransitionalStateEncoding));
+                            transitionsAlreadyFoundToBeWinning |= preTransitionalStateEncoding & newWinningTransitions;
+                            //BF_newDumpDot(*this,positionsAlreadyFoundToBeWinning,NULL,filename.str()+"winningPosOld.dot");
+                            positionsAlreadyFoundToBeWinning |= preTransitionalStateEncoding & winningPositionsNew;
+                            //BF_newDumpDot(*this,newWinningTransitions,NULL,filename.str()+"winningTrans.dot");
+                            //BF_newDumpDot(*this,winningPositionsNew,NULL,filename.str()+"winningPosNew.dot");
                         }
 
-                        BF_newDumpDot(*this,winningPositionsNew,NULL,filename.str()+"wpnew.dot");
+                        //BF_newDumpDot(*this,winningPositionsNew,NULL,filename.str()+"wpnew.dot");
+                        //BF_newDumpDot(*this,positionsAlreadyFoundToBeWinning,NULL,filename.str()+"positionsalreadyfoundtobewinning.dot");
 
-
-                        winningPositionsNew |= preTransitionalStateEncoding & positionsAlreadyFoundToBeWinning;
-
-                        if (positionsAlreadyFoundToBeWinning!=winningPositionsNew) {
+                        if (oldPositionsWinning != positionsAlreadyFoundToBeWinning) {
                             // Add new elements to the TODO list
                             for (auto it = transitionCosts.begin();it!=transitionCosts.end();it++) {
                                 // No need to consider the cost-0 case again
                                 if (it->first != 0) {
                                     std::cerr << "Insert " << it->first+currentTuple.getActionCost() << std::endl;
                                     todo.insert(MK_COST_TUPLE(currentTuple.getWaitingCost(),it->first+currentTuple.getActionCost()));
+                                    todo.insert(MK_COST_TUPLE(currentTuple.getWaitingCost()+1,currentTuple.getActionCost()));
+                                    todo.insert(MK_COST_TUPLE(currentTuple.getWaitingCost()+1,it->first+currentTuple.getActionCost()));
                                 }
                             }
-                            positionsAlreadyFoundToBeWinning = winningPositionsNew;
                         }
+
+                        winningTransitionsFound[currentTuple] = transitionsAlreadyFoundToBeWinning;
+                        winningPositionsFound[currentTuple] = positionsAlreadyFoundToBeWinning;
 
                     } else {
                         // Waiting cost > 0
+
+                        // Take not too costly winning transitions and compute a suitable SCC
 
 
                     }
                 }
 
+            }
+
+            // Let's dump the strategy data!
+            unsigned int i = 0;
+            for (auto it = strategyDumpingData.begin();it!=strategyDumpingData.end();it++) {
+                if (it->first == livenessGoal) {
+                    std::ostringstream filename2;
+                    filename2 << "/tmp/guarantee" << livenessGoal << "winningTransitions" << i++ << ".dot";
+                    BF_newDumpDot(*this,it->second,NULL,filename2.str());
+                }
             }
 
         } // Iteration through all liveness goals completed
