@@ -108,6 +108,7 @@ public:
         varMgr->varVectorsToConstruct[&vector] = types;
     }
     operator BFVarVector& () {return vector;}
+    size_t size() { return vector.size(); }
 };
 
 // Template class to simplify building variable cube

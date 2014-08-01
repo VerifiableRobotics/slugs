@@ -13,19 +13,20 @@ z
 1
 
 [ENV_LIVENESS]
-1
+a'
 
 [ENV_INIT]
 1
 
 [SYS_TRANS]
-1
+| ! x' & y z
+| ! & y' z' & y a
+| ! y' | z y
 
 [SYS_LIVENESS]
-& x' z
-& y' ! z
+x'
 
 [SYS_INIT]
-1
-
-
+! x
+! y
+! z

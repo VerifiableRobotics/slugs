@@ -84,7 +84,7 @@ typedef enum {
 
     // Variables used in extensionTwoDimensionalCost.hpp
     CurrentLivenessAssumptionCounterPre, CurrentLivenessAssumptionCounterPost, IsInftyCostPre,
-    IsInftyCostPost,
+    IsInftyCostPost, TransitiveClosureIntermediateVariables,
 
     // Dummy parameters used for internal reasons. Must be last in the enum
     NoneVariableType
@@ -125,6 +125,7 @@ REGISTER_VARIABLE_TYPE_STRING(CurrentLivenessAssumptionCounterPost, "CurrentLive
 REGISTER_VARIABLE_TYPE_STRING(IsInftyCostPost,"IsInftyCostPost")
 REGISTER_VARIABLE_TYPE_STRING(CurrentLivenessAssumptionCounterPre, "CurrentLivenessAssumptionCounterPre")
 REGISTER_VARIABLE_TYPE_STRING(IsInftyCostPre,"IsInftyCostPre")
+REGISTER_VARIABLE_TYPE_STRING(TransitiveClosureIntermediateVariables,"TransitiveClosureIntermediateVariables")
 
 
 //! Variable hierarchy. Allows to include subgrouped variables when computing variable
@@ -170,6 +171,7 @@ REGISTER_VARIABLE_TYPE_HIERARCHY(CurrentLivenessAssumptionCounterPre, PreOutput)
 REGISTER_VARIABLE_TYPE_HIERARCHY(IsInftyCostPre,PreOutput)
 REGISTER_VARIABLE_TYPE_HIERARCHY(CurrentLivenessAssumptionCounterPost, PostOutput)
 REGISTER_VARIABLE_TYPE_HIERARCHY(IsInftyCostPost,PostOutput)
+REGISTER_VARIABLE_TYPE_HIERARCHY(TransitiveClosureIntermediateVariables,NoneVariableType)
 
 
 #endif

@@ -62,6 +62,8 @@ public:
 		}
 		return *this;
 	}
+
+	int size() const { return nofNodes; };
 };
 
 #endif /* BFBDDVARVECTOR_H_ */
