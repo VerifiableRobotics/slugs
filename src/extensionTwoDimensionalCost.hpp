@@ -17,8 +17,17 @@ public:
      * @param _waitingCost
      * @param _preference
      */
-    TwoDimensionalCostNotionTuple(double _combinedCost, int _waitingCost, double _actionCost, bool _preference)
-        : combinedCost(_combinedCost), actionCost(_actionCost), waitingCost(_waitingCost), preference(_preference) {
+    TwoDimensionalCostNotionTuple(double waitingCostWeight, double actionCostWeight, int _waitingCost, double _actionCost, bool _preference)
+        :  actionCost(_actionCost), waitingCost(_waitingCost), preference(_preference) {
+        if (actionCostWeight>0) {
+            if (actionCost==std::numeric_limits<double>::infinity()) {
+                combinedCost = std::numeric_limits<double>::infinity();
+            } else {
+                combinedCost = waitingCostWeight*waitingCost + actionCostWeight*actionCost;
+            }
+        } else {
+            combinedCost = waitingCostWeight*waitingCost;
+        }
         assert(waitingCost >= 0);
     }
 
@@ -52,10 +61,11 @@ public:
         assert(other.preference==preference);
         if (other.actionCost != actionCost) return false;
         if (other.waitingCost != waitingCost) return false;
+        assert(other.combinedCost==combinedCost);
         return true;
     }
     friend std::ostream& operator<< (std::ostream& stream, TwoDimensionalCostNotionTuple const& tuple) {
-        stream << "(" << tuple.waitingCost << ",";
+        stream << "(" << tuple.combinedCost << ":" << tuple.waitingCost << ",";
         if (tuple.actionCost==std::numeric_limits<double>::infinity())
             stream << "infty)";
         else
@@ -286,8 +296,10 @@ public:
 
         std::cerr << "TODO: Disallow the system to set the current assumption being waited for to some illegal value.\n";
 
+        BF_newDumpDot(*this,safetySys,"Pre Post","/tmp/safetySys.dot");
 
-#define MK_COST_TUPLE(x,y) TwoDimensionalCostNotionTuple(preferenceFactorWaiting*x+preferenceFactorAction*y,x,y,waitingPreferred)
+
+#define MK_COST_TUPLE(x,y) TwoDimensionalCostNotionTuple(preferenceFactorWaiting,preferenceFactorAction,x,y,waitingPreferred)
 
         // ===================================
         // Computation of the winning strategy
@@ -314,8 +326,15 @@ public:
 
                 // Get new element
                 TwoDimensionalCostNotionTuple currentTuple = *(todo.begin());
+                std::cerr << "Content of todo: ";
+                for (auto it = todo.begin();it!=todo.end();it++) std::cerr << *it << " ";
+                std::cerr << std::endl;
                 todo.erase(currentTuple);
+                std::cerr << "Content of todo: ";
+                for (auto it = todo.begin();it!=todo.end();it++) std::cerr << *it << " ";
+                std::cerr << std::endl;
                 std::cerr << "Working on Cost Tuple: " << currentTuple << std::endl;
+                assert(todo.count(currentTuple)==0);
 
                 // Inft-cost or normal cost?
                 if (currentTuple.getActionCost()==std::numeric_limits<double>::infinity()) {
@@ -346,7 +365,7 @@ public:
                         }
                     }
 
-                    //BF_newDumpDot(*this,allowedEndingTransitions,NULL,filename.str()+"allowed1.dot");
+                    BF_newDumpDot(*this,allowedEndingTransitions,"Pre Post",filename.str()+"allowed1.dot");
 
                     // .... and add the allowed transitions to positions that are already know to be winning ...
                     for (auto it = transitionCosts.begin();it!=transitionCosts.end();it++) {
@@ -363,7 +382,7 @@ public:
                         }
                     }
 
-                    //BF_newDumpDot(*this,allowedEndingTransitions,NULL,filename.str()+"allowed2.dot");
+                    BF_newDumpDot(*this,allowedEndingTransitions,"Pre Post",filename.str()+"allowed2.dot");
 
 
                     // Reachability game
@@ -378,7 +397,7 @@ public:
                         transitionsAlreadyFoundToBeWinning |= preTransitionalStateEncoding & newWinningTransitions;
                         //BF_newDumpDot(*this,positionsAlreadyFoundToBeWinning,NULL,filename.str()+"winningPosOld.dot");
                         positionsAlreadyFoundToBeWinning |= preTransitionalStateEncoding & winningPositionsNew;
-                        //BF_newDumpDot(*this,newWinningTransitions,NULL,filename.str()+"winningTrans.dot");
+                        BF_newDumpDot(*this,newWinningTransitions,NULL,filename.str()+"winningTrans.dot");
                         //BF_newDumpDot(*this,winningPositionsNew,NULL,filename.str()+"winningPosNew.dot");
                     }
 
@@ -492,6 +511,7 @@ public:
 
                         BF_newDumpDot(*this,winningPositionsNew,"Pre Post",filename.str()+"wpnew2.dot");
                         BF_newDumpDot(*this,positionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"positionsalreadyfoundtobewinning2.dot");
+                        BF_newDumpDot(*this,transitionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"transitionsalreadyfoundtobewinning2.dot");
 
                         winningTransitionsFound[currentTuple] = transitionsAlreadyFoundToBeWinning;
                         winningPositionsFound[currentTuple] = positionsAlreadyFoundToBeWinning;
@@ -501,6 +521,7 @@ public:
                     // Add new potential elements to the TODO list.
                     if (oldPositionsWinning != positionsAlreadyFoundToBeWinning) {
                         // Add new elements to the TODO list
+                        std::cerr << "Inserting new elements into the TODO list...\n";
                         todo.insert(MK_COST_TUPLE(currentTuple.getWaitingCost()+1,currentTuple.getActionCost()));
                         for (auto it = transitionCosts.begin();it!=transitionCosts.end();it++) {
                             // No need to consider the cost-0 case again
