@@ -1,0 +1,11 @@
+[INPUT]
+
+[OUTPUT]
+x:0...3
+
+[SYS_TRANS]
+x=3 | x'<=x+1
+
+[SYS_LIVENESS]
+x'=3
+

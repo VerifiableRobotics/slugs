@@ -1,0 +1,16 @@
+[INPUT]
+
+[OUTPUT]
+x:0...3
+c:0...3
+
+[SYS_TRANS]
+## As before -- x may only increase by at most one except it x=3
+x=3 | x'<=x+1
+
+## Counter value can only increase until the old goal "x'=3" is satisfied 
+x'=3 | c'>=c
+
+[SYS_LIVENESS]
+x'=3 | c'>c
+
