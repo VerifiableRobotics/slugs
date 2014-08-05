@@ -1,0 +1,32 @@
+#======================================
+# Fire fighting example from LTLMoP
+#======================================
+[INPUT]
+a
+
+[OUTPUT]
+x
+y
+
+[ENV_TRANS]
+1
+
+[ENV_LIVENESS]
+a'
+
+[ENV_INIT]
+! a
+
+[SYS_TRANS]
+| a' ! ^ x x'
+| a' ! ^ y y'
+| | ! & ! x ! y & ! x' ! y' & ! x' y'
+| | ! & ! x y & ! x' y' & x' ! y'
+| | ! & x ! y & x' ! y' & x' y'
+
+[SYS_LIVENESS]
+& x' y'
+
+[SYS_INIT]
+! x
+! y

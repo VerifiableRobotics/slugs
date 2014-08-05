@@ -291,15 +291,15 @@ public:
             }
             std::ostringstream encodingName;
             encodingName << "/tmp/nonTransitionalState" << i;
-            BF_newDumpDot(*this,thisCombinationPre,"Pre Post",encodingName.str()+"pre.dot");
-            BF_newDumpDot(*this,thisCombinationPost,"Pre Post",encodingName.str()+"post.dot");
+            //BF_newDumpDot(*this,thisCombinationPre,"Pre Post",encodingName.str()+"pre.dot");
+            //BF_newDumpDot(*this,thisCombinationPost,"Pre Post",encodingName.str()+"post.dot");
             nonTransitionalStatePreEncoding.push_back(thisCombinationPre);
             nonTransitionalStatePostEncoding.push_back(thisCombinationPost);
         }
 
         std::cerr << "TODO: Disallow the system to set the current assumption being waited for to some illegal value.\n";
 
-        BF_newDumpDot(*this,safetySys,"Pre Post","/tmp/safetySys.dot");
+        //BF_newDumpDot(*this,safetySys,"Pre Post","/tmp/safetySys.dot");
 
 
 #define MK_COST_TUPLE(x,y) TwoDimensionalCostNotionTuple(preferenceFactorWaiting,preferenceFactorAction,x,y,waitingPreferred)
@@ -339,6 +339,9 @@ public:
                 std::cerr << "Working on Cost Tuple: " << currentTuple << std::endl;
                 assert(todo.count(currentTuple)==0);
 
+                BF positionsWinningBeforeProcessingThisCostTuple =
+                   (winningPositionsFound.empty())?(mgr.constantFalse()):(winningPositionsFound.rbegin()->second);
+
                 // Inft-cost or normal cost?
                 if (currentTuple.getActionCost()==std::numeric_limits<double>::infinity()) {
                     // Infty Cost case
@@ -363,12 +366,12 @@ public:
                             winningTransitionFinder--;
                             std::cerr << "Found some transitions (2) ...\n";
                             allowedEscapeTransitions |= winningTransitionFinder->second.ExistAbstract(assumptionCounterPreCube).ExistAbstractSingleVar(isInftyCostPreVars[0]);
-                            BF_newDumpDot(*this,winningTransitionFinder->second,"Pre Post",filename.str()+"allowedEscapeTransitionAdditionNonAbstract.dot");
-                            BF_newDumpDot(*this,winningTransitionFinder->second.ExistAbstract(assumptionCounterPreCube).ExistAbstractSingleVar(isInftyCostPreVars[0]),"Pre Post",filename.str()+"allowedEscapeTransitionAddition.dot");
+                            //BF_newDumpDot(*this,winningTransitionFinder->second,"Pre Post",filename.str()+"allowedEscapeTransitionAdditionNonAbstract.dot");
+                            //BF_newDumpDot(*this,winningTransitionFinder->second.ExistAbstract(assumptionCounterPreCube).ExistAbstractSingleVar(isInftyCostPreVars[0]),"Pre Post",filename.str()+"allowedEscapeTransitionAddition.dot");
 
                         }
 
-                        BF_newDumpDot(*this,allowedEscapeTransitions,"Pre Post",filename.str()+"allowedEscapeTransitions.dot");
+                        //BF_newDumpDot(*this,allowedEscapeTransitions,"Pre Post",filename.str()+"allowedEscapeTransitions.dot");
 
                         // 3. Iterate over the assumptions and find SCCs
                         for (unsigned int livenessAssumption = 0;livenessAssumption<livenessAssumptions.size();livenessAssumption++) {
@@ -382,7 +385,7 @@ public:
                             }
 
                             // Compute transitive closure of the transitions, but exclude states that were previously winning.
-                            BF_newDumpDot(*this,transitions,"Pre Post",filename.str()+"transitiveBeforeClosure.dot");
+                            //BF_newDumpDot(*this,transitions,"Pre Post",filename.str()+"transitiveBeforeClosure.dot");
 
                             // For computing the transitive closure, only the internal transitions are to be used.
                             BF transitiveClosureInternaltransitions = winningSCCStates & winningSCCStates.SwapVariables(varVectorPre,varVectorPost);
@@ -393,11 +396,11 @@ public:
                                 transitiveClosureInternaltransitions |= (transitiveClosureInternaltransitions.SwapVariables(varVectorPost,transitiveClosureIntermediateVarVector)
                                         & transitiveClosureInternaltransitions.SwapVariables(varVectorPre,transitiveClosureIntermediateVarVector)).ExistAbstract(transitiveClosureIntermediateVarCube);
                             }
-                            BF_newDumpDot(*this,transitiveClosureInternaltransitions,"Pre Post",filename.str()+"transitiveClosure.dot");
+                            //BF_newDumpDot(*this,transitiveClosureInternaltransitions,"Pre Post",filename.str()+"transitiveClosure.dot");
 
                             // Prepare to cut out all transitions that are not somehow reversible
                             BF reversibleTransitions = transitiveClosureInternaltransitions &  transitiveClosureInternaltransitions.SwapVariables(varVectorPre,varVectorPost);
-                            BF_newDumpDot(*this,reversibleTransitions,"Pre Post",filename.str()+"reversibletransitions.dot");
+                            //BF_newDumpDot(*this,reversibleTransitions,"Pre Post",filename.str()+"reversibletransitions.dot");
 
                             BF finalTransitions = nonTransitionalStatePreEncoding[livenessAssumption] & isInftyCostPreVars[0] & (
                                 (!safetyEnv)
@@ -406,26 +409,26 @@ public:
                                     | ((!livenessAssumptions[livenessAssumption]) & winningSCCStates.SwapVariables(varVectorPre,varVectorPost) & reversibleTransitions & isInftyCostPostVars[0]))));
                             BF finalSCCStates = winningSCCStates & finalTransitions.ExistAbstract(varCubePostOutput).UnivAbstract(varCubePostInput);
 
-                            BF_newDumpDot(*this,finalSCCStates,"Pre Post",filename.str()+"finalSCCStates.dot");
-                            BF_newDumpDot(*this,finalTransitions,"Pre Post",filename.str()+"finalTransitions.dot");
+                            //BF_newDumpDot(*this,finalSCCStates,"Pre Post",filename.str()+"finalSCCStates.dot");
+                            //BF_newDumpDot(*this,finalTransitions,"Pre Post",filename.str()+"finalTransitions.dot");
 
                             // Compute the winning transitions
                             strategyDumpingData.push_back(std::pair<int,BF>(livenessGoal,finalTransitions));
                             std::cerr << "Added Strategy dumping data " << strategyDumpingData.size() << " at line " << __LINE__ << std::endl;
 
-                            BF_newDumpDot(*this,winningSCCStates,"Pre Post",filename.str()+"winningSCCStates.dot");
+                            //BF_newDumpDot(*this,winningSCCStates,"Pre Post",filename.str()+"winningSCCStates.dot");
 
                             transitionsAlreadyFoundToBeWinning |= finalTransitions;
                             positionsAlreadyFoundToBeWinning |= finalSCCStates;
 
                             winningTransitionsFound[currentTuple] = transitionsAlreadyFoundToBeWinning;
                             winningPositionsFound[currentTuple] = positionsAlreadyFoundToBeWinning;
-                            BF_newDumpDot(*this,positionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"overallWinningStatesAfterSCCAdding.dot");
+                            //BF_newDumpDot(*this,positionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"overallWinningStatesAfterSCCAdding.dot");
 
                         }
 
-                        BF_newDumpDot(*this,positionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"wpnewTwo.dot");
-                        BF_newDumpDot(*this,transitionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"winningTrasitionsFoundNew.dot");
+                        //BF_newDumpDot(*this,positionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"wpnewTwo.dot");
+                        //BF_newDumpDot(*this,transitionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"winningTrasitionsFoundNew.dot");
 
                         // Solve a reachability game "on top" in order to find states that are only winning
                         // because of the new SCC
@@ -446,17 +449,17 @@ public:
                             //BF_newDumpDot(*this,winningPositionsNew,NULL,filename.str()+"winningPosNew.dot");
                         }
 
-                        BF_newDumpDot(*this,winningPositionsNew,"Pre Post",filename.str()+"wpnew2.dot");
-                        BF_newDumpDot(*this,positionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"positionsalreadyfoundtobewinning2.dot");
-                        BF_newDumpDot(*this,transitionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"transitionsalreadyfoundtobewinning2.dot");
+                        //BF_newDumpDot(*this,winningPositionsNew,"Pre Post",filename.str()+"wpnew2.dot");
+                        //BF_newDumpDot(*this,positionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"positionsalreadyfoundtobewinning2.dot");
+                        //BF_newDumpDot(*this,transitionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"transitionsalreadyfoundtobewinning2.dot");
 
                         winningTransitionsFound[currentTuple] = transitionsAlreadyFoundToBeWinning;
                         winningPositionsFound[currentTuple] = positionsAlreadyFoundToBeWinning;
 
 
                         // Add new potential elements to the TODO list.
-                        if (oldPositionsWinning != positionsAlreadyFoundToBeWinning) {
-                            BF_newDumpDot(*this,(!oldPositionsWinning) & positionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"winningPositionsAdded.dot");
+                        if (positionsWinningBeforeProcessingThisCostTuple != positionsAlreadyFoundToBeWinning) {
+                            BF_newDumpDot(*this,(!positionsWinningBeforeProcessingThisCostTuple) & positionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"winningPositionsAdded.dot");
                             // Add new elements to the TODO list
                             std::cerr << "Inserting new elements into the TODO list...\n";
                             assert(currentTuple.getActionCost()==std::numeric_limits<double>::infinity());
@@ -485,7 +488,7 @@ public:
                         }
                     }
 
-                    BF_newDumpDot(*this,allowedEndingTransitions,"Pre Post",filename.str()+"allowed1.dot");
+                    //BF_newDumpDot(*this,allowedEndingTransitions,"Pre Post",filename.str()+"allowed1.dot");
 
                     // .... and add the allowed transitions to positions that are already know to be winning ...
                     for (auto it = transitionCosts.begin();it!=transitionCosts.end();it++) {
@@ -499,11 +502,11 @@ public:
                             winningStateFinder--;
                             std::cerr << "Found some transitions...\n";
                             allowedEndingTransitions |= safetySys & winningStateFinder->second.SwapVariables(varVectorPre,varVectorPost) & it->second;
-                            BF_newDumpDot(*this,winningStateFinder->second,"Pre Post",filename.str()+"winningStateFinder.dot");
+                            //BF_newDumpDot(*this,winningStateFinder->second,"Pre Post",filename.str()+"winningStateFinder.dot");
                         }
                     }
 
-                    BF_newDumpDot(*this,allowedEndingTransitions,"Pre Post",filename.str()+"allowed2.dot");
+                    //BF_newDumpDot(*this,allowedEndingTransitions,"Pre Post",filename.str()+"allowed2.dot");
 
 
                     // Reachability game
@@ -519,12 +522,12 @@ public:
                         transitionsAlreadyFoundToBeWinning |= newWinningTransitions;
                         //BF_newDumpDot(*this,positionsAlreadyFoundToBeWinning,NULL,filename.str()+"winningPosOld.dot");
                         positionsAlreadyFoundToBeWinning |= winningPositionsNew;
-                        BF_newDumpDot(*this,newWinningTransitions,NULL,filename.str()+"winningTrans.dot");
-                        BF_newDumpDot(*this,winningPositionsNew,NULL,filename.str()+"winningPosNew.dot");
+                        //BF_newDumpDot(*this,newWinningTransitions,NULL,filename.str()+"winningTrans.dot");
+                        //BF_newDumpDot(*this,winningPositionsNew,NULL,filename.str()+"winningPosNew.dot");
                     }
 
-                    BF_newDumpDot(*this,winningPositionsNew,"Pre Post",filename.str()+"wpnew.dot");
-                    BF_newDumpDot(*this,positionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"positionsalreadyfoundtobewinning.dot");
+                    //BF_newDumpDot(*this,winningPositionsNew,"Pre Post",filename.str()+"wpnew.dot");
+                    //BF_newDumpDot(*this,positionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"positionsalreadyfoundtobewinning.dot");
 
                     winningTransitionsFound[currentTuple] = transitionsAlreadyFoundToBeWinning;
                     winningPositionsFound[currentTuple] = positionsAlreadyFoundToBeWinning;
@@ -553,12 +556,12 @@ public:
                             winningTransitionFinder--;
                             std::cerr << "Found some transitions (2) ...\n";
                             allowedEscapeTransitions |= winningTransitionFinder->second.ExistAbstract(assumptionCounterPreCube).ExistAbstractSingleVar(isInftyCostPreVars[0]);
-                            BF_newDumpDot(*this,winningTransitionFinder->second,"Pre Post",filename.str()+"allowedEscapeTransitionAdditionNonAbstract.dot");
-                            BF_newDumpDot(*this,winningTransitionFinder->second.ExistAbstract(assumptionCounterPreCube).ExistAbstractSingleVar(isInftyCostPreVars[0]),"Pre Post",filename.str()+"allowedEscapeTransitionAddition.dot");
+                            //BF_newDumpDot(*this,winningTransitionFinder->second,"Pre Post",filename.str()+"allowedEscapeTransitionAdditionNonAbstract.dot");
+                            //BF_newDumpDot(*this,winningTransitionFinder->second.ExistAbstract(assumptionCounterPreCube).ExistAbstractSingleVar(isInftyCostPreVars[0]),"Pre Post",filename.str()+"allowedEscapeTransitionAddition.dot");
 
                         }
 
-                        BF_newDumpDot(*this,allowedEscapeTransitions,"Pre Post",filename.str()+"allowedEscapeTransitions.dot");
+                        //BF_newDumpDot(*this,allowedEscapeTransitions,"Pre Post",filename.str()+"allowedEscapeTransitions.dot");
 
                         // 3. Iterate over the assumptions and find SCCs
                         for (unsigned int livenessAssumption = 0;livenessAssumption<livenessAssumptions.size();livenessAssumption++) {
@@ -573,7 +576,7 @@ public:
                             }
 
                             // Compute transitive closure of the transitions, but exclude states that were previously winning.
-                            BF_newDumpDot(*this,transitions,"Pre Post",filename.str()+"transitiveBeforeClosure.dot");
+                            //BF_newDumpDot(*this,transitions,"Pre Post",filename.str()+"transitiveBeforeClosure.dot");
 
                             // For computing the transitive closure, only the internal transitions are to be used.
                             BF transitiveClosureInternaltransitions = (!winningPositionsFound[currentTuple]) & winningSCCStates & winningSCCStates.SwapVariables(varVectorPre,varVectorPost);
@@ -584,11 +587,11 @@ public:
                                 transitiveClosureInternaltransitions |= (transitiveClosureInternaltransitions.SwapVariables(varVectorPost,transitiveClosureIntermediateVarVector)
                                         & transitiveClosureInternaltransitions.SwapVariables(varVectorPre,transitiveClosureIntermediateVarVector)).ExistAbstract(transitiveClosureIntermediateVarCube);
                             }
-                            BF_newDumpDot(*this,transitiveClosureInternaltransitions,"Pre Post",filename.str()+"transitiveClosure.dot");
+                            //BF_newDumpDot(*this,transitiveClosureInternaltransitions,"Pre Post",filename.str()+"transitiveClosure.dot");
 
                             // Prepare to cut out all transitions that are not somehow reversible
                             BF reversibleTransitions = transitiveClosureInternaltransitions &  transitiveClosureInternaltransitions.SwapVariables(varVectorPre,varVectorPost);
-                            BF_newDumpDot(*this,reversibleTransitions,"Pre Post",filename.str()+"reversibletransitions.dot");
+                            //BF_newDumpDot(*this,reversibleTransitions,"Pre Post",filename.str()+"reversibletransitions.dot");
 
                             BF finalTransitions = nonTransitionalStatePreEncoding[livenessAssumption] & !isInftyCostPreVars[0] & (
                                 (!safetyEnv)
@@ -597,33 +600,33 @@ public:
                                     | ((!livenessAssumptions[livenessAssumption]) & winningSCCStates.SwapVariables(varVectorPre,varVectorPost) & reversibleTransitions & cheapTransitions & !isInftyCostPostVars[0]))));
                             BF finalSCCStates = winningSCCStates & finalTransitions.ExistAbstract(varCubePostOutput).UnivAbstract(varCubePostInput);
 
-                            BF_newDumpDot(*this,finalSCCStates,"Pre Post",filename.str()+"finalSCCStates.dot");
-                            BF_newDumpDot(*this,finalTransitions,"Pre Post",filename.str()+"finalTransitions.dot");
+                            //BF_newDumpDot(*this,finalSCCStates,"Pre Post",filename.str()+"finalSCCStates.dot");
+                            //BF_newDumpDot(*this,finalTransitions,"Pre Post",filename.str()+"finalTransitions.dot");
 
                             // Compute the winning transitions
                             strategyDumpingData.push_back(std::pair<int,BF>(livenessGoal,finalTransitions));
                             std::cerr << "Added Strategy dumping data " << strategyDumpingData.size() << " at line " << __LINE__ << std::endl;
 
-                            BF_newDumpDot(*this,winningSCCStates,"Pre Post",filename.str()+"winningSCCStates.dot");
+                            //BF_newDumpDot(*this,winningSCCStates,"Pre Post",filename.str()+"winningSCCStates.dot");
 
                             transitionsAlreadyFoundToBeWinning |= finalTransitions;
                             positionsAlreadyFoundToBeWinning |= finalSCCStates;
 
                             winningTransitionsFound[currentTuple] = transitionsAlreadyFoundToBeWinning;
                             winningPositionsFound[currentTuple] = positionsAlreadyFoundToBeWinning;
-                            BF_newDumpDot(*this,positionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"overallWinningStatesAfterSCCAdding.dot");
+                            //BF_newDumpDot(*this,positionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"overallWinningStatesAfterSCCAdding.dot");
 
                         }
 
-                        BF_newDumpDot(*this,positionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"wpnewTwo.dot");
-                        BF_newDumpDot(*this,transitionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"winningTrasitionsFoundNew.dot");
+                        //BF_newDumpDot(*this,positionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"wpnewTwo.dot");
+                        //BF_newDumpDot(*this,transitionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"winningTrasitionsFoundNew.dot");
 
                         // Solve a reachability game "on top" in order to find states that are only winning
                         // because of the new SCC
                         allowedEndingTransitions = transitionsAlreadyFoundToBeWinning;
                         BF winningPositionsOld = mgr.constantTrue();
-                        BF winningPositionsNew = mgr.constantFalse();
-                        BF oldPositionsWinning = positionsAlreadyFoundToBeWinning;
+                        BF winningPositionsNew = positionsAlreadyFoundToBeWinning;
+                        BF oldPositionsWinning = mgr.constantFalse();
                         while (winningPositionsNew!=winningPositionsOld) {
                             winningPositionsOld = winningPositionsNew;
                             BF newWinningTransitions = (!(isInftyCostPreVars[0])) & safetySys & (allowedEndingTransitions | (transitionCosts[0.0] & winningPositionsNew.SwapVariables(varVectorPre,varVectorPost)));
@@ -637,9 +640,9 @@ public:
                             //BF_newDumpDot(*this,winningPositionsNew,NULL,filename.str()+"winningPosNew.dot");
                         }
 
-                        BF_newDumpDot(*this,winningPositionsNew,"Pre Post",filename.str()+"wpnew2.dot");
-                        BF_newDumpDot(*this,positionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"positionsalreadyfoundtobewinning2.dot");
-                        BF_newDumpDot(*this,transitionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"transitionsalreadyfoundtobewinning2.dot");
+                        //BF_newDumpDot(*this,winningPositionsNew,"Pre Post",filename.str()+"wpnew2.dot");
+                        //BF_newDumpDot(*this,positionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"positionsalreadyfoundtobewinning2.dot");
+                        //BF_newDumpDot(*this,transitionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"transitionsalreadyfoundtobewinning2.dot");
 
                         winningTransitionsFound[currentTuple] = transitionsAlreadyFoundToBeWinning;
                         winningPositionsFound[currentTuple] = positionsAlreadyFoundToBeWinning;
@@ -647,8 +650,8 @@ public:
                     }
 
                     // Add new potential elements to the TODO list.
-                    if (oldPositionsWinning != positionsAlreadyFoundToBeWinning) {
-                        BF_newDumpDot(*this,(!oldPositionsWinning) & positionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"winningPositionsAdded.dot");
+                    if (positionsWinningBeforeProcessingThisCostTuple != positionsAlreadyFoundToBeWinning) {
+                        BF_newDumpDot(*this,(!positionsWinningBeforeProcessingThisCostTuple) & positionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"winningPositionsAdded.dot");
                         // Add new elements to the TODO list
                         std::cerr << "Inserting new elements into the TODO list...\n";
                         todo.insert(MK_COST_TUPLE(currentTuple.getWaitingCost()+1,currentTuple.getActionCost()));
@@ -666,14 +669,14 @@ public:
             }
 
             // Let's dump the strategy data!
-            unsigned int i = 0;
+            /*unsigned int i = 0;
             for (auto it = strategyDumpingData.begin();it!=strategyDumpingData.end();it++) {
                 if (it->first == livenessGoal) {
                     std::ostringstream filename2;
                     filename2 << "/tmp/guarantee" << livenessGoal << "winningTransitions" << i++ << ".dot";
                     BF_newDumpDot(*this,it->second,"Pre Post",filename2.str());
                 }
-            }
+            }*/
 
         } // Iteration through all liveness goals completed
 
