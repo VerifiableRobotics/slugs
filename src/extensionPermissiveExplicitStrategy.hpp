@@ -35,6 +35,8 @@ protected:
     using T::varCubePostInput;
     using T::determinize;
     using T::doesVariableInheritType;
+    using T::livenessAssumptions;
+    using T::safetySys;
 
     XExtractPermissiveExplicitStrategy<T>(std::list<std::string> &filenames): T(filenames) {}
 
@@ -81,7 +83,7 @@ public:
      *        "winningPositions" have been filled by the synthesis algorithm with meaningful data.
      * @param outputStream - Where the strategy shall be printed to.
      */
-    void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
+    void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {        
 
         // We don't want any reordering from this point onwards, as
         // the BDD manipulations from this point onwards are 'kind of simple'.
