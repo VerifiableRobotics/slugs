@@ -292,6 +292,7 @@ protected:
         std::cout << "#=======================================================\n";
         std::cout << "#= Belief Space Abstraction                            =\n";
         std::cout << "#=======================================================\n";
+        std::cout << "# --- End of the specification for the report\n";
         std::cout << "[SYS_TRANS]\n";
         printBFAsSlugsExpression(strategy);
         std::cout << std::endl;

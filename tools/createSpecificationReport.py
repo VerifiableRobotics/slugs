@@ -115,14 +115,18 @@ def createSpecificationReport(slugsFile):
     print "<pre class=\"details\">"
     nofEmptyLines = -10000
     with open(slugsFile,"r") as f:
+        abortedCopying = False
         for line in f.readlines():
-            if line.strip()=="":
-                nofEmptyLines+=1
-            else:
-                for i in xrange(0,nofEmptyLines):
-                    print ""
-                nofEmptyLines = 0
-                print cgi.escape(line),
+            if not abortedCopying:
+                if line.strip()=="":
+                    nofEmptyLines+=1
+                elif line.strip()=="# --- End of the specification for the report":
+                    abortCopying = True
+                else:
+                    for i in xrange(0,nofEmptyLines):
+                        print ""
+                    nofEmptyLines = 0
+                    print cgi.escape(line),
     print "</pre>"
     print "</details>"
     sys.stdout.flush()
