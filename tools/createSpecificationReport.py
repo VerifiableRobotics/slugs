@@ -121,7 +121,7 @@ def createSpecificationReport(slugsFile):
                 if line.strip()=="":
                     nofEmptyLines+=1
                 elif line.strip()=="# --- End of the specification for the report":
-                    abortCopying = True
+                    abortedCopying = True
                 else:
                     for i in xrange(0,nofEmptyLines):
                         print ""
