@@ -31,6 +31,7 @@ protected:
     using T::varVectorPost;
     using T::varCubePostOutput;
     using T::addVariable;
+    using T::computeVariableInformation;
 
     std::vector<int> counterVarNumbers;
     int goalTransitionSelectorVar;
@@ -92,7 +93,11 @@ public:
                 }
             }
             positionalStrategiesForTheIndividualGoals[i] = strategy;
-            //BF_newDumpDot(*this,strategy,"PreInput PreOutput PostInput PostOutput","/tmp/generalStrategy.dot");
+
+            // std::ostringstream gsName;
+            // gsName << "/tmp/generalStrategy" << i << ".dot";
+            // BF dump = variables[4] & !variables[6]& !variables[8] & strategy;
+            // BF_newDumpDot(*this,dump,"PreInput PreOutput PostInput PostOutput",gsName.str().c_str());
         }
 
         // Allocate counter variables
@@ -102,12 +107,13 @@ public:
             counterVarNumbers.push_back(addVariable(SymbolicStrategyCounterVar,os.str()));
         }
         goalTransitionSelectorVar = addVariable(SymbolicStrategyCounterVar,"strat_type");
+        computeVariableInformation();
 
         BF combinedStrategy = mgr.constantFalse();
         for (unsigned int i=0;i<livenessGuarantees.size();i++) {
             BF thisEncoding = mgr.constantTrue();
             for (unsigned j=0;j<counterVarNumbers.size();j++) {
-                if (j&(1 << i)) {
+                if (i&(1 << j)) {
                     thisEncoding &= variables[counterVarNumbers[j]];
                 } else {
                     thisEncoding &= !variables[counterVarNumbers[j]];
@@ -135,6 +141,9 @@ public:
         fileExtraHeader << "#\n# For information about the DDDMP format, please see:\n";
         fileExtraHeader << "#    http://www.cs.uleth.ca/~rice/cudd_docs/dddmp/dddmpAllFile.html#dddmpDump.c\n#\n";
         fileExtraHeader << "# For information about how this file is generated, please see the SLUGS source.\n#\n";
+
+        // BF dump = variables[4] & !variables[6]& !variables[8] & combinedStrategy;
+        // BF_newDumpDot(*this,dump,"SymbolicStrategyCounterVar PreInput PreOutput PostInput PostOutput","/tmp/writtenBDD.dot");
 
         mgr.writeBDDToFile(filename.c_str(),fileExtraHeader.str(),combinedStrategy,variables,variableNames);
 
