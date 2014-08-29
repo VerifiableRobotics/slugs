@@ -246,6 +246,29 @@ def createSpecificationReport(slugsFile):
     print "</details>"
     sys.stdout.flush()
 
+    # =====================================================================================
+    # Winning positions that can falsify the environment - Restricted to the reachable ones
+    # =====================================================================================
+    print "<details>"
+    print "<summary>5b. States/Positions that are winning by environment falsification (reachable states only)</summary>"
+    print "<pre class=\"details\">"
+    slugsLines = readSlugsFile(slugsCompiledFile)
+    slugsLines["[SYS_LIVENESS]"] = ["0"]
+    writeSlugsFile(slugsModifiedFile,slugsLines)    
+    command = slugsExecutableAndBasicOptions + " --analyzeInitialPositions --restrictToReachableStates "+slugsModifiedFile+" > "+slugsReturnFile+" 2> "+slugsErrorFile
+    print >>sys.stderr, "Executing: "+command
+    retValue = os.system(command)
+    if (retValue!=0):
+        print >>sys.stderr, "Slugs failed!"
+        raise Exception("Could not build report")
+    with open(slugsReturnFile,"r") as f:
+        for line in f.readlines():
+            print cgi.escape(line),
+    print "</pre>"
+    print "</details>"
+    sys.stdout.flush()
+
+
     # =====================================================
     # Superfluous assumptions
     # =====================================================

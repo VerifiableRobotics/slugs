@@ -108,6 +108,8 @@ public:
         std::vector<bool> systemGoalsSat;
         std::vector<int> environmentGoals;
         std::vector<bool> environmentGoalsSat;
+        std::vector<bool> safetyEnvViolation;
+        std::vector<bool> safetySysViolation;
 
         trace.push_back(currentPosition);
         systemGoals.push_back(0);
@@ -145,6 +147,10 @@ public:
                 environmentGoalsSat.push_back(false);
                 assert((edge & livenessAssumptions[environmentGoals.back()]).isFalse());
             }
+
+            // Violations
+            safetyEnvViolation.push_back(!(edge < safetyEnv));
+            safetySysViolation.push_back(!(edge < safetySys));
 
             // Compute next position
             assert(nextPosition < safetySys);
@@ -219,6 +225,7 @@ public:
             std::ostringstream environmentGoalNumber;
             environmentGoalNumber << environmentGoals[runPart];
             environmentGoalNumber << ((environmentGoalsSat[runPart])?"+":" ");
+            if (safetyEnvViolation[runPart]) environmentGoalNumber << " (safety prop. violation)";
             thisLine.push_back(environmentGoalNumber.str());
             thisLine.push_back("|");
 
@@ -226,6 +233,7 @@ public:
             std::ostringstream systemGoalNumber;
             systemGoalNumber << systemGoals[runPart];
             systemGoalNumber << ((systemGoalsSat[runPart])?"+":" ");
+            if (safetySysViolation[runPart]) environmentGoalNumber << " (safety prop. violation)";
             thisLine.push_back(systemGoalNumber.str());
             thisLine.push_back("|");
 

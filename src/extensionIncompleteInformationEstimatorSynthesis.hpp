@@ -23,6 +23,8 @@ template<class T> class XIncompleteInformationEstimatorSynthesis : public T {
     using T::varVectorPre;
     using T::varVectorPost;
     using T::doesVariableInheritType;
+    using T::varCubePost;
+    using T::preVars;
 
     // Variables local to this plugin
     BF strategy;
@@ -211,7 +213,10 @@ protected:
         BF oldReachableStates = mgr.constantFalse();
         BF allSafetyConstraints = safetyEnv & safetySys;
 
-        BF_newDumpDot(*this,reachableStates,NULL,"/tmp/reactStart.dot");
+        BF_newDumpDot(*this,reachableStates,NULL,"/tmp/reachStart.dot");
+        BF_newDumpDot(*this,initEnv,NULL,"/tmp/initEnvStart.dot");
+        BF_newDumpDot(*this,initSys,NULL,"/tmp/initSysStart.dot");
+
 
         // Classical algorithm
         while (reachableStates!=oldReachableStates) {
@@ -221,6 +226,8 @@ protected:
             //assert(newStates == (reachableStates & safetyEnv & safetySys).ExistAbstract(varCubePre).SwapVariables(varVectorPre,varVectorPost));
             reachableStates |= newStates;
         }
+
+        BF_newDumpDot(*this,reachableStates,NULL,"/tmp/reachEnd.dot");
 
         if (reachableStates.isFalse()) {
             std::cerr << "=========\nWARNING!\n=========\nThere is no initial state in the estimator model.\n\n";
@@ -248,12 +255,13 @@ protected:
         }*/
 
         // Compute the Estimator
-        strategy = ((!reachableStates) | (!safetyEnv) | safetySys).UnivAbstract(varCubeUnobservables);
+        strategy = ( (!reachableStates)  | (!safetyEnv) | safetySys).UnivAbstract(varCubeUnobservables);
+        sleep(10);
 
         mgr.setReorderingMaxBlowup(1.03f);
 
-        // BF_newDumpDot(*this,strategy,NULL,
-        //              "/tmp/strat.dot");
+        BF_newDumpDot(*this,strategy,NULL,
+                      "/tmp/stratNoMinMax.dot");
         // BF_newDumpDot(*this,(!reachableStates) | (!safetyEnv) | safetySys,NULL,
         //              "/tmp/prestrat.dot");
 
@@ -294,6 +302,7 @@ protected:
         std::cout << "#=======================================================\n";
         std::cout << "# --- End of the specification for the report\n";
         std::cout << "[SYS_TRANS]\n";
+        BF_newDumpDot(*this,strategy,NULL,"/tmp/estimatorGuarantees.dot");
         printBFAsSlugsExpression(strategy);
         std::cout << std::endl;
 
@@ -302,6 +311,7 @@ protected:
         BF combined = safetyEnv & safetySys & strategy;
         std::cerr << "...computing assumptions...\n";
         reachableStates = initSys & initEnv;
+        BF_newDumpDot(*this,reachableStates,NULL,"/tmp/reachable0.dot");
         oldReachableStates = mgr.constantFalse();
         while (reachableStates!=oldReachableStates) {
             oldReachableStates = reachableStates;
@@ -313,8 +323,35 @@ protected:
         printBFAsSlugsExpression(environmentAssumption);
         BF_newDumpDot(*this,environmentAssumption,NULL,"/tmp/envass.dot");
         std::cout << std::endl;
+
+
+        // Perform some checks
+        BF deadEnds = (!(environmentAssumption.ExistAbstract(varCubePost))) & reachableStates;
+        if (!(deadEnds.isFalse())) {
+            std::cerr << "============================================================\n";
+            std::cerr << "WARNING! There are environment dead-ends in the abstraction!\n";
+            std::cerr << "============================================================\n";
+            BF_newDumpDot(*this,deadEnds,NULL,"/tmp/envDeadEnd.dot");
+            BF_newDumpDot(*this,weakDeterminize(deadEnds,preVars),NULL,"/tmp/envDeadEndDet.dot");
+        }
     }
 
+    BF weakDeterminize(BF in, std::vector<BF> vars) {
+        for (auto it = vars.begin();it!=vars.end();it++) {
+            BF check = in.UnivAbstractSingleVar(*it);
+            if (!(check.isFalse())) {
+                in = check;
+            } else {
+                BF res = in & !(*it);
+                if (res.isFalse()) {
+                    in = in & *it;
+                } else {
+                    in = res;
+                }
+            }
+        }
+        return in;
+    }
 
 public:
     static GR1Context* makeInstance(std::list<std::string> &filenames) {

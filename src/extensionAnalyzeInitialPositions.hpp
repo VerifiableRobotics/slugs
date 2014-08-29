@@ -29,7 +29,7 @@ public:
 /**
  * A class that checks realizability and then analyzes the winning positions.
  */
-template<class T> class XAnalyzeInitialPositions : public T {
+template<class T, bool restrictToReachablePositions> class XAnalyzeInitialPositions : public T {
 protected:
     using T::checkRealizability;
     using T::varCubePre;
@@ -52,9 +52,11 @@ protected:
     using T::parseBooleanFormula;
     using T::livenessAssumptions;
     using T::livenessGuarantees;
+    using T::varVectorPre;
+    using T::varVectorPost;
 
     // Constructor
-    XAnalyzeInitialPositions<T>(std::list<std::string> &filenames) : T(filenames) {}
+    XAnalyzeInitialPositions<T,restrictToReachablePositions>(std::list<std::string> &filenames) : T(filenames) {}
 
     void printLargePreCubes(BF pre, BF careSet) {
 
@@ -183,6 +185,19 @@ public:
 
     void execute() {
         checkRealizability();
+
+        if (restrictToReachablePositions) {
+            BF reachable = initEnv & initSys;
+            BF combined = safetyEnv & safetySys;
+            std::cerr << "...computing assumptions...\n";
+            BF reachableStates = initSys & initEnv;
+            BF oldReachableStates = mgr.constantFalse();
+            while (reachableStates!=oldReachableStates) {
+                oldReachableStates = reachableStates;
+                reachableStates |= (reachableStates & combined).ExistAbstract(varCubePre).SwapVariables(varVectorPre,varVectorPost);
+            }
+            variableLimits &= reachableStates;
+        }
 
         double nofPos = variableLimits.getNofSatisfyingAssignments(varCubePre);
         double nofPosA = (initEnv & variableLimits).getNofSatisfyingAssignments(varCubePre);
@@ -358,7 +373,7 @@ public:
 
 
     static GR1Context* makeInstance(std::list<std::string> &filenames) {
-        return new XAnalyzeInitialPositions<T>(filenames);
+        return new XAnalyzeInitialPositions<T,restrictToReachablePositions>(filenames);
     }
 };
 

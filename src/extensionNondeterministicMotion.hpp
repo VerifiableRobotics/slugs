@@ -235,7 +235,7 @@ public:
             // Iterate over all of the liveness guarantees. Put the results into the variable 'nextContraintsForGoals' for every
             // goal. Then, after we have iterated over the goals, we can update nu2.
             BF nextContraintsForGoals = mgr.constantTrue();
-            for (uint j=0;j<livenessGuarantees.size();j++) {
+            for (unsigned int j=0;j<livenessGuarantees.size();j++) {
 
                 // Start computing the transitions that lead closer to the goal and lead to a position that is not yet known to be losing.
                 // Start with the ones that actually represent reaching the goal (which is a transition in this implementation as we can have
@@ -253,7 +253,7 @@ public:
                     // Iterate over the liveness assumptions. Store the positions that are found to be winning for *any*
                     // of them into the variable 'goodForAnyLivenessAssumption'.
                     BF goodForAnyLivenessAssumption = mu1.getValue();
-                    for (uint i=0;i<livenessAssumptions.size();i++) {
+                    for (unsigned int i=0;i<livenessAssumptions.size();i++) {
 
                         // Prepare the variable 'foundPaths' that contains the transitions that stay within the inner-most
                         // greatest fixed point or get closer to the goal. Only used for strategy extraction
@@ -279,7 +279,7 @@ public:
 
                         // Dump the paths that we just wound into 'strategyDumpingData' - store the current goal long
                         // with the BDD
-                        strategyDumpingData.push_back(std::pair<uint,BF>(j,foundPaths));
+                        strategyDumpingData.push_back(std::pair<unsigned int,BF>(j,foundPaths));
                     }
 
                     // Update the moddle fixed point
@@ -321,7 +321,7 @@ public:
         // Create a new liveness assumption that says that always eventually, if an action/pre-state
         // combination may lead to a different position, then it is taken
         BF prePostMotionStatesDifferent = mgr.constantFalse();
-        for (uint i=0;i<preMotionStateVars.size();i++) {
+        for (unsigned int i=0;i<preMotionStateVars.size();i++) {
             prePostMotionStatesDifferent |= (preMotionStateVars[i] ^ postMotionStateVars[i]);
         }
         BF preMotionInputCombinationsThatCanChangeState = (prePostMotionStatesDifferent & robotBDD).ExistAbstract(varCubePostMotionState);
