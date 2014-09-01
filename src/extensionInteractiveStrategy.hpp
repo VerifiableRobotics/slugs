@@ -587,6 +587,7 @@ public:
                         }
                     }
 
+                    BF oldInitialPositions = possibleInitialPositions;
                     if (realizable) {
                         possibleInitialPositions &= initSys;
                     } else {
@@ -596,6 +597,35 @@ public:
                     if (possibleInitialPositions.isFalse()) {
                         if (realizable) {
                             std::cout << "FAILGUARANTEES" << std::endl;
+
+                            resultPtr = 0;
+                            // Print variable assignment that satisfies forced and assumptions
+                            for (const VariableType &type: {PreInput, PreOutput}) {
+                                for (unsigned int i=0;i<variables.size();i++) {
+                                    if (doesVariableInheritType(i,type)) {
+                                        if (result[resultPtr]=='.') {
+                                            if (!((oldInitialPositions & !variables[i]).isFalse())) {
+                                                result[resultPtr] = '0';
+                                                oldInitialPositions &= !variables[i];
+                                            } else if (!((oldInitialPositions & variables[i]).isFalse())) {
+                                                result[resultPtr] = '1';
+                                                oldInitialPositions &= variables[i];
+                                            } else {
+                                                throw "Fatal error! Should not occur (1).";
+                                            }
+                                        }
+                                        resultPtr++;
+                                    }
+                                }
+                            }
+
+                            // Print position result
+                            for (unsigned int i=0;i<preVars.size();i++) {
+                                std::cout << result[i];
+                            }
+                            std::cout << std::endl;
+                            // std::cout << livenessAssumption % livenessAssumptions.size() << std::endl;
+                            // std::cout << livenessGuarantee % livenessGuarantees.size() << std::endl;
                         } else {
                             std::cout << "FORCEDNONWINNING" << std::endl;
                         }
@@ -619,6 +649,7 @@ public:
                             }
                         }
 
+                        oldInitialPositions = possibleInitialPositions;
                         if (realizable) {
                             possibleInitialPositions &= winningPositions;
                         } else {
@@ -630,6 +661,35 @@ public:
                                 std::cout << "FORCEDNONWINNING" << std::endl;
                             } else {
                                 std::cout << "FAILGUARANTEES" << std::endl;
+
+                                resultPtr = 0;
+                                // Print variable assignment that satisfies forced and assumptions
+                                for (const VariableType &type: {PreInput, PreOutput}) {
+                                    for (unsigned int i=0;i<variables.size();i++) {
+                                        if (doesVariableInheritType(i,type)) {
+                                            if (result[resultPtr]=='.') {
+                                                if (!((oldInitialPositions & !variables[i]).isFalse())) {
+                                                    result[resultPtr] = '0';
+                                                    oldInitialPositions &= !variables[i];
+                                                } else if (!((oldInitialPositions & variables[i]).isFalse())) {
+                                                    result[resultPtr] = '1';
+                                                    oldInitialPositions &= variables[i];
+                                                } else {
+                                                    throw "Fatal error! Should not occur (2).";
+                                                }
+                                            }
+                                            resultPtr++;
+                                        }
+                                    }
+                                }
+
+                                // Print position result
+                                for (unsigned int i=0;i<preVars.size();i++) {
+                                    std::cout << result[i];
+                                }
+                                std::cout << std::endl;
+                                // std::cout << livenessAssumption % livenessAssumptions.size() << std::endl;
+                                // std::cout << livenessGuarantee % livenessGuarantees.size() << std::endl;
                             }
                         } else {
 
@@ -669,7 +729,7 @@ public:
                                                 result[resultPtr] = '1';
                                                 possibleInitialPositions &= variables[i];
                                             } else {
-                                                throw "Fatal error! Should not occur.";
+                                                throw "Fatal error! Should not occur (3).";
                                             }
                                         }
                                         resultPtr++;
@@ -772,6 +832,7 @@ public:
                     assert(resultPtr==postVars.size());
 
                     // Add next component
+                    BF oldAllSoFar = allSoFar;
                     if (realizable) {
                         allSoFar &= safetySys;
                     } else {
@@ -781,6 +842,35 @@ public:
                     if (allSoFar.isFalse()) {
                         if (realizable) {
                             std::cout << "FAILGUARANTEES" << std::endl;
+
+                            // Print variable assignment that satisfies forced and assumptions
+                            resultPtr = 0;
+                            for (const VariableType &type: {PostInput, PostOutput}) {
+                                for (unsigned int i=0;i<variables.size();i++) {
+                                    if (doesVariableInheritType(i,type)) {
+                                        if (result[resultPtr]=='.') {
+                                            if (!((oldAllSoFar & !variables[i]).isFalse())) {
+                                                result[resultPtr] = '0';
+                                                oldAllSoFar &= !variables[i];
+                                            } else if (!((oldAllSoFar & variables[i]).isFalse())) {
+                                                result[resultPtr] = '1';
+                                                oldAllSoFar &= variables[i];
+                                            } else {
+                                                throw "Fatal error! Should not occur (4).";
+                                            }
+                                        }
+                                        resultPtr++;
+                                    }
+                                }
+                            }
+
+                            // Print position result
+                            for (unsigned int i=0;i<preVars.size();i++) {
+                                std::cout << result[i];
+                            }
+                            std::cout << std::endl;
+                            std::cout << livenessAssumption % livenessAssumptions.size() << std::endl;
+                            std::cout << livenessGuarantee % livenessGuarantees.size() << std::endl;
                         } else {
                             std::cout << "FORCEDNONWINNING" << std::endl;
                         }
@@ -806,6 +896,7 @@ public:
 
                         // Then combine with the strategy (or safetySys)
                         BF_newDumpDot(*this,allSoFar,NULL,"/tmp/allSoFarPre.dot");
+                        oldAllSoFar = allSoFar;
                         if (realizable) {
                             allSoFar &= positionalStrategiesForTheIndividualGoals[livenessGuarantee];
                         } else {
@@ -819,6 +910,36 @@ public:
                                 std::cout << "FORCEDNONWINNING" << std::endl;
                             } else {
                                 std::cout << "FAILGUARANTEES" << std::endl;
+
+                                resultPtr = 0;
+                                // Print variable assignment that satisfies forced and assumptions
+                                for (const VariableType &type: {PostInput, PostOutput}) {
+                                    for (unsigned int i=0;i<variables.size();i++) {
+                                        if (doesVariableInheritType(i,type)) {
+                                            if (result[resultPtr]=='.') {
+                                                if (!((oldAllSoFar & !variables[i]).isFalse())) {
+                                                    result[resultPtr] = '0';
+                                                    oldAllSoFar &= !variables[i];
+                                                } else if (!((oldAllSoFar & variables[i]).isFalse())) {
+                                                    result[resultPtr] = '1';
+                                                    oldAllSoFar &= variables[i];
+                                                } else {
+                                                    throw "Fatal error! Should not occur (5).";
+                                                }
+                                            }
+                                            resultPtr++;
+                                        }
+                                    }
+                                }
+
+                                // Print position result
+                                for (unsigned int i=0;i<preVars.size();i++) {
+                                    std::cout << result[i];
+                                }
+                                std::cout << std::endl;
+                                std::cout << livenessAssumption % livenessAssumptions.size() << std::endl;
+                                std::cout << livenessGuarantee % livenessGuarantees.size() << std::endl;
+
                             }
                         } else {
                             // Ok, so we found a suitable transition. Concretize it.
@@ -842,6 +963,11 @@ public:
                                 }
                             }
 
+                            // See if we can suggest a next trace element that does not enforce violation
+                            BF allSafe = (safetySys & safetyEnv).ExistAbstract(varCubePost);
+                            BF candidate = allSafe.SwapVariables(varVectorPost,varVectorPre) & allSoFar;
+                            if (!(candidate.isFalse())) allSoFar = candidate;
+
                             // Determinize the rest
                             resultPtr = 0;
                             for (const VariableType &type: {PostInput, PostOutput}) {
@@ -855,7 +981,7 @@ public:
                                                 result[resultPtr] = '1';
                                                 allSoFar &= variables[i];
                                             } else {
-                                                throw "Fatal error! Should not occur.";
+                                                throw "Fatal error! Should not occur (6).";
                                             }
                                         }
                                         resultPtr++;

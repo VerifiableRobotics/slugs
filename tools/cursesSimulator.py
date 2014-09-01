@@ -255,12 +255,16 @@ try:
                 if (initLine=="FAILGUARANTEES"):
                     traceFlags[0].add("G")
                     isValidElement = False
+                    # Read a new line
+                    print >>sys.stderr, "Awaiting position line: "+initLine
+                    initLine = slugsProcess.stdout.readline().strip()
+                    print >>sys.stderr, "Read position line: "+initLine
                 else:
                     if "G" in traceFlags[0]:
                         traceFlags[0].remove("G")
                 if (initLine=="FORCEDNONWINNING"):
                     traceFlags[0].add("L")
-                    isValidElement = False
+                    isValidElement = True
                 else:
                     if "L" in traceFlags[0]:
                         traceFlags[0].remove("L")
@@ -295,7 +299,11 @@ try:
                         traceFlags[len(trace)-1].remove("A")
                 if (positionLine=="FAILGUARANTEES"):
                     traceFlags[len(trace)-1].add("G")
-                    isValidElement = False
+                    isValidElement = True
+                    # Read a new line
+                    print >>sys.stderr, "Awaiting position line: "+positionLine
+                    positionLine = slugsProcess.stdout.readline().strip()
+                    print >>sys.stderr, "Read position line: "+positionLine
                 else:
                     if "G" in traceFlags[len(trace)-1]:
                         traceFlags[len(trace)-1].remove("G")
@@ -408,7 +416,7 @@ try:
                         stdscr.addstr(currentLine, startX, "=======+")
                         currentLine += 1
                     # In case of an error, mask non-forced values
-                    if ("A" in traceFlags[element+minTraceElement]) or ("G" in traceFlags[element+minTraceElement]) or ("L" in traceFlags[element+minTraceElement]):
+                    if ("A" in traceFlags[element+minTraceElement]) or (("G" in traceFlags[element+minTraceElement]) and structuredVariablesIsOutput[i]) or ("L" in traceFlags[element+minTraceElement]):
                         if trace[element+minTraceElement][i][1]==EDITED_BY_HAND:
                             stdscr.addstr(currentLine, startX+1, str(trace[element+minTraceElement][i][0]), curses.A_UNDERLINE)
                         else:

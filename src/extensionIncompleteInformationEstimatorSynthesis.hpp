@@ -293,6 +293,21 @@ protected:
             }
         }
 
+        // Test estimator!
+#ifndef NDEBUG
+        for (unsigned int i=0;i<variables.size();i++) {
+            std::string variableName = variableNames[i];
+            if ((variableName.substr(0,4)=="min_") || (variableName.substr(0,4)=="max_")) {
+                if (doesVariableInheritType(i,EstimationPost)) {
+                    std::cerr << "Note: Checking determinism for " << variableName << std::endl;
+                    BF overlap1 = (strategy & variables[i]).ExistAbstract(varCubeEstimationPost);
+                    BF overlap2 = (strategy & !variables[i]).ExistAbstract(varCubeEstimationPost);
+                    assert((overlap1 & overlap2).isFalse());
+                }
+            }
+        }
+#endif
+
         BF_newDumpDot(*this,strategy,NULL,"/tmp/strat.dot");
 
         // Print strategy for the estimator
