@@ -19,19 +19,18 @@ MAX_OVERALL_NUMBER = 999999
 # The types must be numbered such that taking the minimum of different values for different bits (except for edited_by_hand) gives the correct labelling for a composite value obtained by merging the bits to an integer value. 
 CHOSEN_BY_COMPUTER = 0
 EDITED_BY_HAND = 1
-FORCED_VALUE_ASSUMPTIONS_AND_GUARANTEES = 2
-FORCED_VALUE_ASSUMPTIONS_AND_GUARANTEES_AND_USER = 3
-
+FORCED_VALUE_ASSUMPTIONS = 2
+FORCED_VALUE_ASSUMPTIONS_AND_GUARANTEES = 3
+FORCED_VALUE_ASSUMPTIONS_AND_STRATEGY = 4
 
 
 # ==================================
 # Check parameters
 # ==================================
-specFile = "../examples/debuggingTest.slugsin"
-# if len(sys.argv)<2:
-#     print >>sys.stderr, "Error: Need Slugsin file as parameter"
-#     sys.exit(1)
-# specFile = sys.argv[1]
+if len(sys.argv)<2:
+    print >>sys.stderr, "Error: Need Slugsin file as parameter"
+    sys.exit(1)
+specFile = sys.argv[1]
 
 
 # ==================================
@@ -107,9 +106,11 @@ for (isOutput,source,startIndex) in [(False,inputAPs,0),(True,outputAPs,len(inpu
             structuredVariablesIsOutput.append(isOutput)
 
 
-# ===================================
-# Parsing a structured state
-# ===================================
+# ===============================================
+# Translating between structured positions/states
+# and the state/position representations that
+# slugs needs 
+# ===============================================
 def computeBinarySlugsStringFromStructuredLabeledTraceElementsForcedElements(traceElement):
     result = {}
     for i,name in enumerate(structuredVariables):
@@ -125,6 +126,19 @@ def computeBinarySlugsStringFromStructuredLabeledTraceElementsForcedElements(tra
     result = "".join([result[a] for a in xrange(0,len(result))])
     return result
 
+def computeBinarySlugsStringFromStructuredLabeledTraceElementsAllElements(traceElement):
+    result = {}
+    for i,name in enumerate(structuredVariables):
+        (chosenValue,assignmentType) = traceElement[i]
+        encodedValue = chosenValue-structuredVariablesMin[i]
+        for (a,b) in structuredVariablesBitPositions[i].iteritems():
+            if (encodedValue & (1 << a))>0:
+                result[b] = '1'
+            else:
+                result[b] = '0'
+    result = "".join([result[a] for a in xrange(0,len(result))])
+    return result
+
 
 def parseBinaryStateTupleIntoStructuredTuple(structuredTuple):
     result = []
@@ -132,24 +146,30 @@ def parseBinaryStateTupleIntoStructuredTuple(structuredTuple):
         thisOne = structuredVariablesMin[i]
         types = set([])
         for (a,b) in structuredVariablesBitPositions[i].iteritems():
-            print >>sys.stderr,(a,b)
-            print >>sys.stderr,(structuredTuple)
-            if structuredTuple[b]=="H":
+            # print >>sys.stderr,(a,b)
+            # print >>sys.stderr,(structuredTuple)
+            if structuredTuple[b]=="A":
+                thisOne += 1 << a
+                types.add(FORCED_VALUE_ASSUMPTIONS)
+            elif structuredTuple[b]=="a":
+                types.add(FORCED_VALUE_ASSUMPTIONS)
+            elif structuredTuple[b]=="G":
                 thisOne += 1 << a
                 types.add(FORCED_VALUE_ASSUMPTIONS_AND_GUARANTEES)
-            elif structuredTuple[b]=="L":
+            elif structuredTuple[b]=="g":
                 types.add(FORCED_VALUE_ASSUMPTIONS_AND_GUARANTEES)
-            elif structuredTuple[b]=="+":
+            elif structuredTuple[b]=="S":
                 thisOne += 1 << a
-                types.add(FORCED_VALUE_ASSUMPTIONS_AND_GUARANTEES_AND_USER)
-            elif structuredTuple[b]=="-":
-                types.add(FORCED_VALUE_ASSUMPTIONS_AND_GUARANTEES_AND_USER)
+                types.add(FORCED_VALUE_ASSUMPTIONS_AND_STRATEGY)
+            elif structuredTuple[b]=="s":
+                types.add(FORCED_VALUE_ASSUMPTIONS_AND_STRATEGY)
             elif structuredTuple[b]=="1":
                 thisOne += 1 << a
                 types.add(CHOSEN_BY_COMPUTER)
             elif structuredTuple[b]=="0":
                 types.add(CHOSEN_BY_COMPUTER)            
             else:
+                print >>sys.stderr, "Error: Found literal ",structuredTuple[b]," in structured Tuple"
                 assert False
         result.append((thisOne,min(types)))
     return result
@@ -178,10 +198,11 @@ if len(structuredVariables)==0:
 # ==================================
 # Initialize Trace
 # ==================================
-firstState = []
+unfixedState = []
 for i in xrange(0,len(structuredVariables)):
-    firstState.append((structuredVariablesMin[i],CHOSEN_BY_COMPUTER))
-trace = [firstState]
+    unfixedState.append((structuredVariablesMin[i],CHOSEN_BY_COMPUTER))
+unfixedState = tuple(unfixedState) # Enforce non-mutability for the rest of this script
+trace = [list(unfixedState)] 
 traceGoalNumbers = [(0,0)]
 traceFlags = [set([])]
 
@@ -196,6 +217,7 @@ stdscr.keypad(1)
 curses.init_pair(1, curses.COLOR_RED, curses.COLOR_WHITE)
 curses.init_pair(2, curses.COLOR_GREEN, curses.COLOR_BLACK)
 curses.init_pair(3, curses.COLOR_BLUE, curses.COLOR_BLACK)
+curses.init_pair(4, curses.COLOR_RED, curses.COLOR_BLACK)
 stdscr.refresh()
 
 try:
@@ -224,12 +246,18 @@ try:
                 initLine = slugsProcess.stdout.readline().strip()
                 print >> sys.stderr, "INITLINE: "+initLine
                 isValidElement = True            
-                if (initLine=="FAIL"):
-                    traceFlags[0].add("X")
+                if (initLine=="FAILASSUMPTIONS"):
+                    traceFlags[0].add("A")
                     isValidElement = False
                 else:
-                    if "X" in traceFlags[0]:
-                        traceFlags[0].remove("X")
+                    if "A" in traceFlags[0]:
+                        traceFlags[0].remove("A")
+                if (initLine=="FAILGUARANTEES"):
+                    traceFlags[0].add("G")
+                    isValidElement = False
+                else:
+                    if "G" in traceFlags[0]:
+                        traceFlags[0].remove("G")
                 if (initLine=="FORCEDNONWINNING"):
                     traceFlags[0].add("L")
                     isValidElement = False
@@ -246,7 +274,51 @@ try:
                         else:
                             trace[0][i] = parsedTraceElement[i]
                 
+        else:
+            # Update non-initial state
+            if not "(OOB)" in traceFlags[len(trace)-1]:
+                currentElement = computeBinarySlugsStringFromStructuredLabeledTraceElementsAllElements(trace[len(trace)-2])
+                successorElement = computeBinarySlugsStringFromStructuredLabeledTraceElementsForcedElements(trace[len(trace)-1])
+                dataForStrategyTransition = currentElement+successorElement+"\n"+str(traceGoalNumbers[len(trace)-2][0])+"\n"+str(traceGoalNumbers[len(trace)-2][1])
+                slugsProcess.stdin.write("XSTRATEGYTRANSITION\n"+dataForStrategyTransition+"\n")
+                print >> sys.stderr, "IPRINT: "+"XSTRATEGYTRANSITION\n"+writtenElement+"\n"
+                slugsProcess.stdin.flush()
+                print >> sys.stderr, "IREAD: "+slugsProcess.stdout.readline() # Skip the prompt
+                positionLine = slugsProcess.stdout.readline().strip()
+                print >> sys.stderr, "POSILINE: "+positionLine
+                isValidElement = True            
+                if (positionLine=="FAILASSUMPTIONS"):
+                    traceFlags[len(trace)-1].add("A")
+                    isValidElement = False
+                else:
+                    if "A" in traceFlags[len(trace)-1]:
+                        traceFlags[len(trace)-1].remove("A")
+                if (positionLine=="FAILGUARANTEES"):
+                    traceFlags[len(trace)-1].add("G")
+                    isValidElement = False
+                else:
+                    if "G" in traceFlags[len(trace)-1]:
+                        traceFlags[len(trace)-1].remove("G")
+                if (positionLine=="FORCEDNONWINNING"):
+                    traceFlags[len(trace)-1].add("L")
+                    isValidElement = False
+                else:
+                    if "L" in traceFlags[len(trace)-1]:
+                        traceFlags[len(trace)-1].remove("L")
 
+                if isValidElement:
+                    parsedTraceElement = parseBinaryStateTupleIntoStructuredTuple(positionLine)
+                    # Merge the computed concretized trace element back into the actual trace
+                    for i in xrange(0,len(structuredVariables)):
+                        if trace[len(trace)-1][i][1]==EDITED_BY_HAND:
+                            assert trace[len(trace)-1][i][0]==parsedTraceElement[i][0]
+                        else:
+                            trace[len(trace)-1][i] = parsedTraceElement[i]
+
+                    nextLivenessAssumption = int(slugsProcess.stdout.readline().strip())
+                    nextLivenessGuarantee = int(slugsProcess.stdout.readline().strip())
+                    traceGoalNumbers[len(trace)-1] = (nextLivenessAssumption,nextLivenessGuarantee)
+                    
 
         # ==============================
         # Draw interface
@@ -263,7 +335,7 @@ try:
         # Main part
         if (xsize<max(72,maxLenInputOrOutputName+46)):
             stdscr.addstr(2, 0, "Terminal is not wide enough!",curses.color_pair(1))
-        elif (ysize<max(len(structuredVariables)+13,15)) :
+        elif (ysize<max(len(structuredVariables)+13,17)) :
             stdscr.addstr(2, 0, "Terminal is not high enough!",curses.color_pair(1))
         elif helpScreen==1:
             stdscr.addstr(2, 0, "Basic Keys:")
@@ -273,22 +345,28 @@ try:
             stdscr.addstr(6, 0, " - Backspace: Revert forced value to automatically chosen one")
             stdscr.addstr(7, 0, " - Numbers: Enter a value to be enforced")
             stdscr.addstr(9, 0, "Marking semantics:")
-            stdscr.addstr(10, 1, "- Automatically chosen value")
-            stdscr.addstr(11, 1, "- ")
-            stdscr.addstr(11, 3, "Manually chosen value", curses.A_UNDERLINE)
-            stdscr.addstr(12, 1, "- ")
-            stdscr.addstr(12, 3, "Value that is implied by the safety assumptions and guarantees", curses.color_pair(2))
-            stdscr.addstr(13, 1, "- ")
-            stdscr.addstr(13, 3, "Value is implied by safety a's and g's & the manually chosen values", curses.color_pair(3))
+            stdscr.addstr(10, 1, "1) Automatically chosen value")
+            stdscr.addstr(11, 1, "2) ")
+            stdscr.addstr(11, 4, "Manually chosen value", curses.A_UNDERLINE)
+            stdscr.addstr(12, 1, "3) ")
+            stdscr.addstr(12, 4, "Value that is implied by the safety a's and implied values", curses.color_pair(2))
+            stdscr.addstr(13, 1, "4) ")
+            stdscr.addstr(13, 4, "Value implied by the safety g's and the cases above", curses.color_pair(3))
+            stdscr.addstr(14, 1, "5) ")
+            stdscr.addstr(14, 4, "Value implied by the strat' of the winning player & cases above", curses.color_pair(4))
+            stdscr.addstr(15, 0, "The order of case 4 and 5 are swapped for unrealizable specifications.")
             stdscr.move(ysize-1,0)
         elif helpScreen==2:
             stdscr.addstr(2, 0, "Flags:")
-            stdscr.addstr(3, 0, " - X: Violates Safety or Initialization assumptions or guarantees")
-            stdscr.addstr(4, 0, " - L: Is losing with the forced values for the player that would")
-            stdscr.addstr(5, 0, "      normally win")
-            stdscr.addstr(6, 0, " - (OOB): Variable value out of bounds (not within its min and max")
-            stdscr.addstr(8, 0, "Movin on to the next trace element is only possible when there are")
-            stdscr.addstr(9, 0, "none of these flags present.")
+            stdscr.addstr(3, 0, " - A: Violates Safety or Initialization assumptions")
+            stdscr.addstr(4, 0, " - G: Violates Safety or Initialization guarantees")
+            stdscr.addstr(5, 0, " - L: Is losing with the forced values for the player that would")
+            stdscr.addstr(6, 0, "      normally win")
+            stdscr.addstr(7, 0, " - (OOB): Variable value out of bounds (not within its min and max")
+            stdscr.addstr(9, 0, "Values are displayed as '?' is due to strategy or property violations")
+            stdscr.addstr(10, 0, "(possibly due to forced values), no actual value can be given.")
+            stdscr.addstr(12, 0, "Moving on to the next trace element is also only possible when")
+            stdscr.addstr(13, 0, "none of the above flags are present.")
             stdscr.move(ysize-1,0)
         else:
             # Print Trace information
@@ -329,14 +407,23 @@ try:
                         currentMode = True
                         stdscr.addstr(currentLine, startX, "=======+")
                         currentLine += 1
-                    if trace[element+minTraceElement][i][1]==CHOSEN_BY_COMPUTER:
-                        stdscr.addstr(currentLine, startX+1, str(trace[element+minTraceElement][i][0]))
-                    elif trace[element+minTraceElement][i][1]==EDITED_BY_HAND:
-                        stdscr.addstr(currentLine, startX+1, str(trace[element+minTraceElement][i][0]), curses.A_UNDERLINE)
-                    elif trace[element+minTraceElement][i][1]==FORCED_VALUE_ASSUMPTIONS_AND_GUARANTEES:
-                        stdscr.addstr(currentLine, startX+1, str(trace[element+minTraceElement][i][0]), curses.color_pair(2))
-                    elif trace[element+minTraceElement][i][1]==FORCED_VALUE_ASSUMPTIONS_AND_GUARANTEES_AND_USER:
-                        stdscr.addstr(currentLine, startX+1, str(trace[element+minTraceElement][i][0]), curses.color_pair(3))
+                    # In case of an error, mask non-forced values
+                    if ("A" in traceFlags[element+minTraceElement]) or ("G" in traceFlags[element+minTraceElement]) or ("L" in traceFlags[element+minTraceElement]):
+                        if trace[element+minTraceElement][i][1]==EDITED_BY_HAND:
+                            stdscr.addstr(currentLine, startX+1, str(trace[element+minTraceElement][i][0]), curses.A_UNDERLINE)
+                        else:
+                            stdscr.addstr(currentLine, startX+1, "?") 
+                    else:
+                        if trace[element+minTraceElement][i][1]==CHOSEN_BY_COMPUTER:
+                            stdscr.addstr(currentLine, startX+1, str(trace[element+minTraceElement][i][0]))
+                        elif trace[element+minTraceElement][i][1]==EDITED_BY_HAND:
+                            stdscr.addstr(currentLine, startX+1, str(trace[element+minTraceElement][i][0]), curses.A_UNDERLINE)
+                        elif trace[element+minTraceElement][i][1]==FORCED_VALUE_ASSUMPTIONS:
+                            stdscr.addstr(currentLine, startX+1, str(trace[element+minTraceElement][i][0]), curses.color_pair(2))
+                        elif trace[element+minTraceElement][i][1]==FORCED_VALUE_ASSUMPTIONS_AND_GUARANTEES:
+                            stdscr.addstr(currentLine, startX+1, str(trace[element+minTraceElement][i][0]), curses.color_pair(3))
+                        elif trace[element+minTraceElement][i][1]==FORCED_VALUE_ASSUMPTIONS_AND_STRATEGY:
+                            stdscr.addstr(currentLine, startX+1, str(trace[element+minTraceElement][i][0]), curses.color_pair(4))
                     stdscr.addstr(currentLine, startX+7, "|") 
                     currentLine += 1
                 stdscr.addstr(currentLine, startX, "=======+")
@@ -382,36 +469,61 @@ try:
         if c == curses.KEY_UP:
             if cursorInWhichProposition>0:
                 cursorInWhichProposition -= 1
+
+        # 2. Change trace element selection
+        if c == curses.KEY_RIGHT:
+            if len(traceFlags[len(trace)-1])==0:
+                if len(postTrace)>0:
+                    trace.append(postTrace[0])
+                    postTrace = postTrace[1:]
+                else:
+                    trace.append(list(unfixedState))
+                traceGoalNumbers.append((0,0))
+                traceFlags.append(set([]))
+        if c == curses.KEY_LEFT:
+            if len(trace)>1:
+                postTrace = [trace[len(trace)-1]]+postTrace
+                trace = trace[0:len(trace)-1]
+                traceGoalNumbers = traceGoalNumbers[0:len(trace)]
+                traceFlags = traceFlags[0:len(trace)]
+                
+
+            
                    
-        # 2. Numbers and Backspace
+        # 3. Numbers and Backspace
         if (c>=ord('0') and c<=ord('9')) or c==curses.KEY_BACKSPACE:
+            
+            # Only allow editing if no error currently there
+            if (trace[element+minTraceElement][cursorInWhichProposition][1]==EDITED_BY_HAND) or not \
+              (("A" in traceFlags[element+minTraceElement]) or ("G" in traceFlags[element+minTraceElement]) or ("L" in traceFlags[element+minTraceElement])):
 
-            traceElementBeingEdited = len(trace)-1
-            if (c>=ord('0') and c<=ord('9')):    
-                number = c - ord('0')
-                if cursorEditPosition==None:
-                    trace[traceElementBeingEdited][cursorInWhichProposition] = (number,EDITED_BY_HAND)
-                    cursorEditPosition = 1
+                traceElementBeingEdited = len(trace)-1
+                if (c>=ord('0') and c<=ord('9')):    
+                    number = c - ord('0')
+                    if cursorEditPosition==None:
+                        trace[traceElementBeingEdited][cursorInWhichProposition] = (number,EDITED_BY_HAND)
+                        cursorEditPosition = 1
+                    else:
+                        trace[traceElementBeingEdited][cursorInWhichProposition] = (min(MAX_OVERALL_NUMBER,
+                              trace[traceElementBeingEdited][cursorInWhichProposition][0]*10+number),EDITED_BY_HAND)
+                        cursorEditPosition = len(str(trace[traceElementBeingEdited][cursorInWhichProposition][0]))
                 else:
-                    trace[traceElementBeingEdited][cursorInWhichProposition] = (min(MAX_OVERALL_NUMBER,
-                          trace[traceElementBeingEdited][cursorInWhichProposition][0]*10+number),EDITED_BY_HAND)
-                    cursorEditPosition = len(str(trace[traceElementBeingEdited][cursorInWhichProposition][0]))
-            else:
-                if cursorEditPosition==None:
-                    trace[traceElementBeingEdited][cursorInWhichProposition] = (structuredVariablesMin[cursorInWhichProposition],CHOSEN_BY_COMPUTER)
-                else:
-                    trace[traceElementBeingEdited][cursorInWhichProposition] = (trace[traceElementBeingEdited][cursorInWhichProposition][0]/10,EDITED_BY_HAND)
-                    cursorEditPosition = len(str(trace[traceElementBeingEdited][cursorInWhichProposition][0]))
+                    if cursorEditPosition==None or trace[traceElementBeingEdited][cursorInWhichProposition][0]==0:
+                        trace[traceElementBeingEdited][cursorInWhichProposition] = (structuredVariablesMin[cursorInWhichProposition],CHOSEN_BY_COMPUTER)
+                        cursorEditPosition=None
+                    else:
+                        trace[traceElementBeingEdited][cursorInWhichProposition] = (trace[traceElementBeingEdited][cursorInWhichProposition][0]/10,EDITED_BY_HAND)
+                        cursorEditPosition = len(str(trace[traceElementBeingEdited][cursorInWhichProposition][0]))
 
-            # Out of bounds check
-            if ((trace[traceElementBeingEdited][cursorInWhichProposition][0] < structuredVariablesMin[cursorInWhichProposition]) or
-               (trace[traceElementBeingEdited][cursorInWhichProposition][0] > structuredVariablesMax[cursorInWhichProposition])):
-                traceFlags[traceElementBeingEdited].add("(OOB)")
-            else:
-                if "(OOB)" in traceFlags[traceElementBeingEdited]:
-                    traceFlags[traceElementBeingEdited].remove("(OOB)")
+                # Out of bounds check
+                if ((trace[traceElementBeingEdited][cursorInWhichProposition][0] < structuredVariablesMin[cursorInWhichProposition]) or
+                   (trace[traceElementBeingEdited][cursorInWhichProposition][0] > structuredVariablesMax[cursorInWhichProposition])):
+                    traceFlags[traceElementBeingEdited].add("(OOB)")
+                else:
+                    if "(OOB)" in traceFlags[traceElementBeingEdited]:
+                        traceFlags[traceElementBeingEdited].remove("(OOB)")
         
-        # 3. Special keys                        
+        # 4. Special keys                        
         if c == ord('q'):
             break  # Exit the while()
         if c == ord('h'):
@@ -419,15 +531,10 @@ try:
 
 
 
-# Trace flags:
-# - (OOB): Out of bounds
-
 
 # =====================
 # Cleanup Curses
 # =====================
 finally:
     curses.endwin()
-
-
 

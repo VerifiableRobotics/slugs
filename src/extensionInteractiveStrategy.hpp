@@ -70,17 +70,19 @@ public:
                     }
                 }
                 positionalStrategiesForTheIndividualGoals.push_back(strategy);
-                //BF_newDumpDot(*this,strategy,"PreInput PreOutput PostInput PostOutput","/tmp/generalStrategy.dot");
+                std::ostringstream filename;
+                filename << "/tmp/realizableStratForSystemGoal" << i << ".dot";
+                BF_newDumpDot(*this,strategy,"PreInput PreOutput PostInput PostOutput",filename.str().c_str());
             }
         } else {
 
             // Compute Counter-Strategy
             BFFixedPoint mu2(mgr.constantFalse());
             for (;!mu2.isFixedPointReached();) {
-                std::vector<std::pair<unsigned int,BF> > strategyDumpingDataOld = strategyDumpingData;
                 BF nextContraintsForGoals = mgr.constantFalse();
                 for (unsigned int j=0;j<livenessGuarantees.size();j++) {
                     BF livetransitions = (!livenessGuarantees[j]) | (mu2.getValue().SwapVariables(varVectorPre,varVectorPost));
+                    std::vector<std::pair<unsigned int,BF> > strategyDumpingDataOld = strategyDumpingData;
                     BFFixedPoint nu1(mgr.constantTrue());
                     for (;!nu1.isFixedPointReached();) {
                         strategyDumpingData = strategyDumpingDataOld;
@@ -111,13 +113,16 @@ public:
                 BF strategy = mgr.constantFalse();
                 for (auto it = strategyDumpingData.begin();it!=strategyDumpingData.end();it++) {
                     if (it->first == i) {
-                        BF newCases = it->second.ExistAbstract(varCubePost) & !casesCovered;
-                        strategy |= newCases & it->second;
+                        BF actions = it->second.UnivAbstract(varCubePostOutput);
+                        BF newCases = actions.ExistAbstract(varCubePost) & !casesCovered;
+                        strategy |= newCases & actions;
                         casesCovered |= newCases;
                     }
                 }
                 positionalStrategiesForTheIndividualGoals.push_back(strategy);
-                //BF_newDumpDot(*this,strategy,"PreInput PreOutput PostInput PostOutput","/tmp/generalStrategy.dot");
+                std::ostringstream filename;
+                filename << "/tmp/realizableStratForEnvironmentGoal" << i << ".dot";
+                BF_newDumpDot(*this,strategy,"PreInput PreOutput PostInput PostOutput",filename.str().c_str());
             }
         }
 
@@ -531,13 +536,13 @@ public:
                             } else if (c=='.') {
                                 // No forced value
                             } else {
-                                std::cerr << "Error: Illegal XMAKETRANS string given.\n";
+                                std::cerr << "Error: Illegal XCOMPLETEINIT string given.\n";
                             }
                         }
                     }
                 }
 
-                BF possibleInitialPositions = initSys & initEnv & winningPositions;
+                BF possibleInitialPositions = initEnv & forced;
 
                 // There exists an allowed initial position
                 char result[preVars.size()];
@@ -547,24 +552,20 @@ public:
                         if (doesVariableInheritType(i,type)) {
                             std::cerr << "Considering variable: " << variableNames[i] << std::endl;
                             if ((possibleInitialPositions & variables[i]).isFalse()) {
-                                result[resultPtr] = 'L';
+                                result[resultPtr] = 'a';
                             } else if ((possibleInitialPositions & !variables[i]).isFalse()) {
-                                result[resultPtr] = 'H';
+                                result[resultPtr] = 'A';
                             } else {
                                 result[resultPtr] = '.';
                             }
                             resultPtr++;
                         }
                     }
-                }
+                }                
                 assert(resultPtr==preVars.size());
-                possibleInitialPositions &= forced;
+
                 if (possibleInitialPositions.isFalse()) {
-                    if ((initSys & initEnv & forced).isFalse()) {
-                        std::cout << "FAIL" << std::endl;
-                    } else {
-                        std::cout << "FORCEDNONWINNING" << std::endl;
-                    }
+                    std::cout << "FAILASSUMPTIONS" << std::endl;
                 } else {
                     //BF_newDumpDot(*this,possibleInitialPositions,NULL,"/tmp/init.dot");
                     // Find the newly forced values
@@ -574,9 +575,9 @@ public:
                             if (doesVariableInheritType(i,type)) {
                                 if (result[resultPtr]=='.') {
                                     if ((possibleInitialPositions & variables[i]).isFalse()) {
-                                        result[resultPtr] = '-';
+                                        result[resultPtr] = 'a';
                                     } else if ((possibleInitialPositions & !variables[i]).isFalse()) {
-                                        result[resultPtr] = '+';
+                                        result[resultPtr] = 'A';
                                     } else {
                                         result[resultPtr] = '.';
                                     }
@@ -586,32 +587,298 @@ public:
                         }
                     }
 
-                    // Determinize the rest
-                    resultPtr = 0;
-                    for (const VariableType &type: {PreInput, PreOutput}) {
+                    if (realizable) {
+                        possibleInitialPositions &= initSys;
+                    } else {
+                        possibleInitialPositions &= winningPositions;
+                    }
+
+                    if (possibleInitialPositions.isFalse()) {
+                        if (realizable) {
+                            std::cout << "FAILGUARANTEES" << std::endl;
+                        } else {
+                            std::cout << "FORCEDNONWINNING" << std::endl;
+                        }
+                    } else {
+
+                        // Determinize part 2
+                        resultPtr = 0;
+                        for (const VariableType &type: {PreInput, PreOutput}) {
+                            for (unsigned int i=0;i<variables.size();i++) {
+                                if (doesVariableInheritType(i,type)) {
+                                    if (result[resultPtr]=='.') {
+                                        if ((possibleInitialPositions & !variables[i]).isFalse()) {
+                                            result[resultPtr] = (realizable)?'G':'S';
+                                            std::cerr << "!Nabend!\n";
+                                        } else if ((possibleInitialPositions & variables[i]).isFalse()) {
+                                            result[resultPtr] = (realizable)?'g':'s';
+                                        }
+                                    }
+                                    resultPtr++;
+                                }
+                            }
+                        }
+
+                        if (realizable) {
+                            possibleInitialPositions &= winningPositions;
+                        } else {
+                            possibleInitialPositions &= initSys;
+                        }
+
+                        if (possibleInitialPositions.isFalse()) {
+                            if (realizable) {
+                                std::cout << "FORCEDNONWINNING" << std::endl;
+                            } else {
+                                std::cout << "FAILGUARANTEES" << std::endl;
+                            }
+                        } else {
+
+                            BF_newDumpDot(*this,possibleInitialPositions,NULL,"/tmp/afterInitSys.dot");
+
+                            // Determinize part 3
+                            resultPtr = 0;
+                            for (const VariableType &type: {PreInput, PreOutput}) {
+                                for (unsigned int i=0;i<variables.size();i++) {
+                                    if (doesVariableInheritType(i,type)) {
+                                        if (result[resultPtr]=='.') {
+                                            if ((possibleInitialPositions & variables[i]).isFalse()) {
+                                                result[resultPtr] = (realizable)?'s':'g';
+                                                std::cerr << "!Moin!\n";
+                                            } else if ((possibleInitialPositions & !variables[i]).isFalse()) {
+                                                result[resultPtr] = (realizable)?'S':'G';
+                                            } else {
+                                                result[resultPtr] = '.';
+                                            }
+                                        }
+                                        resultPtr++;
+                                    }
+                                }
+                            }
+                            assert(!(possibleInitialPositions.isFalse()));
+
+                            // Determinize the rest
+                            resultPtr = 0;
+                            for (const VariableType &type: {PreInput, PreOutput}) {
+                                for (unsigned int i=0;i<variables.size();i++) {
+                                    if (doesVariableInheritType(i,type)) {
+                                        if (result[resultPtr]=='.') {
+                                            if (!((possibleInitialPositions & !variables[i]).isFalse())) {
+                                                result[resultPtr] = '0';
+                                                possibleInitialPositions &= !variables[i];
+                                            } else if (!((possibleInitialPositions & variables[i]).isFalse())) {
+                                                result[resultPtr] = '1';
+                                                possibleInitialPositions &= variables[i];
+                                            } else {
+                                                throw "Fatal error! Should not occur.";
+                                            }
+                                        }
+                                        resultPtr++;
+                                    }
+                                }
+                            }
+                            BF_newDumpDot(*this,possibleInitialPositions,NULL,"/tmp/finalPossibleInitialPositions.dot");
+                            assert(!(possibleInitialPositions.isFalse()));
+                            assert(determinize(possibleInitialPositions,preVars)==possibleInitialPositions);
+
+                            // Print result
+                            for (unsigned int i=0;i<preVars.size();i++) {
+                                std::cout << result[i];
+                            }
+                            std::cout << std::endl;
+                        }
+                    }
+                }
+            } else if (command=="XSTRATEGYTRANSITION") {
+                // This command computes the strategy's next move
+                std::cout << "\n"; // Get rid of the prompt
+
+                // First parse the inputs, then the outputs, so that external tools can always set the inputs first
+                BF startingPoint = mgr.constantTrue();
+                for (const VariableType &type: {PreInput, PreOutput}) {
+                    for (unsigned int i=0;i<variables.size();i++) {
+                        if (doesVariableInheritType(i,type)) {
+                            char c;
+                            std::cin >> c;
+                            if (c=='0') {
+                                startingPoint &= !variables[i];
+                            } else if (c=='1') {
+                                startingPoint &= variables[i];
+                            } else {
+                                std::cerr << "Error: Illegal XSTRATEGYTRANSITION string given.\n";
+                            }
+                        }
+                    }
+                }
+
+                BF forced  = mgr.constantTrue();
+                // First parse the inputs, then the outputs, so that external tools can always set the inputs first
+                for (const VariableType &type: {PostInput, PostOutput}) {
+                    for (unsigned int i=0;i<variables.size();i++) {
+                        if (doesVariableInheritType(i,type)) {
+                            char c;
+                            std::cin >> c;
+                            if (c=='0') {
+                                forced &= !variables[i];
+                            } else if (c=='1') {
+                                forced &= variables[i];
+                            } else if (c=='.') {
+                                // No forced value
+                            } else {
+                                std::cerr << "Error: Illegal XSTRATEGYTRANSITION string given.\n";
+                            }
+                        }
+                    }
+                }
+
+                // Parse current liveness goal numbers
+                unsigned int livenessAssumption;
+                unsigned int livenessGuarantee;
+                std::cin >> livenessAssumption;
+                std::cin >> livenessGuarantee;
+
+                std::cerr << "Starting from liveness assumption/guarantee " << livenessAssumption << "/" << livenessGuarantee << std::endl;
+
+                // We have a split here:
+                //
+                // - For realizable specifications, we augment with safety assumptions and guarantees
+                //   first.
+                // - For unrealizable ones, we have to consider the strategy before the safety gua-
+                //   rantees in order to capture the environment forcing the system to lose in
+                //   finite time correctly.
+                BF allSoFar = startingPoint & safetyEnv & forced;
+
+                if (allSoFar.isFalse()) {
+                    std::cout << "FAILASSUMPTIONS" << std::endl;
+                } else {
+
+                    // So there exist transitions. Prepare result array
+                    char result[preVars.size()];
+                    unsigned int resultPtr = 0;
+                    for (const VariableType &type: {PostInput, PostOutput}) {
                         for (unsigned int i=0;i<variables.size();i++) {
                             if (doesVariableInheritType(i,type)) {
-                                if (result[resultPtr]=='.') {
-                                    if (!((possibleInitialPositions & !variables[i]).isFalse())) {
-                                        result[resultPtr] = '0';
-                                        possibleInitialPositions &= !variables[i];
-                                    } else if (!((possibleInitialPositions & variables[i]).isFalse())) {
-                                        result[resultPtr] = '1';
-                                        possibleInitialPositions &= variables[i];
-                                    } else {
-                                        throw "Fatal error! Should not occur.";
-                                    }
+                                std::cerr << "Considering variable: " << variableNames[i] << std::endl;
+                                if ((allSoFar & variables[i]).isFalse()) {
+                                    result[resultPtr] = 'a';
+                                } else if ((allSoFar & !variables[i]).isFalse()) {
+                                    result[resultPtr] = 'A';
+                                } else {
+                                    result[resultPtr] = '.';
                                 }
                                 resultPtr++;
                             }
                         }
                     }
+                    assert(resultPtr==postVars.size());
 
-                    // Print result
-                    for (unsigned int i=0;i<preVars.size();i++) {
-                        std::cout << result[i];
+                    // Add next component
+                    if (realizable) {
+                        allSoFar &= safetySys;
+                    } else {
+                        allSoFar &= positionalStrategiesForTheIndividualGoals[livenessAssumption];
                     }
-                    std::cout << std::endl;
+
+                    if (allSoFar.isFalse()) {
+                        if (realizable) {
+                            std::cout << "FAILGUARANTEES" << std::endl;
+                        } else {
+                            std::cout << "FORCEDNONWINNING" << std::endl;
+                        }
+                    } else {
+
+                        resultPtr = 0;
+                        for (const VariableType &type: {PostInput, PostOutput}) {
+                            for (unsigned int i=0;i<variables.size();i++) {
+                                if (doesVariableInheritType(i,type)) {
+                                    std::cerr << "Considering variable: " << variableNames[i] << std::endl;
+                                    if (result[resultPtr]=='.') {
+                                        if ((allSoFar & variables[i]).isFalse()) {
+                                            result[resultPtr] = (realizable)?'g':'s';
+                                        } else if ((allSoFar & !variables[i]).isFalse()) {
+                                            result[resultPtr] = (realizable)?'G':'S';
+                                        }
+                                    }
+                                    resultPtr++;
+                                }
+                            }
+                        }
+                        assert(resultPtr==postVars.size());
+
+                        // Then combine with the strategy (or safetySys)
+                        BF_newDumpDot(*this,allSoFar,NULL,"/tmp/allSoFarPre.dot");
+                        if (realizable) {
+                            allSoFar &= positionalStrategiesForTheIndividualGoals[livenessGuarantee];
+                        } else {
+                            allSoFar &= safetySys;
+                        }
+
+                        BF_newDumpDot(*this,allSoFar,NULL,"/tmp/allSoFarIncludingStrategy.dot");
+
+                        if (allSoFar.isFalse()) {
+                            if (realizable) {
+                                std::cout << "FORCEDNONWINNING" << std::endl;
+                            } else {
+                                std::cout << "FAILGUARANTEES" << std::endl;
+                            }
+                        } else {
+                            // Ok, so we found a suitable transition. Concretize it.
+
+                            // Find the newly forced values
+                            resultPtr = 0;
+                            for (const VariableType &type: {PostInput, PostOutput}) {
+                                for (unsigned int i=0;i<variables.size();i++) {
+                                    if (doesVariableInheritType(i,type)) {
+                                        if (result[resultPtr]=='.') {
+                                            if ((allSoFar & variables[i]).isFalse()) {
+                                                result[resultPtr] = (realizable)?'s':'g';
+                                            } else if ((allSoFar & !variables[i]).isFalse()) {
+                                                result[resultPtr] = (realizable)?'S':'G';
+                                            } else {
+                                                result[resultPtr] = '.';
+                                            }
+                                        }
+                                        resultPtr++;
+                                    }
+                                }
+                            }
+
+                            // Determinize the rest
+                            resultPtr = 0;
+                            for (const VariableType &type: {PostInput, PostOutput}) {
+                                for (unsigned int i=0;i<variables.size();i++) {
+                                    if (doesVariableInheritType(i,type)) {
+                                        if (result[resultPtr]=='.') {
+                                            if (!((allSoFar & !variables[i]).isFalse())) {
+                                                result[resultPtr] = '0';
+                                                allSoFar &= !variables[i];
+                                            } else if (!((allSoFar & variables[i]).isFalse())) {
+                                                result[resultPtr] = '1';
+                                                allSoFar &= variables[i];
+                                            } else {
+                                                throw "Fatal error! Should not occur.";
+                                            }
+                                        }
+                                        resultPtr++;
+                                    }
+                                }
+                            }
+
+                            BF_newDumpDot(*this,allSoFar,NULL,"/tmp/finalTransitionChosen.dot");
+
+                            // Print position result
+                            for (unsigned int i=0;i<preVars.size();i++) {
+                                std::cout << result[i];
+                            }
+                            std::cout << std::endl;
+
+                            // Print new assumption and guarantee goal counters
+                            if (allSoFar < livenessAssumptions[livenessAssumption]) livenessAssumption++;
+                            if (allSoFar < livenessGuarantees[livenessGuarantee]) livenessGuarantee++;
+                            std::cout << livenessAssumption % livenessAssumptions.size() << std::endl;
+                            std::cout << livenessGuarantee % livenessGuarantees.size() << std::endl;
+
+                        }
+                    }
                 }
 
             } else {
