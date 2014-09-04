@@ -255,8 +255,10 @@ protected:
         }*/
 
         // Compute the Estimator
-        strategy = ( (!reachableStates)  | (!safetyEnv) | safetySys).UnivAbstract(varCubeUnobservables);
-        sleep(10);
+        // Old: strategy = ( (!reachableStates)  | (!safetyEnv) | safetySys).UnivAbstract(varCubeUnobservables);
+        // New:
+        strategy = ! ( (reachableStates & safetyEnv).AndAbstract(!safetySys,varCubeUnobservables)  );
+        // sleep(10);
 
         mgr.setReorderingMaxBlowup(1.03f);
 
@@ -329,11 +331,13 @@ protected:
         BF_newDumpDot(*this,reachableStates,NULL,"/tmp/reachable0.dot");
         oldReachableStates = mgr.constantFalse();
         while (reachableStates!=oldReachableStates) {
+            std::cerr << ".";
             oldReachableStates = reachableStates;
-            reachableStates |= (reachableStates & combined).ExistAbstract(varCubePre).SwapVariables(varVectorPre,varVectorPost);
+            reachableStates |= reachableStates.AndAbstract(combined,varCubePre).SwapVariables(varVectorPre,varVectorPost);
         }
+        std::cerr << "!";
         BF_newDumpDot(*this,reachableStates,NULL,"/tmp/reachable2.dot");
-        BF environmentAssumption = (reachableStates & safetyEnv).ExistAbstract(varCubeEverythingButEstimatorPreAndObservables);
+        BF environmentAssumption = reachableStates.AndAbstract(safetyEnv,varCubeEverythingButEstimatorPreAndObservables);
         std::cout << "[ENV_TRANS]\n";
         printBFAsSlugsExpression(environmentAssumption);
         BF_newDumpDot(*this,environmentAssumption,NULL,"/tmp/envass.dot");
@@ -345,6 +349,14 @@ protected:
         if (!(deadEnds.isFalse())) {
             std::cerr << "============================================================\n";
             std::cerr << "WARNING! There are environment dead-ends in the abstraction!\n";
+            std::cerr << "============================================================\n";
+            BF_newDumpDot(*this,deadEnds,NULL,"/tmp/envDeadEnd.dot");
+            BF_newDumpDot(*this,weakDeterminize(deadEnds,preVars),NULL,"/tmp/envDeadEndDet.dot");
+        }
+        deadEnds = (!deadEnds) & ((!strategy).UnivAbstract(varCubeEstimationPost)) & reachableStates;
+        if (!(deadEnds.isFalse())) {
+            std::cerr << "============================================================\n";
+            std::cerr << "WARNING! There are system dead-ends in the abstraction!\n";
             std::cerr << "============================================================\n";
             BF_newDumpDot(*this,deadEnds,NULL,"/tmp/envDeadEnd.dot");
             BF_newDumpDot(*this,weakDeterminize(deadEnds,preVars),NULL,"/tmp/envDeadEndDet.dot");

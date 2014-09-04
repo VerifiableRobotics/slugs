@@ -40,7 +40,7 @@ def tokenize(str):
         m = match('[a-zA-Z_.\'@]+[a-zA-Z0-9_.\'@]*', str)
         if m:
             currentSymbol = m.group(0)
-            if (currentSymbol in ["X","F","G","U","W","FALSE","TRUE","next"]):
+            if (currentSymbol in ["X","F","G","U","W","FALSE","TRUE","next","LEASTSIGNIFICANTBITOVERWRITES"]):
                 res.append((currentSymbol,))
             else:
                 currentSymbol = m.group(0)
@@ -83,6 +83,8 @@ def clean_tree(tree):
     elif (tree[0]=="Disjunction") and (len(tree)==2):
         return clean_tree(tree[1])
     elif (tree[0]=="Xor") and (len(tree)==2):
+        return clean_tree(tree[1])
+    elif (tree[0]=="LeastSignificantBitOverwriteExpression") and (len(tree)==2):
         return clean_tree(tree[1])
     elif (tree[0]=="BinaryTemporalFormula") and (len(tree)==2):
         return clean_tree(tree[1])
@@ -292,6 +294,20 @@ def recurseCalculationSubformula(tree,memoryStructureParts, isPrimed):
             return translatedNames[apName]
         else:
             return [a+"'" for a in translatedNames[apName]]
+
+    elif (tree[0]=="NumberBrackets"):
+        print >>sys.stderr,tree
+        assert tree[1]==('(',)
+        assert tree[3]==(')',)
+        return recurseCalculationSubformula(tree[2],memoryStructureParts, isPrimed)
+
+    # Overwrite the least significant bits of some expression
+    elif tree[0]=="LeastSignificantBitOverwriteExpression":
+        part1MemoryStructurePointers = recurseCalculationSubformula(tree[1],memoryStructureParts, isPrimed)        
+        part2MemoryStructurePointers = recurseCalculationSubformula(tree[3],memoryStructureParts, isPrimed)  
+        assert len(part1MemoryStructurePointers)<len(part2MemoryStructurePointers)
+        return part1MemoryStructurePointers+part2MemoryStructurePointers[len(part1MemoryStructurePointers):]
+
         
     else:
         raise Exception("Found currently unsupported calculator subformula type:"+tree[0])

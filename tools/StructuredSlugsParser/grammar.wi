@@ -27,7 +27,8 @@ Assignment: boolID;
 
 CalculationSubformula: NumberExpression NumberComparisonOperator NumberExpression;
 NumberExpression: MultiplicativeNumber | MultiplicativeNumber AdditionOperator NumberExpression | MultiplicativeNumber SubtractionOperator NumberExpression;
-MultiplicativeNumber: AtomicNumberExpression | AtomicNumberExpression MultiplicationOperator AtomicNumberExpression;
+MultiplicativeNumber: LeastSignificantBitOverwriteExpression | LeastSignificantBitOverwriteExpression MultiplicationOperator LeastSignificantBitOverwriteExpression;
+LeastSignificantBitOverwriteExpression: AtomicNumberExpression | AtomicNumberExpression LeastSignificantBitOverwriteOperator AtomicNumberExpression;
 AtomicNumberExpression: numID | numeral | NumberBrackets;
 NumberBrackets: '(' NumberExpression ')';
 
@@ -48,7 +49,7 @@ GreaterEqualOperator: '>' '=';
 AdditionOperator: '+';
 MultiplicationOperator: '*';
 NegationOperator: '-';
-
+LeastSignificantBitOverwriteOperator: "LEASTSIGNIFICANTBITOVERWRITES";
 
 XorOperator: '^';
 UnaryTemporalOperator: FinallyOperator | NextOperator | GloballyOperator | NotOperator;

@@ -567,7 +567,7 @@ public:
                 if (possibleInitialPositions.isFalse()) {
                     std::cout << "FAILASSUMPTIONS" << std::endl;
                 } else {
-                    //BF_newDumpDot(*this,possibleInitialPositions,NULL,"/tmp/init.dot");
+                    BF_newDumpDot(*this,possibleInitialPositions,NULL,"/tmp/init.dot");
                     // Find the newly forced values
                     resultPtr = 0;
                     for (const VariableType &type: {PreInput, PreOutput}) {
@@ -600,6 +600,7 @@ public:
 
                             resultPtr = 0;
                             // Print variable assignment that satisfies forced and assumptions
+                            BF_newDumpDot(*this,oldInitialPositions,NULL,"/tmp/init.dot");
                             for (const VariableType &type: {PreInput, PreOutput}) {
                                 for (unsigned int i=0;i<variables.size();i++) {
                                     if (doesVariableInheritType(i,type)) {
@@ -663,6 +664,7 @@ public:
                                 std::cout << "FAILGUARANTEES" << std::endl;
 
                                 resultPtr = 0;
+                                BF_newDumpDot(*this,oldInitialPositions,NULL,"/tmp/init.dot");
                                 // Print variable assignment that satisfies forced and assumptions
                                 for (const VariableType &type: {PreInput, PreOutput}) {
                                     for (unsigned int i=0;i<variables.size();i++) {

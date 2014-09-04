@@ -335,7 +335,13 @@ try:
         (ysize,xsize) = stdscr.getmaxyx()
 
         # Paint border
-        stdscr.addstr(0, 0, "SLUGS Simulator"+(xsize-15)*" ",curses.color_pair(1))
+        initText = "SLUGS Simulator ("
+        if len(specFile)>xsize-len(initText)-1:
+            initText = initText + "[...]"+specFile[len(specFile)-xsize+len(initText)+6:]
+        else:
+            initText = initText + specFile
+        initText = initText + ")"        
+        stdscr.addstr(0, 0, initText+(xsize-min(xsize,len(initText)))*" ",curses.color_pair(1))
         stdscr.addstr(ysize-1, 0, (xsize-1)*" ",curses.color_pair(1))
         stdscr.addstr(ysize-1, 0, "Press (h) for help.",curses.color_pair(1))
         stdscr.insstr(ysize-1, 20, " ",curses.color_pair(1))
