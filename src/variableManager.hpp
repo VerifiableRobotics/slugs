@@ -87,6 +87,13 @@ public:
     virtual std::string getVariableName(unsigned int number) const {
         return variableNames[number];
     }
+    virtual unsigned int findVariableNumber(std::string nameString) const {
+        for (unsigned int i=0;i<variables.size();i++) {
+            if (nameString==variableNames[i]) return i;
+        }
+        assert(false);
+        return (unsigned int)(-1);
+    }
     //@}
 };
 
