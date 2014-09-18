@@ -1,4 +1,10 @@
 # QMake Build file
+QMAKE_CC = gcc
+QMAKE_LINK_C = gcc
+
+QMAKE_CXX = g++
+QMAKE_LINK = g++
+
 BDDFLAGS = $$system(gcc BFAbstractionLibrary/compilerOptionGenerator.c -o /tmp/BFAbstractionCompilerOptionsProducer-$$(USER);/tmp/BFAbstractionCompilerOptionsProducer-$$(USER))
 DEFINES += USE_CUDD
 CFLAGS += -g -fpermissive
