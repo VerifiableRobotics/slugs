@@ -482,12 +482,19 @@ def isValidRecursiveSlugsProperty(tokens):
 # ============================================
 # Main worker
 # ============================================
-def performConversion(inputFile,thoroughly):
-    specFile = open(inputFile,"r")
+def performConversion(structured_slugs, thoroughly):
+    """Convert from structured slugs format to slugs input format.
+    
+    @type structured_slugs: str
+    
+    @type thoroughly: bool
+    """
+    spec_lines = structured_slugs.split('\n')
+    
     mode = ""
     lines = {"[ENV_TRANS]":[],"[ENV_INIT]":[],"[INPUT]":[],"[OUTPUT]":[],"[SYS_TRANS]":[],"[SYS_INIT]":[],"[ENV_LIVENESS]":[],"[SYS_LIVENESS]":[],"[OBSERVABLE_INPUT]":[],"[UNOBSERVABLE_INPUT]":[],"[CONTROLLABLE_INPUT]":[] }
 
-    for line in specFile.readlines():
+    for line in spec_lines:
         line = line.strip()
         if line == "":
             pass
@@ -501,8 +508,6 @@ def performConversion(inputFile,thoroughly):
                 pass
             else:
                 lines[mode].append(line)
-
-    specFile.close()
 
     # ---------------------------------------    
     # Reparse input lines
@@ -650,7 +655,11 @@ if __name__ == "__main__":
                 print >>sys.stderr, "Error: more than one file name given."
                 sys.exit(1)
             inputFile = parameter
-    performConversion(inputFile,thoroughly)
+    
+    with open(inputFile, "r") as specFile:
+        s = specFile.read()
+    
+    performConversion(s, thoroughly)
     print >>sys.stderr, translatedNames
 
 
