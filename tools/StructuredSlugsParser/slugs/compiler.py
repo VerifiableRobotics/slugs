@@ -595,42 +595,43 @@ def performConversion(structured_slugs, thoroughly):
                 booleanAPs.append(line)
                 booleanAPs.append(line+"'")
                 translatedIOLines[variableType].append(line)
-
+    
     # ---------------------------------------    
     # Output new input/output lines
-    # ---------------------------------------    
+    # ---------------------------------------
+    output = []
     for variableType in ["[INPUT]","[OUTPUT]","[OBSERVABLE_INPUT]","[UNOBSERVABLE_INPUT]","[CONTROLLABLE_INPUT]"]: 
         if len(translatedIOLines[variableType])>0:
-            print variableType
+            output.append(variableType)
             for a in translatedIOLines[variableType]:
-                print a
-            print ""
+                output.append(a)
+            output.append("")
 
     # ---------------------------------------    
     # Go through the properties and translate
     # ---------------------------------------    
     for propertyType in ["[ENV_TRANS]","[ENV_INIT]","[SYS_TRANS]","[SYS_INIT]","[ENV_LIVENESS]","[SYS_LIVENESS]"]:
         if len(lines[propertyType])>0:
-            print propertyType
+            output.append(propertyType)
 
             # Test for conformance with recursive definition
             for a in lines[propertyType]:
                 print >>sys.stderr, a.strip().split(" ")
                 if a.strip()[0:1] == "#":
-                    print a
+                    output.append(a)
                 else:
                     (isSlugsFormula,reasonForNotBeingASlugsFormula) = isValidRecursiveSlugsProperty(a.strip().split(" "))
                     if isSlugsFormula:
-                        print a
+                        output.append(a)
                     else:
                         print >>sys.stderr,a
                         # Try to parse!
                         tree = parseLTL(a,reasonForNotBeingASlugsFormula)            
                         # printTree(tree)
                         currentLine = translateToSlugsFormat(tree)
-                        print currentLine
-            print ""
-        
+                        output.append(currentLine)
+            output.append("")
+    return '\n'.join(output)
 
 
 # ==================================
@@ -659,7 +660,8 @@ if __name__ == "__main__":
     with open(inputFile, "r") as specFile:
         s = specFile.read()
     
-    performConversion(s, thoroughly)
+    output = performConversion(s, thoroughly)
+    print(output)
     print >>sys.stderr, translatedNames
 
 
