@@ -1,5 +1,5 @@
-#!/usr/bin/python
-#
+#!/usr/bin/env python
+
 # Translates a structured specification into an unstructured one that is suitable to be read by the slugs synthesis tool
 
 import math
