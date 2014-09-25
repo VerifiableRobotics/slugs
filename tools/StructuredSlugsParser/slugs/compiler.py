@@ -4,6 +4,9 @@
 
 from __future__ import absolute_import
 
+import logging
+logger = logging.getLogger(__name__)
+
 import re
 import sys
 
@@ -188,9 +191,9 @@ def flatten_as_much_as_possible(tree):
 # =====================================================
 def printTree(tree,depth=0):
     if isinstance(tree,str):
-        print >>sys.stderr," "*depth+tree
+        logger.debug(" "*depth+tree)
     else:
-        print >>sys.stderr," "*depth+tree[0]
+        logger.debug(" "*depth+tree[0])
         for a in tree[1:]:
             printTree(a,depth+2)
 
@@ -202,20 +205,20 @@ def parseLTL(ltlTxt,reasonForNotBeingASlugsFormula):
 
     try:
         input = tokenize(ltlTxt)
-        # print >>sys.stderr, input
+        # logger.debug(input)
         tree = p.parse(input)
 
     except p.ParseErrors, exception:
         for t,e in exception.errors:
             if t[0] == p.EOF:
-                print >>sys.stderr, "Formula end not expected here"
+                logger.error("Formula end not expected here")
                 continue
 
             found = repr(t[0])
-            print >>sys.stderr, "Error in the property line: "+ltlTxt
-            print >>sys.stderr, "... which could not have been a slugs Polish notation line because of: "+ reasonForNotBeingASlugsFormula
-            print >>sys.stderr, "Could not parse %s, "%found
-            print >>sys.stderr, "Wanted a token of one of the following forms: "+", ".join([ repr(s) for s in e ])
+            logger.error("Error in the property line: "+ltlTxt)
+            logger.error("... which could not have been a slugs Polish notation line because of: "+ reasonForNotBeingASlugsFormula)
+            logger.error("Could not parse %s, "%found)
+            logger.error("Wanted a token of one of the following forms: "+", ".join([ repr(s) for s in e ]))
         raise
 
     # Convert to a tree
@@ -293,7 +296,7 @@ def recurseCalculationSubformula(tree,memoryStructureParts, isPrimed):
             return [a+"'" for a in translatedNames[apName]]
 
     elif (tree[0]=="NumberBrackets"):
-        print >>sys.stderr,tree
+        logger.debug(tree)
         assert tree[1]==('(',)
         assert tree[3]==(')',)
         return recurseCalculationSubformula(tree[2],memoryStructureParts, isPrimed)
@@ -338,9 +341,9 @@ def computeCalculationSubformula(tree, isPrimed):
     memoryStructureParts = []
     part1MemoryStructurePointers = recurseCalculationSubformula(addMinimumValueToAllVariables(tree[1]),memoryStructureParts, isPrimed)
     part2MemoryStructurePointers = recurseCalculationSubformula(addMinimumValueToAllVariables(tree[3]),memoryStructureParts, isPrimed)
-    print >>sys.stderr,"P1: "+str(part1MemoryStructurePointers)
-    print >>sys.stderr,"P2: "+str(part2MemoryStructurePointers)
-    print >>sys.stderr,"MSPatComp: "+str(memoryStructureParts)
+    logger.debug("P1: "+str(part1MemoryStructurePointers))
+    logger.debug("P2: "+str(part2MemoryStructurePointers))
+    logger.debug("MSPatComp: "+str(memoryStructureParts))
 
     # Pick the correct comparison operator
     # ->    Greater or Greater-Equal
@@ -432,14 +435,14 @@ def parseSimpleFormula(tree, isPrimed):
         assert len(tree)==4
         return computeCalculationSubformula(tree,isPrimed)
 
-    print >>sys.stderr, "Cannot parse sub-tree!"
-    print >>sys.stderr, tree
+    logger.error("Cannot parse sub-tree!")
+    logger.error(tree)
     raise Exception("Slugs parsing error")
     
 
 def translateToSlugsFormat(tree):
     tokens = parseSimpleFormula(tree,False)
-    print >>sys.stderr,tokens
+    logger.debug(tokens)
     return " ".join(tokens)
 
 
@@ -517,29 +520,29 @@ def convert_to_slugsin(structured_slugs, thoroughly):
             if line.startswith("#"):
                 translatedIOLines[variableType].append(line.strip())
             if "'" in line:
-                print >>sys.stderr, "Error with atomic signal name "+line+": the name must not contain any \"'\" characters"
+                logger.error("Error with atomic signal name "+line+": the name must not contain any \"'\" characters")
                 raise Exception("Translation error")
             if "@" in line:
-                print >>sys.stderr, "Error with atomic signal name "+line+": the name must not contain any \"@\" characters"
+                logger.error("Error with atomic signal name "+line+": the name must not contain any \"@\" characters")
                 raise Exception("Translation error")
             if ":" in line:
                 parts = line.split(":")
                 parts = [a.strip() for a in parts]
                 if len(parts)!=2:
-                    print >>sys.stderr, "Error reading line '"+line+"' in section "+variableType+": Too many ':'s!"
+                    logger.error("Error reading line '"+line+"' in section "+variableType+": Too many ':'s!")
                     raise Exception("Failed to translate file.")
                 parts2 = parts[1].split("...")
                 if len(parts2)!=2:
-                    print >>sys.stderr, "Error reading line '"+line+"' in section "+variableType+": Syntax should be name:from...to, where the latter two are numbers"
+                    logger.error("Error reading line '"+line+"' in section "+variableType+": Syntax should be name:from...to, where the latter two are numbers")
                     raise Exception("Failed to translate file.")
                 try:
                     minValue = int(parts2[0])
                     maxValue = int(parts2[1])
                 except ValueError:
-                    print >>sys.stderr, "Error reading line '"+line+"' in section "+variableType+": the minimal and maximal values are not given as numbers"
+                    logger.error("Error reading line '"+line+"' in section "+variableType+": the minimal and maximal values are not given as numbers")
                     raise Exception("Failed to translate file.")
                 if minValue>maxValue:
-                    print >>sys.stderr, "Error reading line '"+line+"' in section "+variableType+": the minimal value should be smaller than the maximum one (or at least equal)"
+                    logger.error("Error reading line '"+line+"' in section "+variableType+": the minimal value should be smaller than the maximum one (or at least equal)")
                     raise Exception("Failed to translate file.")
                 
                 # Fill the dictionaries numberAPLimits, translatedNames with information
@@ -613,7 +616,7 @@ def convert_to_slugsin(structured_slugs, thoroughly):
 
             # Test for conformance with recursive definition
             for a in lines[propertyType]:
-                print >>sys.stderr, a.strip().split(" ")
+                logger.debug(a.strip().split(" "))
                 if a.strip()[0:1] == "#":
                     output.append(a)
                 else:
@@ -621,7 +624,7 @@ def convert_to_slugsin(structured_slugs, thoroughly):
                     if isSlugsFormula:
                         output.append(a)
                     else:
-                        print >>sys.stderr,a
+                        logger.debug(a)
                         # Try to parse!
                         tree = parseLTL(a,reasonForNotBeingASlugsFormula)            
                         # printTree(tree)
@@ -636,8 +639,7 @@ def convert_to_slugsin(structured_slugs, thoroughly):
 # ==================================
 if __name__ == "__main__":
     if len(sys.argv)<2:
-        print >>sys.stderr, "Error: Need input file parameter"
-        sys.exit(1)
+        raise Exception("Error: Need input file parameter")
 
     inputFile = None
     thoroughly = False
@@ -646,11 +648,11 @@ if __name__ == "__main__":
             if parameter=="--thorougly":
                 thoroughly = True
             else:
-                print >>sys.stderr, "Error: did not understand parameter '"+parameter+"'"
+                raise Exception("Error: did not understand parameter '"+parameter+"'")
                 sys.exit(1)
         else:
             if inputFile!=None:
-                print >>sys.stderr, "Error: more than one file name given."
+                raise Exception("Error: more than one file name given.")
                 sys.exit(1)
             inputFile = parameter
     
@@ -659,6 +661,4 @@ if __name__ == "__main__":
     
     output = convert_to_slugsin(s, thoroughly)
     print(output)
-    print >>sys.stderr, translatedNames
-
-
+    logger.debug(translatedNames)
