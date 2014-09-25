@@ -479,7 +479,7 @@ def isValidRecursiveSlugsProperty(tokens):
 # ============================================
 # Main worker
 # ============================================
-def performConversion(structured_slugs, thoroughly):
+def convert_to_slugsin(structured_slugs, thoroughly):
     """Convert from structured slugs format to slugs input format.
     
     @type structured_slugs: str
@@ -657,7 +657,7 @@ if __name__ == "__main__":
     with open(inputFile, "r") as specFile:
         s = specFile.read()
     
-    output = performConversion(s, thoroughly)
+    output = convert_to_slugsin(s, thoroughly)
     print(output)
     print >>sys.stderr, translatedNames
 
