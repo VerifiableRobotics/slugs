@@ -17,17 +17,11 @@ from . import parser
 # - which APs there are
 # - how the numbers are encoded
 # =====================================================
-p = parser.Parser()
-booleanAPs = []
-numberAPs = []
-numberAPLimits = {}
-numberAPNofBits = {}
-translatedNames = {}
 
 # =====================================================
 # Lexer for the LTL formulas
 # =====================================================
-def tokenize(str):
+def tokenize(str, booleanAPs):
 
     res = []
     while str:
@@ -66,70 +60,70 @@ def tokenize(str):
 # =====================================================
 # Simplify the specifications
 # =====================================================
-def clean_tree(tree):
+def clean_tree(tree, p):
     """ Cleans a parse Tree, i.e. removes brackets and so on """
     if tree[0] in p.terminals:
         return tree
     if (tree[0]=="Brackets"):
-        return clean_tree(tree[2])
+        return clean_tree(tree[2], p)
     elif (tree[0]=="Implication") and (len(tree)==2):
-        return clean_tree(tree[1])
+        return clean_tree(tree[1], p)
     elif (tree[0]=="Atomic") and (len(tree)==2):
-        return clean_tree(tree[1])
+        return clean_tree(tree[1], p)
     elif (tree[0]=="Conjunction") and (len(tree)==2):
-        return clean_tree(tree[1])
+        return clean_tree(tree[1], p)
     elif (tree[0]=="Biimplication") and (len(tree)==2):
-        return clean_tree(tree[1])
+        return clean_tree(tree[1], p)
     elif (tree[0]=="Disjunction") and (len(tree)==2):
-        return clean_tree(tree[1])
+        return clean_tree(tree[1], p)
     elif (tree[0]=="Xor") and (len(tree)==2):
-        return clean_tree(tree[1])
+        return clean_tree(tree[1], p)
     elif (tree[0]=="LeastSignificantBitOverwriteExpression") and (len(tree)==2):
-        return clean_tree(tree[1])
+        return clean_tree(tree[1], p)
     elif (tree[0]=="BinaryTemporalFormula") and (len(tree)==2):
-        return clean_tree(tree[1])
+        return clean_tree(tree[1], p)
     elif (tree[0]=="BooleanAtomicFormula") and (len(tree)==2):
-        return clean_tree(tree[1])
+        return clean_tree(tree[1], p)
     elif (tree[0]=="BooleanAtomicFormula") and (len(tree)!=2):
         raise Exception("BooleanAtomic formula must have only one successor")
     elif (tree[0]=="UnaryFormula") and (len(tree)==2):
-        return clean_tree(tree[1])
+        return clean_tree(tree[1], p)
     elif (tree[0]=="MultiplicativeNumber") and (len(tree)==2):
-        return clean_tree(tree[1])
+        return clean_tree(tree[1], p)
     elif (tree[0]=="NumberExpression") and (len(tree)==2):
-        return clean_tree(tree[1])
+        return clean_tree(tree[1], p)
     elif (tree[0]=="AtomicNumberExpression"):
         if len(tree)!=2:
             raise ValueError("AtomicNumberExpression must have length 2")
-        return clean_tree(tree[1])
+        return clean_tree(tree[1], p)
     elif (tree[0]=="AtomicFormula"):
         if len(tree)!=2:
             raise ValueError("AtomicFormula must have length 2")
-        return clean_tree(tree[1])
+        return clean_tree(tree[1], p)
     elif (tree[0]=="Implication"):
-        return [tree[0],clean_tree(tree[1]),clean_tree(tree[3])]
+        return [tree[0],clean_tree(tree[1], p),clean_tree(tree[3], p)]
     elif (tree[0]=="Conjunction"):
-        return [tree[0],clean_tree(tree[1]),clean_tree(tree[3])]
+        return [tree[0],clean_tree(tree[1], p),clean_tree(tree[3], p)]
     elif (tree[0]=="Biimplication"):
-        return [tree[0],clean_tree(tree[1]),clean_tree(tree[3])]
+        return [tree[0],clean_tree(tree[1], p),clean_tree(tree[3], p)]
     elif (tree[0]=="Disjunction"):
-        return [tree[0],clean_tree(tree[1]),clean_tree(tree[3])]
+        return [tree[0],clean_tree(tree[1], p),clean_tree(tree[3], p)]
     elif (tree[0]=="Xor"):
-        return [tree[0],clean_tree(tree[1]),clean_tree(tree[3])]
+        return [tree[0],clean_tree(tree[1], p),clean_tree(tree[3], p)]
     elif (tree[0]=="BinaryTemporalFormula"):
-        return [tree[0],clean_tree(tree[1]),clean_tree(tree[2]),clean_tree(tree[3])]
+        return [tree[0],clean_tree(tree[1], p),clean_tree(tree[2], p),clean_tree(tree[3], p)]
     elif (tree[0]=="UnaryFormula"):
-        return [tree[0],clean_tree(tree[1]),clean_tree(tree[2])]
+        return [tree[0],clean_tree(tree[1], p),clean_tree(tree[2], p)]
     elif (tree[0]=="MultiplicativeNumber"):
-        return [tree[0],clean_tree(tree[1]),clean_tree(tree[2]),clean_tree(tree[3])]
+        return [tree[0],clean_tree(tree[1], p),clean_tree(tree[2], p),clean_tree(tree[3], p)]
     elif (tree[0]=="NumberExpression"):
-        return [tree[0],clean_tree(tree[1]),clean_tree(tree[2]),clean_tree(tree[3])]
+        return [tree[0],clean_tree(tree[1], p),clean_tree(tree[2], p),clean_tree(tree[3], p)]
     elif (tree[0]=="BinaryTemporalOperator"):
         # Remove the "superfluous indirection"
-        return clean_tree(tree[1])
+        return clean_tree(tree[1], p)
     elif (tree[0]=="UnaryTemporalOperator"):
         # Remove the "superfluous indirection"
-        return clean_tree(tree[1])
+        return clean_tree(tree[1], p)
     elif (tree[0]=="Assignment"):
         # Flatten "id" case
         A = [tree[0],tree[1][1]]
@@ -138,7 +132,7 @@ def clean_tree(tree):
     else:
         A = [tree[0]]
         for x in tree[1:]:
-           A.append(clean_tree(x))
+           A.append(clean_tree(x, p))
         return A
 
 def flatten_as_much_as_possible(tree):
@@ -201,10 +195,10 @@ def printTree(tree,depth=0):
 # =====================================================
 # The Parsing function
 # =====================================================
-def parseLTL(ltlTxt,reasonForNotBeingASlugsFormula):
+def parseLTL(ltlTxt,reasonForNotBeingASlugsFormula, booleanAPs, p):
 
     try:
-        input = tokenize(ltlTxt)
+        input = tokenize(ltlTxt, booleanAPs)
         # logger.debug(input)
         tree = p.parse(input)
 
@@ -222,7 +216,7 @@ def parseLTL(ltlTxt,reasonForNotBeingASlugsFormula):
         raise
 
     # Convert to a tree
-    cleaned_tree = flatten_as_much_as_possible(clean_tree(tree))
+    cleaned_tree = flatten_as_much_as_possible(clean_tree(tree, p))
     return cleaned_tree
 
 # =====================================================
@@ -235,11 +229,11 @@ def parseLTL(ltlTxt,reasonForNotBeingASlugsFormula):
 # Computation Recursion function
 # Assumes that every variable starts from 0
 #------------------------------------------
-def recurseCalculationSubformula(tree,memoryStructureParts, isPrimed):
+def recurseCalculationSubformula(tree, memoryStructureParts, isPrimed, translatedNames):
     if (tree[0]=="NumberExpression"):
         assert len(tree)==4 # Everything else would have been filtered out already
-        part1MemoryStructurePointers = recurseCalculationSubformula(tree[1],memoryStructureParts, isPrimed)        
-        part2MemoryStructurePointers = recurseCalculationSubformula(tree[3],memoryStructureParts, isPrimed)  
+        part1MemoryStructurePointers = recurseCalculationSubformula(tree[1],memoryStructureParts, isPrimed, translatedNames)
+        part2MemoryStructurePointers = recurseCalculationSubformula(tree[3],memoryStructureParts, isPrimed, translatedNames)
 
         # Addition? 
         if tree[2][0]=="AdditionOperator":
@@ -299,12 +293,12 @@ def recurseCalculationSubformula(tree,memoryStructureParts, isPrimed):
         logger.debug(tree)
         assert tree[1]==('(',)
         assert tree[3]==(')',)
-        return recurseCalculationSubformula(tree[2],memoryStructureParts, isPrimed)
+        return recurseCalculationSubformula(tree[2],memoryStructureParts, isPrimed, translatedNames)
 
     # Overwrite the least significant bits of some expression
     elif tree[0]=="LeastSignificantBitOverwriteExpression":
-        part1MemoryStructurePointers = recurseCalculationSubformula(tree[1],memoryStructureParts, isPrimed)        
-        part2MemoryStructurePointers = recurseCalculationSubformula(tree[3],memoryStructureParts, isPrimed)  
+        part1MemoryStructurePointers = recurseCalculationSubformula(tree[1],memoryStructureParts, isPrimed, translatedNames)
+        part2MemoryStructurePointers = recurseCalculationSubformula(tree[3],memoryStructureParts, isPrimed, translatedNames)
         assert len(part1MemoryStructurePointers)<len(part2MemoryStructurePointers)
         return part1MemoryStructurePointers+part2MemoryStructurePointers[len(part1MemoryStructurePointers):]
 
@@ -318,7 +312,7 @@ def recurseCalculationSubformula(tree,memoryStructureParts, isPrimed):
 # way, it does not have to be considered in the
 # actual translation algorithm.
 #-----------------------------------------------
-def addMinimumValueToAllVariables(tree):
+def addMinimumValueToAllVariables(tree, numberAPLimits, p):
     if tree[0]=="numID":
         apName = tree[1]
         primed = apName[len(apName)-1]=="'"        
@@ -332,15 +326,15 @@ def addMinimumValueToAllVariables(tree):
     elif tree[0] in p.terminals:
         return tree
     else:
-        return tuple([tree[0]] + [addMinimumValueToAllVariables(a) for a in tree[1:]])
+        return tuple([tree[0]] + [addMinimumValueToAllVariables(a, numberAPLimits) for a in tree[1:]], p)
 
 #-----------------------------------------------
 # Main Function. Takes the formula tree and adds
 #-----------------------------------------------
-def computeCalculationSubformula(tree, isPrimed):
+def computeCalculationSubformula(tree, isPrimed, numberAPLimits, translatedNames, p):
     memoryStructureParts = []
-    part1MemoryStructurePointers = recurseCalculationSubformula(addMinimumValueToAllVariables(tree[1]),memoryStructureParts, isPrimed)
-    part2MemoryStructurePointers = recurseCalculationSubformula(addMinimumValueToAllVariables(tree[3]),memoryStructureParts, isPrimed)
+    part1MemoryStructurePointers = recurseCalculationSubformula(addMinimumValueToAllVariables(tree[1], numberAPLimits, p), memoryStructureParts, isPrimed, translatedNames)
+    part2MemoryStructurePointers = recurseCalculationSubformula(addMinimumValueToAllVariables(tree[3], numberAPLimits, p), memoryStructureParts, isPrimed, translatedNames)
     logger.debug("P1: "+str(part1MemoryStructurePointers))
     logger.debug("P2: "+str(part2MemoryStructurePointers))
     logger.debug("MSPatComp: "+str(memoryStructureParts))
@@ -391,35 +385,35 @@ def computeCalculationSubformula(tree, isPrimed):
 # ============================================
 # Build Slugs file - Temporal logic properties
 # ============================================
-def parseSimpleFormula(tree, isPrimed):
+def parseSimpleFormula(tree, isPrimed, numberAPLimits, translatedNames, p):
     if (tree[0]=="Formula"):
         assert len(tree)==2
-        return parseSimpleFormula(tree[1],isPrimed)
+        return parseSimpleFormula(tree[1],isPrimed, numberAPLimits, translatedNames, p)
     if (tree[0]=="Biimplication"):
-        b1 = parseSimpleFormula(tree[1],isPrimed)
+        b1 = parseSimpleFormula(tree[1],isPrimed, numberAPLimits, translatedNames, p)
         b2 = parseSimpleFormula(tree[2],isPrimed)
         return ["|","&","!"]+b1+["!"]+b2+["&"]+b1+b2
     if (tree[0]=="Implication"):
-        b1 = parseSimpleFormula(tree[1],isPrimed)
-        b2 = parseSimpleFormula(tree[2],isPrimed)
+        b1 = parseSimpleFormula(tree[1],isPrimed, numberAPLimits, translatedNames, p)
+        b2 = parseSimpleFormula(tree[2],isPrimed, numberAPLimits, translatedNames, p)
         return ["|","!"]+b1+b2
     if (tree[0]=="Conjunction"):
-        ret = parseSimpleFormula(tree[1],isPrimed)
+        ret = parseSimpleFormula(tree[1],isPrimed, numberAPLimits, translatedNames, p)
         for a in tree[2:]:
-            ret = ["&"]+ret+parseSimpleFormula(a,isPrimed)
+            ret = ["&"]+ret+parseSimpleFormula(a,isPrimed, numberAPLimits, translatedNames, p)
         return ret
     if (tree[0]=="Disjunction"):
-        ret = parseSimpleFormula(tree[1],isPrimed)
+        ret = parseSimpleFormula(tree[1],isPrimed, numberAPLimits, translatedNames, p)
         for a in tree[2:]:
-            ret = ["|"]+ret+parseSimpleFormula(a,isPrimed)
+            ret = ["|"]+ret+parseSimpleFormula(a,isPrimed, numberAPLimits, translatedNames, p)
         return ret
     if (tree[0]=="UnaryFormula"):
         if tree[1][0]=="NotOperator":
-            return ["!"]+parseSimpleFormula(tree[2],isPrimed)
+            return ["!"]+parseSimpleFormula(tree[2],isPrimed, numberAPLimits, translatedNames, p)
         elif tree[1][0]=="NextOperator":
             if isPrimed:
                 raise "Nested nexts are not allowed."
-            return parseSimpleFormula(tree[2],True)
+            return parseSimpleFormula(tree[2], True, numberAPLimits, translatedNames, p)
     if (tree[0]=="Assignment"):
         var = tree[1]
         if isPrimed:
@@ -433,15 +427,15 @@ def parseSimpleFormula(tree, isPrimed):
         return ["0"]
     if (tree[0]=="CalculationSubformula"):
         assert len(tree)==4
-        return computeCalculationSubformula(tree,isPrimed)
+        return computeCalculationSubformula(tree, isPrimed, numberAPLimits, translatedNames, p)
 
     logger.error("Cannot parse sub-tree!")
     logger.error(tree)
     raise Exception("Slugs parsing error")
     
 
-def translateToSlugsFormat(tree):
-    tokens = parseSimpleFormula(tree,False)
+def translateToSlugsFormat(tree, numberAPLimits, translatedNames, p):
+    tokens = parseSimpleFormula(tree,False, numberAPLimits, translatedNames, p)
     logger.debug(tokens)
     return " ".join(tokens)
 
@@ -452,7 +446,7 @@ def translateToSlugsFormat(tree):
 # will be one element on the stack left when
 # applying the operations from right to left
 # ============================================
-def isValidRecursiveSlugsProperty(tokens):
+def isValidRecursiveSlugsProperty(tokens, booleanAPs):
     tokens = [a for a in tokens if a!=""]
     if "$" in tokens:
         return (True,"Found a '$' in the property.")
@@ -489,6 +483,13 @@ def convert_to_slugsin(structured_slugs, thoroughly):
     
     @type thoroughly: bool
     """
+    p = parser.Parser()
+    booleanAPs = []
+    numberAPs = []
+    numberAPLimits = {}
+    numberAPNofBits = {}
+    translatedNames = {}
+    
     spec_lines = structured_slugs.split('\n')
     
     mode = ""
@@ -620,17 +621,18 @@ def convert_to_slugsin(structured_slugs, thoroughly):
                 if a.strip()[0:1] == "#":
                     output.append(a)
                 else:
-                    (isSlugsFormula,reasonForNotBeingASlugsFormula) = isValidRecursiveSlugsProperty(a.strip().split(" "))
+                    (isSlugsFormula,reasonForNotBeingASlugsFormula) = isValidRecursiveSlugsProperty(a.strip().split(" "), booleanAPs)
                     if isSlugsFormula:
                         output.append(a)
                     else:
                         logger.debug(a)
                         # Try to parse!
-                        tree = parseLTL(a,reasonForNotBeingASlugsFormula)            
+                        tree = parseLTL(a,reasonForNotBeingASlugsFormula, booleanAPs, p)
                         # printTree(tree)
-                        currentLine = translateToSlugsFormat(tree)
+                        currentLine = translateToSlugsFormat(tree, numberAPLimits, translatedNames, p)
                         output.append(currentLine)
             output.append("")
+    logger.debug(translatedNames)
     return '\n'.join(output)
 
 
@@ -661,4 +663,3 @@ if __name__ == "__main__":
     
     output = convert_to_slugsin(s, thoroughly)
     print(output)
-    logger.debug(translatedNames)
