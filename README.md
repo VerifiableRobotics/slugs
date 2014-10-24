@@ -33,7 +33,10 @@ The slugs executable will be put into the src directory.
 Using slugs on OS X
 -------------------
 Things should generally work fine if you have a package management system (i.e. Homebrew or Macports) installed and follow the above instructions for Linux.
-Note that you will need to have installed at least the following packages: qt, boost.
+Note that you will need to:
+
+- have [`gcc, g++`](https://gcc.gnu.org/) in your `$PATH`,
+- have installed at least the following packages: `qt`, `boost`.
 
 In order to get CUDD to compile, you'll need to apply a small patch.  Inside the 'cudd-2.5.0' folder, run:
 
