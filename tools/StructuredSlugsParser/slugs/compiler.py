@@ -398,7 +398,7 @@ def addMinimumValueToAllVariables(tree, numberAPLimits, p):
         return tree
     else:
         return tuple(
-            [tree[0]] + [addMinimumValueToAllVariables(a, numberAPLimits) for a in tree[1:]], p)
+            [tree[0]] + [addMinimumValueToAllVariables(a, numberAPLimits, p) for a in tree[1:]])
 
 #-----------------------------------------------
 # Main Function. Takes the formula tree and adds
@@ -521,7 +521,9 @@ def parseSimpleFormula(tree, isPrimed, numberAPLimits, translatedNames, p):
             numberAPLimits,
             translatedNames,
             p)
-        b2 = parseSimpleFormula(tree[2], isPrimed)
+        b2 = parseSimpleFormula(
+            tree[2], isPrimed, numberAPLimits,
+            translatedNames, p)
         return ["|", "&", "!"] + b1 + ["!"] + b2 + ["&"] + b1 + b2
     if (tree[0] == "Implication"):
         b1 = parseSimpleFormula(
