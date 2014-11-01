@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 import re
 import sys
 
-from . import parser
+from slugs import parser
 
 # =====================================================
 # Allocate global parser and parser context variables:
