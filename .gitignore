@@ -42,3 +42,16 @@ src/latex/*
 # OS litter
 .DS_Store
 
+# Binary files
+*.pdf
+*.png
+*.jpg
+*.tar
+*.gz
+*.out
+
+# Latex
+*.aux
+
+# logs and text
+*.log
