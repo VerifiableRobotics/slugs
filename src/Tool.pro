@@ -28,21 +28,32 @@ TEMPLATE = app \
 CONFIG += debug
 CONFIG -= app_bundle
 CONFIG -= qt
-HEADERS += BFAbstractionLibrary/BF.h BFAbstractionLibrary/BFCudd.h gr1context.hpp variableTypes.hpp variableManager.hpp extensionExtractExplicitStrategy.hpp extensionRoboticsSemantics.hpp \
-    extensionWeakenSafetyAssumptions.hpp extensionBiasForAction.hpp \
-    extensionComputeCNFFormOfTheSpecification.hpp extensionCounterstrategy.hpp extensionExtractExplicitCounterstrategy.hpp \
-    extensionIncrementalSynthesis.hpp extensionFixedPointRecycling.hpp extensionInteractiveStrategy.hpp extensionIROSfastslow.hpp \
-    extensionAnalyzeInitialPositions.hpp extensionAnalyzeAssumptions.hpp \
+HEADERS += BFAbstractionLibrary/BF.h BFAbstractionLibrary/BFCudd.h \
+	gr1context.hpp variableTypes.hpp \
+	variableManager.hpp \
+	extensions/ExtractExplicitStrategy.hpp \
+	extensions/RoboticsSemantics.hpp \
+    extensions/WeakenSafetyAssumptions.hpp \
+    extensionBiasForAction.hpp \
+    extensions/ComputeCNFFormOfTheSpecification.hpp \
+    extensions/Counterstrategy.hpp \
+    extensions/ExtractExplicitCounterstrategy.hpp \
+    extensions/IncrementalSynthesis.hpp \
+    extensions/FixedPointRecycling.hpp \
+    extensions/InteractiveStrategy.hpp \
+    extensions/IROSfastslow.hpp \
+    extensions/AnalyzeInitialPositions.hpp \
+    extensions/AnalyzeAssumptions.hpp \
     BFAbstractionLibrary/BFCuddMintermEnumerator.h \
-    extensionComputeInterestingRunOfTheSystem.hpp \
-    extensionAnalyzeSafetyLivenessInteraction.hpp \
-    extensionAbstractWinningTraceGenerator.hpp \
-    extensionInterleave.hpp \
-    extensionPermissiveExplicitStrategy.hpp \
-    extensionIncompleteInformationEstimatorSynthesis.hpp \
-    extensionNondeterministicMotion.hpp \
-    extensionExtractSymbolicStrategy.hpp \
-    extensionTwoDimensionalCost.hpp
+    extensions/ComputeInterestingRunOfTheSystem.hpp \
+    extensions/AnalyzeSafetyLivenessInteraction.hpp \
+    extensions/AbstractWinningTraceGenerator.hpp \
+    extensions/Interleave.hpp \
+    extensions/PermissiveExplicitStrategy.hpp \
+    extensions/IncompleteInformationEstimatorSynthesis.hpp \
+    extensions/NondeterministicMotion.hpp \
+    extensions/ExtractSymbolicStrategy.hpp \
+    extensions/TwoDimensionalCost.hpp
 
 SOURCES += main.cpp BFAbstractionLibrary/bddDump.cpp BFAbstractionLibrary/BFCuddVarVector.cpp BFAbstractionLibrary/BFCudd.cpp BFAbstractionLibrary/BFCuddManager.cpp \
     BFAbstractionLibrary/BFCuddVarCube.cpp tools.cpp synthesisAlgorithm.cpp synthesisContextBasics.cpp variableManager.cpp \
