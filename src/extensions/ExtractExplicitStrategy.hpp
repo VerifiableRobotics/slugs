@@ -4,6 +4,8 @@
 #include "gr1context.hpp"
 #include <string>
 
+#define JSON 1
+
 /**
  * An extension that triggers that a strategy is actually extracted.
  */
@@ -117,6 +119,26 @@ public:
             positionalStrategiesForTheIndividualGoals[i] = strategy;
             //BF_newDumpDot(*this,strategy,"PreInput PreOutput PostInput PostOutput","/tmp/generalStrategy.dot");
         }
+        
+#ifdef JSON
+        // start json
+        outputStream << "{\"version\": 0,\n \"slugs\": \"0.0.1\",\n\n";
+        
+        // print names of variables
+        bool first = true;
+        outputStream << " \"variables\": [";
+        for (unsigned int i=0; i<variables.size(); i++) {
+            if (doesVariableInheritType(i, Pre)) {
+                if (first) {
+                    first = false;
+                } else {
+                    outputStream << ", ";
+                }
+                outputStream << "\"" << variableNames[i] << "\"";
+            }
+        }
+        outputStream << "],\n\n \"nodes\": {\n";
+#endif
 
         // Extract strategy
         while (todoList.size()>0) {
@@ -132,7 +154,11 @@ public:
             }*/
 
             // Print state information
+#ifdef JSON
+            outputStream << "\"" << stateNum << "\": {\n\t\"rank\": " << current.second << ",\n\t\"state\": [";
+#else
             outputStream << "State " << stateNum << " with rank " << current.second << " -> <";
+#endif
             bool first = true;
             for (unsigned int i=0;i<variables.size();i++) {
                 if (doesVariableInheritType(i,Pre)) {
@@ -141,12 +167,21 @@ public:
                     } else {
                         outputStream << ", ";
                     }
-                    outputStream << variableNames[i] << ":";
+#ifdef JSON
                     outputStream << (((currentPossibilities & variables[i]).isFalse())?"0":"1");
+#else
+                    outputStream << variableNames[i] << ":";
+#endif
                 }
             }
+#ifdef JSON
+            outputStream << "],\n";  // end of state list
 
+            // start list of successors
+            outputStream << "\t\"trans\": [";
+#else
             outputStream << ">\n\tWith successors : ";
+#endif
             first = true;
 
             // Compute successors for all variables that allow these
@@ -192,9 +227,21 @@ public:
                 }
                 outputStream << tn;
             }
-
+#ifdef JSON
+            // close list of successors and current "state" dict
+            outputStream << "]\n}";
+            if (todoList.size()) {
+            	outputStream << ",";
+            }
+            outputStream << "\n\n";
+#else
             outputStream << "\n";
+#endif
         }
+#ifdef JSON
+        // close "nodes" dict and json object
+        outputStream << "}}\n";
+#endif
     }
 
     static GR1Context* makeInstance(std::list<std::string> &filenames) {
