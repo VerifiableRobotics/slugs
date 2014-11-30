@@ -239,9 +239,7 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
     
     BF newCombination = determinize(targetPositionCandidateSet, postVars) ;
     
-    newCombination  = newCombination.ExistAbstract(varCubePreOutput).SwapVariables(varVectorPre,varVectorPost);
-    
-    
+    newCombination  = (newCombination.ExistAbstract(varCubePostOutput).ExistAbstract(varCubePre)).SwapVariables(varVectorPre,varVectorPost);
     
     std::pair<size_t, std::pair<unsigned int, unsigned int> > target = std::pair<size_t, std::pair<unsigned int, unsigned int> >(newCombination.getHashCode(),std::pair<unsigned int, unsigned int>(current.second.first, current.second.second));
     unsigned int tn;
