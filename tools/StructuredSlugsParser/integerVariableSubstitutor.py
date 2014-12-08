@@ -1,20 +1,23 @@
-#!/usr/bin/env python
-
+#!/usr/bin/python
+#
 # Translates a structured specification into an unstructured one that is suitable to be read by the slugs synthesis tool
 
-from __future__ import absolute_import
-
-import re
+import math
+import os
 import sys
-
-from . import parser
+import resource
+import subprocess
+import signal
+from Parser import Parser
+from re import match
+import StringIO
 
 # =====================================================
 # Allocate global parser and parser context variables:
 # - which APs there are
 # - how the numbers are encoded
 # =====================================================
-p = parser.Parser()
+p = Parser()
 booleanAPs = []
 
 # =====================================================
@@ -30,7 +33,7 @@ def tokenize(str):
             continue
 
         # Match words
-        m = re.match('[a-zA-Z_.\'@]+[a-zA-Z0-9_.\'@]*', str)
+        m = match('[a-zA-Z_.\'@]+[a-zA-Z0-9_.\'@]*', str)
         if m:
             currentSymbol = m.group(0)
             if (currentSymbol in ["X","F","G","U","W","FALSE","TRUE","next"]):
@@ -46,7 +49,7 @@ def tokenize(str):
             continue
 
         # Match numbers
-        m = re.match('[0-9]+', str)
+        m = match('[0-9]+', str)
         if m:
             res.append(('numeral', m.group(0)))
             str = str[m.end(0):]
