@@ -76,6 +76,8 @@ public:
             }
         } else {
 
+            strategyDumpingData.clear();
+
             // Compute Counter-Strategy
             BFFixedPoint mu2(mgr.constantFalse());
             for (;!mu2.isFixedPointReached();) {
