@@ -91,18 +91,21 @@ if __name__ == "__main__":
             else:
                 minValue = testValue
             testList.append(str(testValue)+"+")
+            print str(testValue)+"+"
         elif result==False:
             if monotone:
                 minValue = testValue+1
             else:
                 maxValue = testValue-1
             testList.append(str(testValue)+"-")
+            print str(testValue)+"-"
         else:
             print >>sys.stderr, "Error:\n"+result
             sys.exit(1)
 
     # Final Test - we know that maxValue==minValue now
     result = checkRealizability(scriptName,maxValue)
+    print ""
     if result==True:
         if monotone:
             print "The minimum value for realizability is "+str(maxValue)
