@@ -76,6 +76,8 @@ public:
             }
         } else {
 
+            strategyDumpingData.clear();
+
             // Compute Counter-Strategy
             BFFixedPoint mu2(mgr.constantFalse());
             for (;!mu2.isFixedPointReached();) {
@@ -568,25 +570,8 @@ public:
                     std::cout << "FAILASSUMPTIONS" << std::endl;
                 } else {
                     BF_newDumpDot(*this,possibleInitialPositions,NULL,"/tmp/init.dot");
-                    // Find the newly forced values
-                    resultPtr = 0;
-                    for (const VariableType &type: {PreInput, PreOutput}) {
-                        for (unsigned int i=0;i<variables.size();i++) {
-                            if (doesVariableInheritType(i,type)) {
-                                if (result[resultPtr]=='.') {
-                                    if ((possibleInitialPositions & variables[i]).isFalse()) {
-                                        result[resultPtr] = 'a';
-                                    } else if ((possibleInitialPositions & !variables[i]).isFalse()) {
-                                        result[resultPtr] = 'A';
-                                    } else {
-                                        result[resultPtr] = '.';
-                                    }
-                                }
-                                resultPtr++;
-                            }
-                        }
-                    }
 
+                    // Find the newly forced values
                     BF oldInitialPositions = possibleInitialPositions;
                     if (realizable) {
                         possibleInitialPositions &= initSys;
@@ -705,7 +690,6 @@ public:
                                         if (result[resultPtr]=='.') {
                                             if ((possibleInitialPositions & variables[i]).isFalse()) {
                                                 result[resultPtr] = (realizable)?'s':'g';
-                                                std::cerr << "!Moin!\n";
                                             } else if ((possibleInitialPositions & !variables[i]).isFalse()) {
                                                 result[resultPtr] = (realizable)?'S':'G';
                                             } else {

@@ -6,8 +6,10 @@
 
 /**
  * An extension that triggers that a strategy is actually extracted.
+ *
+ *  This extension contains some code by Github user "johnyf", responsible for producing JSON output.
  */
-template<class T, bool oneStepRecovery> class XExtractExplicitStrategy : public T {
+template<class T, bool oneStepRecovery, bool jsonOutput> class XExtractExplicitStrategy : public T {
 protected:
     // New variables
     std::string outputFilename;
@@ -33,7 +35,7 @@ protected:
     using T::determinize;
     using T::doesVariableInheritType;
 
-    XExtractExplicitStrategy<T,oneStepRecovery>(std::list<std::string> &filenames): T(filenames) {}
+    XExtractExplicitStrategy<T,oneStepRecovery,jsonOutput>(std::list<std::string> &filenames): T(filenames) {}
 
     void init(std::list<std::string> &filenames) {
         T::init(filenames);
@@ -118,6 +120,26 @@ public:
             //BF_newDumpDot(*this,strategy,"PreInput PreOutput PostInput PostOutput","/tmp/generalStrategy.dot");
         }
 
+        // Print JSON Header if JSON output is desired
+        if (jsonOutput) {
+            outputStream << "{\"version\": 0,\n \"slugs\": \"0.0.1\",\n\n";
+
+            // print names of variables
+            bool first = true;
+            outputStream << " \"variables\": [";
+            for (unsigned int i=0; i<variables.size(); i++) {
+                if (doesVariableInheritType(i, Pre)) {
+                    if (first) {
+                        first = false;
+                    } else {
+                        outputStream << ", ";
+                    }
+                    outputStream << "\"" << variableNames[i] << "\"";
+                }
+            }
+            outputStream << "],\n\n \"nodes\": {\n";
+        }
+
         // Extract strategy
         while (todoList.size()>0) {
             std::pair<size_t, unsigned int> current = todoList.front();
@@ -132,7 +154,12 @@ public:
             }*/
 
             // Print state information
-            outputStream << "State " << stateNum << " with rank " << current.second << " -> <";
+            if (jsonOutput) {
+                outputStream << "\"" << stateNum << "\": {\n\t\"rank\": " << current.second << ",\n\t\"state\": [";
+            } else {
+                outputStream << "State " << stateNum << " with rank " << current.second << " -> <";
+            }
+
             bool first = true;
             for (unsigned int i=0;i<variables.size();i++) {
                 if (doesVariableInheritType(i,Pre)) {
@@ -141,12 +168,17 @@ public:
                     } else {
                         outputStream << ", ";
                     }
-                    outputStream << variableNames[i] << ":";
+                    if (!jsonOutput) outputStream << variableNames[i] << ":";
                     outputStream << (((currentPossibilities & variables[i]).isFalse())?"0":"1");
                 }
             }
-
-            outputStream << ">\n\tWith successors : ";
+            if (jsonOutput) {
+                outputStream << "],\n";  // end of state list
+                // start list of successors
+                outputStream << "\t\"trans\": [";
+            } else {
+                outputStream << ">\n\tWith successors : ";
+            }
             first = true;
 
             // Compute successors for all variables that allow these
@@ -190,15 +222,28 @@ public:
                 } else {
                     outputStream << ", ";
                 }
+
                 outputStream << tn;
             }
 
-            outputStream << "\n";
+            if (jsonOutput) {
+                outputStream << "]\n}";
+                if (!(todoList.empty())) {
+                    outputStream << ",";
+                }
+                outputStream << "\n\n";
+            } else {
+                outputStream << "\n";
+            }
+        }
+        if (jsonOutput) {
+            // close "nodes" dict and json object
+            outputStream << "}}\n";
         }
     }
 
     static GR1Context* makeInstance(std::list<std::string> &filenames) {
-        return new XExtractExplicitStrategy<T,oneStepRecovery>(filenames);
+        return new XExtractExplicitStrategy<T,oneStepRecovery,jsonOutput>(filenames);
     }
 };
 

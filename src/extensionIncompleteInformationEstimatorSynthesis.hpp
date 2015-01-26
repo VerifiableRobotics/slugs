@@ -2,6 +2,7 @@
 #define __EXTENSION_INCOMPLETE_INFORMATION_ESTIMATOR_SYNTHESIS_HPP
 
 #include "gr1context.hpp"
+#include <boost/algorithm/string.hpp>
 
 /**
  * An extension that allows to compute an estimator from the description of
@@ -25,6 +26,7 @@ template<class T> class XIncompleteInformationEstimatorSynthesis : public T {
     using T::doesVariableInheritType;
     using T::varCubePost;
     using T::preVars;
+    using T::findVariableNumber;
 
     // Variables local to this plugin
     BF strategy;
@@ -213,9 +215,9 @@ protected:
         BF oldReachableStates = mgr.constantFalse();
         BF allSafetyConstraints = safetyEnv & safetySys;
 
-        BF_newDumpDot(*this,reachableStates,NULL,"/tmp/reachStart.dot");
-        BF_newDumpDot(*this,initEnv,NULL,"/tmp/initEnvStart.dot");
-        BF_newDumpDot(*this,initSys,NULL,"/tmp/initSysStart.dot");
+        //BF_newDumpDot(*this,reachableStates,NULL,"/tmp/reachStart.dot");
+        //BF_newDumpDot(*this,initEnv,NULL,"/tmp/initEnvStart.dot");
+        //BF_newDumpDot(*this,initSys,NULL,"/tmp/initSysStart.dot");
 
 
         // Classical algorithm
@@ -227,7 +229,7 @@ protected:
             reachableStates |= newStates;
         }
 
-        BF_newDumpDot(*this,reachableStates,NULL,"/tmp/reachEnd.dot");
+        //BF_newDumpDot(*this,reachableStates,NULL,"/tmp/reachEnd.dot");
 
         if (reachableStates.isFalse()) {
             std::cerr << "=========\nWARNING!\n=========\nThere is no initial state in the estimator model.\n\n";
@@ -262,8 +264,7 @@ protected:
 
         mgr.setReorderingMaxBlowup(1.03f);
 
-        BF_newDumpDot(*this,strategy,NULL,
-                      "/tmp/stratNoMinMax.dot");
+        // BF_newDumpDot(*this,strategy,NULL,"/tmp/stratNoMinMax.dot");
         // BF_newDumpDot(*this,(!reachableStates) | (!safetyEnv) | safetySys,NULL,
         //              "/tmp/prestrat.dot");
 
@@ -310,7 +311,7 @@ protected:
         }
 #endif
 
-        BF_newDumpDot(*this,strategy,NULL,"/tmp/strat.dot");
+        // BF_newDumpDot(*this,strategy,NULL,"/tmp/strat.dot");
 
         // Print strategy for the estimator
         std::cerr << "...computed belief space abstraction...\n";
@@ -319,7 +320,7 @@ protected:
         std::cout << "#=======================================================\n";
         std::cout << "# --- End of the specification for the report\n";
         std::cout << "[SYS_TRANS]\n";
-        BF_newDumpDot(*this,strategy,NULL,"/tmp/estimatorGuarantees.dot");
+        //BF_newDumpDot(*this,strategy,NULL,"/tmp/estimatorGuarantees.dot");
         printBFAsSlugsExpression(strategy);
         std::cout << std::endl;
 
@@ -328,7 +329,7 @@ protected:
         BF combined = safetyEnv & safetySys & strategy;
         std::cerr << "...computing assumptions...\n";
         reachableStates = initSys & initEnv;
-        BF_newDumpDot(*this,reachableStates,NULL,"/tmp/reachable0.dot");
+        //BF_newDumpDot(*this,reachableStates,NULL,"/tmp/reachable0.dot");
         oldReachableStates = mgr.constantFalse();
         while (reachableStates!=oldReachableStates) {
             std::cerr << ".";
@@ -336,13 +337,24 @@ protected:
             reachableStates |= reachableStates.AndAbstract(combined,varCubePre).SwapVariables(varVectorPre,varVectorPost);
         }
         std::cerr << "!";
-        BF_newDumpDot(*this,reachableStates,NULL,"/tmp/reachable2.dot");
+        //BF_newDumpDot(*this,reachableStates,NULL,"/tmp/reachable2.dot");
         BF environmentAssumption = reachableStates.AndAbstract(safetyEnv,varCubeEverythingButEstimatorPreAndObservables);
         std::cout << "[ENV_TRANS]\n";
         printBFAsSlugsExpression(environmentAssumption);
-        BF_newDumpDot(*this,environmentAssumption,NULL,"/tmp/envass.dot");
+        //BF_newDumpDot(*this,environmentAssumption,NULL,"/tmp/envass.dot");
         std::cout << std::endl;
+        std::cerr << std::endl;
 
+
+        // Recompute reachable states for the following checks
+        combined = safetyEnv & environmentAssumption & strategy;
+        reachableStates = initSys & initEnv;
+        oldReachableStates = mgr.constantFalse();
+        while (reachableStates!=oldReachableStates) {
+              std::cerr << ".";
+              oldReachableStates = reachableStates;
+              reachableStates |= reachableStates.AndAbstract(combined,varCubePre).SwapVariables(varVectorPre,varVectorPost);
+        }
 
         // Perform some checks
         BF deadEnds = (!(environmentAssumption.ExistAbstract(varCubePost))) & reachableStates;
@@ -360,6 +372,166 @@ protected:
             std::cerr << "============================================================\n";
             BF_newDumpDot(*this,deadEnds,NULL,"/tmp/envDeadEnd.dot");
             BF_newDumpDot(*this,weakDeterminize(deadEnds,preVars),NULL,"/tmp/envDeadEndDet.dot");
+        }
+
+        //========================================================
+        // Analyses the opportunities for substitution-compression
+        // Thus, provide the user with a list of possible substitutions.
+        //========================================================
+        std::cerr << "Min/Max difference Analysis (not considering the initial state):\n";
+        BF allTransitions = safetyEnv & environmentAssumption & strategy & reachableStates;
+        //BF_newDumpDot(*this,allTransitions,NULL,"/tmp/allTransitions.dot");
+        for (unsigned int referenceVar=0;referenceVar<variables.size();referenceVar++) {
+
+            // Check if this variable is a suitable reference variable for checking
+            // if substitution-compression can be made.
+            if (variableNames[referenceVar].find("@") != std::string::npos) {
+                std::string referenceVarSuffix = variableNames[referenceVar].substr(variableNames[referenceVar].find("@")+1,std::string::npos);
+                std::string referenceVarPrefix = variableNames[referenceVar].substr(0,variableNames[referenceVar].find("@"));
+                if (referenceVarSuffix.find(".")!=std::string::npos) {
+
+                    // Parse Min/Max of the reference variable
+                    unsigned int referenceVarMin;
+                    unsigned int referenceVarMax;
+                    {
+                        std::vector<std::string> suffixParts;
+                        boost::split(suffixParts,referenceVarSuffix,boost::is_any_of("."));
+                        if (suffixParts.size()!=3) throw "Error: Variable name containing an '@' is not of the required shape! (1)";
+                        if (suffixParts[0]!="0") throw "Error: Variable name containing an '@' is not of the required shape! (2)";
+                        std::stringstream is1(suffixParts[1]);
+                        is1>>referenceVarMin;
+                        if (is1.fail()) throw "Error: Variable name containing an '@' is not of the required shape! (3)";
+                        std::stringstream is2(suffixParts[2]);
+                        is2>>referenceVarMax;
+                        if (is2.fail()) throw "Error: Variable name containing an '@' is not of the required shape! (4)";
+                        char c;
+                        is2>>c;
+                        if (doesVariableInheritType(referenceVar,Post)) {
+                            if (is2.fail()) throw "Error: Found unprimed post variable";
+                            if (c!='\'') throw "Error: Found post variable that is not primed but has an '@' in it.";
+                        } else {
+                            if (!(is2.fail())) throw "Error: Found non-post variable that has an '@' in it and does not have the correct form.";
+                        }
+                    }
+
+                    // Ok, reference variable has been found. Now find the variable
+                    // that we want to "emulate".
+                    for (unsigned int simulatedVar=0;simulatedVar<variables.size();simulatedVar++) {
+                        std::string simulatedVarSuffix = variableNames[simulatedVar].substr(variableNames[simulatedVar].find("@")+1,std::string::npos);
+                        std::string simulatedVarPrefix = variableNames[simulatedVar].substr(0,variableNames[simulatedVar].find("@"));
+                        if ((simulatedVarSuffix.find(".")!=std::string::npos) && (simulatedVar!=referenceVar) && doesVariableInheritType(simulatedVar,EstimationPost)) {
+
+                            // Parse Min/Max of the reference variable
+                            unsigned int simulatedVarMin;
+                            unsigned int simulatedVarMax;
+                            {
+                                std::vector<std::string> suffixParts;
+                                boost::split(suffixParts,simulatedVarSuffix,boost::is_any_of("."));
+                                if (suffixParts.size()!=3) throw "Error: Variable name containing an '@' is not of the required shape! (5)";
+                                if (suffixParts[0]!="0") throw "Error: Variable name containing an '@' is not of the required shape! (6)";
+                                std::stringstream is1(suffixParts[1]);
+                                is1>>simulatedVarMin;
+                                if (is1.fail()) throw "Error: Variable name containing an '@' is not of the required shape! (7)";
+                                std::stringstream is2(suffixParts[2]);
+                                is2>>simulatedVarMax;
+                                if (is2.fail()) throw "Error: Variable name containing an '@' is not of the required shape! (8)";
+                                char c;
+                                is2>>c;
+                                if (is2.fail()) throw "Error: Found unprimed post variable";
+                                if (c!='\'') throw "Error: Found post variable that is not primed but has an '@' in it.";
+                            }
+
+                            // Now compute the minimum/maximum differences
+                            int minDiff = std::numeric_limits<int>::max();
+                            int maxDiff = std::numeric_limits<int>::min();
+
+                            // Iterate over the possible value pairs
+                            for (unsigned int valueReference = referenceVarMin;valueReference <= referenceVarMax;valueReference++) {
+
+                                // Compute BF for the reference variables
+                                BF bfReference = mgr.constantTrue();
+                                {
+                                    unsigned int nofReferenceVars = 0;
+                                    unsigned int normalizedValue = valueReference - referenceVarMin;
+                                    unsigned int diffComputation = referenceVarMax-referenceVarMin;
+                                    while (diffComputation>0) { nofReferenceVars++; diffComputation >>=1; }
+                                    if ((normalizedValue & 1)>0) {
+                                        bfReference &= variables[referenceVar];
+                                    } else {
+                                        bfReference &= !(variables[referenceVar]);
+                                    }
+                                    for (unsigned int i=1;i<nofReferenceVars;i++) {
+                                        std::ostringstream varName;
+                                        varName << referenceVarPrefix << "@" << i;
+                                        if (doesVariableInheritType(referenceVar,Post)) varName << "'";
+                                        BF thisVar = variables[findVariableNumber(varName.str())];
+                                        if ((normalizedValue & (1 << i))>0) {
+                                            bfReference &= thisVar;
+                                        } else {
+                                            bfReference &= !thisVar;
+                                        }
+                                    }
+                                }
+
+                                // Iterate over the possible simulated variable values
+                                for (unsigned int valueSimulated = simulatedVarMin;valueSimulated <= simulatedVarMax;valueSimulated++) {
+
+                                    BF bfSimulated = mgr.constantTrue();
+                                    {
+                                        unsigned int nofSimulatedVars = 0;
+                                        unsigned int normalizedValue = valueSimulated - simulatedVarMin;
+                                        unsigned int diffComputation = simulatedVarMax - simulatedVarMin;
+                                        while (diffComputation>0) { nofSimulatedVars++; diffComputation >>=1; }
+                                        if ((normalizedValue & 1)>0) {
+                                            bfSimulated &= variables[simulatedVar];
+                                        } else {
+                                            bfSimulated &= !(variables[simulatedVar]);
+                                        }
+                                        for (unsigned int i=1;i<nofSimulatedVars;i++) {
+                                            std::ostringstream varName;
+                                            varName << simulatedVarPrefix << "@" << i;
+                                            if (doesVariableInheritType(simulatedVar,Post)) varName << "'";
+                                            BF thisVar = variables[findVariableNumber(varName.str())];
+                                            if ((normalizedValue & (1 << i))>0) {
+                                                bfSimulated &= thisVar;
+                                            } else {
+                                                bfSimulated &= !thisVar;
+                                            }
+                                        }
+                                    }
+
+                                    int thisDiff = valueSimulated;
+                                    thisDiff -= valueReference;
+
+                                    // Only perform the following check if it makes sense
+                                    if ((thisDiff<minDiff) || (thisDiff>maxDiff)) {
+
+                                        // Check if this combination is reachable
+                                        if (!(((!bfSimulated) | (!bfReference)) >= allTransitions)) {
+
+                                            /*std::ostringstream fn;
+                                            fn << "/tmp/diffSim" << simulatedVarPrefix;
+                                            if (doesVariableInheritType(simulatedVar,Post)) fn << "prime";
+                                            fn << "-againstRef-" << referenceVarPrefix;
+                                            if (doesVariableInheritType(referenceVar,Post)) fn << "prime";
+                                            fn << "-" << valueSimulated << "-" << valueReference << "-" << referenceVarMin << "-" << referenceVarMax << "-" << simulatedVarMin << "-" << simulatedVarMax << ".dot";
+                                            BF_newDumpDot(*this,bfSimulated & bfReference & allTransitions,NULL,fn.str());
+                                            */
+
+                                            if (thisDiff<minDiff) minDiff = thisDiff;
+                                            if (thisDiff>maxDiff) maxDiff = thisDiff;
+                                        }
+                                    }
+                                }
+                            }
+
+                            std::cerr << simulatedVarPrefix << "'= " << referenceVarPrefix;
+                            if (doesVariableInheritType(referenceVar,Post)) std::cerr << "'";
+                            std::cerr << " + [" << minDiff << "," << maxDiff << "]" << std::endl;
+                        }
+                    }
+                }
+            }
         }
     }
 
