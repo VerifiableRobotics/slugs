@@ -9,7 +9,7 @@
  * An extension to extract an explicit-state permissive strategy, which
  * is also maximal when no liveness assumptions and guarantees are given.
  */
-template<class T> class XExtractPermissiveExplicitStrategy : public T {
+template<class T, bool oneStepRecovery> class XExtractPermissiveExplicitStrategy : public T {
 protected:
     // New variables
     std::string outputFilename;
@@ -38,7 +38,7 @@ protected:
     using T::livenessAssumptions;
     using T::safetySys;
 
-    XExtractPermissiveExplicitStrategy<T>(std::list<std::string> &filenames): T(filenames) {}
+    XExtractPermissiveExplicitStrategy<T,oneStepRecovery>(std::list<std::string> &filenames): T(filenames) {}
 
     void init(std::list<std::string> &filenames) {
         T::init(filenames);
@@ -160,7 +160,10 @@ public:
 
             // Compute successors for all variables that allow these
             currentPossibilities &= positionalStrategiesForTheIndividualGoals[current.second];
-            BF remainingTransitions = currentPossibilities;
+            BF remainingTransitions =
+                    (oneStepRecovery)?
+                    currentPossibilities:
+                    (currentPossibilities & safetyEnv);
 
             // Switching goals
             while (!(remainingTransitions.isFalse())) {
@@ -199,7 +202,7 @@ public:
     }
 
     static GR1Context* makeInstance(std::list<std::string> &filenames) {
-        return new XExtractPermissiveExplicitStrategy<T>(filenames);
+        return new XExtractPermissiveExplicitStrategy<T,oneStepRecovery>(filenames);
     }
 };
 
