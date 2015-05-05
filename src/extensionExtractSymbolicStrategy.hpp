@@ -142,8 +142,12 @@ public:
         fileExtraHeader << "#    http://www.cs.uleth.ca/~rice/cudd_docs/dddmp/dddmpAllFile.html#dddmpDump.c\n#\n";
         fileExtraHeader << "# For information about how this file is generated, please see the SLUGS source.\n#\n";
 
-        // BF dump = variables[4] & !variables[6]& !variables[8] & combinedStrategy;
-        // BF_newDumpDot(*this,dump,"SymbolicStrategyCounterVar PreInput PreOutput PostInput PostOutput","/tmp/writtenBDD.dot");
+#ifndef NDEBUG
+        std::string tempFilename(tmpnam(NULL));
+        tempFilename = tempFilename + "_strategyBdd.dot";
+        std::cerr << "Writing DOT file of the BDD to: " << tempFilename << std::endl;
+        BF_newDumpDot(*this,combinedStrategy,"SymbolicStrategyCounterVar PreInput PreOutput PostInput PostOutput", tempFilename.c_str());
+#endif
 
         mgr.writeBDDToFile(filename.c_str(),fileExtraHeader.str(),combinedStrategy,variables,variableNames);
 
