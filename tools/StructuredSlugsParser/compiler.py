@@ -514,13 +514,13 @@ def performConversion(inputFile,thoroughly):
         for line in lines[variableType]:
             if line.startswith("#"):
                 translatedIOLines[variableType].append(line.strip())
-            if "'" in line:
+            elif "'" in line:
                 print >>sys.stderr, "Error with atomic signal name "+line+": the name must not contain any \"'\" characters"
                 raise Exception("Translation error")
-            if "@" in line:
+            elif "@" in line:
                 print >>sys.stderr, "Error with atomic signal name "+line+": the name must not contain any \"@\" characters"
                 raise Exception("Translation error")
-            if ":" in line:
+            elif ":" in line:
                 parts = line.split(":")
                 parts = [a.strip() for a in parts]
                 if len(parts)!=2:
@@ -628,6 +628,7 @@ def performConversion(inputFile,thoroughly):
         
 
 
+
 # ==================================
 # Entry point
 # ==================================
@@ -650,6 +651,9 @@ if __name__ == "__main__":
                 print >>sys.stderr, "Error: more than one file name given."
                 sys.exit(1)
             inputFile = parameter
+
+    resource.setrlimit(resource.RLIMIT_STACK, (2**29,-1))
+    sys.setrecursionlimit(10**6)
     performConversion(inputFile,thoroughly)
     print >>sys.stderr, translatedNames
 
