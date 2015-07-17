@@ -296,7 +296,7 @@ def recurseCalculationSubformula(tree,memoryStructureParts, isPrimed):
             return [a+"'" for a in translatedNames[apName]]
 
     elif (tree[0]=="NumberBrackets"):
-        print >>sys.stderr,tree
+        # print >>sys.stderr,tree
         assert tree[1]==('(',)
         assert tree[3]==(')',)
         return recurseCalculationSubformula(tree[2],memoryStructureParts, isPrimed)
@@ -341,9 +341,9 @@ def computeCalculationSubformula(tree, isPrimed):
     memoryStructureParts = []
     part1MemoryStructurePointers = recurseCalculationSubformula(addMinimumValueToAllVariables(tree[1]),memoryStructureParts, isPrimed)
     part2MemoryStructurePointers = recurseCalculationSubformula(addMinimumValueToAllVariables(tree[3]),memoryStructureParts, isPrimed)
-    print >>sys.stderr,"P1: "+str(part1MemoryStructurePointers)
-    print >>sys.stderr,"P2: "+str(part2MemoryStructurePointers)
-    print >>sys.stderr,"MSPatComp: "+str(memoryStructureParts)
+    # print >>sys.stderr,"P1: "+str(part1MemoryStructurePointers)
+    # print >>sys.stderr,"P2: "+str(part2MemoryStructurePointers)
+    # print >>sys.stderr,"MSPatComp: "+str(memoryStructureParts)
 
     # Pick the correct comparison operator
     # ->    Greater or Greater-Equal
@@ -442,7 +442,7 @@ def parseSimpleFormula(tree, isPrimed):
 
 def translateToSlugsFormat(tree):
     tokens = parseSimpleFormula(tree,False)
-    print >>sys.stderr,tokens
+    # print >>sys.stderr,tokens
     return " ".join(tokens)
 
 
@@ -610,7 +610,7 @@ def performConversion(inputFile,thoroughly):
 
             # Test for conformance with recursive definition
             for a in lines[propertyType]:
-                print >>sys.stderr, a.strip().split(" ")
+                # print >>sys.stderr, a.strip().split(" ")
                 if a.strip()[0:1] == "#":
                     print a
                 else:
@@ -618,7 +618,7 @@ def performConversion(inputFile,thoroughly):
                     if isSlugsFormula:
                         print a
                     else:
-                        print >>sys.stderr,a
+                        # print >>sys.stderr,a
                         # Try to parse!
                         tree = parseLTL(a,reasonForNotBeingASlugsFormula)            
                         # printTree(tree)
@@ -655,6 +655,6 @@ if __name__ == "__main__":
     resource.setrlimit(resource.RLIMIT_STACK, (2**29,-1))
     sys.setrecursionlimit(10**6)
     performConversion(inputFile,thoroughly)
-    print >>sys.stderr, translatedNames
+    # print >>sys.stderr, translatedNames
 
 
