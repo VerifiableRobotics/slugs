@@ -363,7 +363,7 @@ public:
         // Print column headers
         std::cout << "Env.L.A. | Sys.L.G. | Input";
         int inputColsLeft = -5;
-        for (unsigned int i=4;i<nofInputColumns+4;i++) {
+        for (int i=4;i<nofInputColumns+4;i++) {
             inputColsLeft+=maxLengths[i]+1;
         }
         for (int i=0;i<inputColsLeft;i++) {

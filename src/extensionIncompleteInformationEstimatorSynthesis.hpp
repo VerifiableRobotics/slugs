@@ -199,7 +199,13 @@ protected:
 
         // Recurse
         int part = recursePrintBFAsSlugsExpression(bf,nodes,parts);
-        assert(part==parts.size()-1);
+
+        // Dummy instruction for the case that the following "assert" stateent is not executed
+        (void)part;
+
+        // Check that call to recursePrintBFAsSlugsExpression succeeded.
+        assert(part==(int)parts.size()-1);
+
         std::cout << "$ " << parts.size();
         for (auto it = parts.begin();it!=parts.end();it++) {
             std::cout << " " << *it;

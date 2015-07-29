@@ -6,7 +6,7 @@ QMAKE_CXX = g++
 QMAKE_LINK = g++
 
 BDDFLAGS = $$system(gcc BFAbstractionLibrary/compilerOptionGenerator.c -o /tmp/BFAbstractionCompilerOptionsProducer-$$(USER);/tmp/BFAbstractionCompilerOptionsProducer-$$(USER))
-DEFINES += USE_CUDD
+DEFINES += USE_CUDD NDEBUG
 CFLAGS += -g -fpermissive
 
 QMAKE_LFLAGS_X86_64 = -arch x86_64
@@ -25,7 +25,7 @@ QMAKE_CXXFLAGS_DEBUG += -g -std=gnu++0x -Wall -Wextra \
 
 TEMPLATE = app \
     console
-CONFIG += debug
+CONFIG += release
 CONFIG -= app_bundle
 CONFIG -= qt
 HEADERS += BFAbstractionLibrary/BF.h BFAbstractionLibrary/BFCudd.h gr1context.hpp variableTypes.hpp variableManager.hpp extensionExtractExplicitStrategy.hpp extensionRoboticsSemantics.hpp \
@@ -42,7 +42,8 @@ HEADERS += BFAbstractionLibrary/BF.h BFAbstractionLibrary/BFCudd.h gr1context.hp
     extensionIncompleteInformationEstimatorSynthesis.hpp \
     extensionNondeterministicMotion.hpp \
     extensionExtractSymbolicStrategy.hpp \
-    extensionTwoDimensionalCost.hpp
+    extensionTwoDimensionalCost.hpp \
+    extensionCooperativeGR1Strategy.hpp
 
 SOURCES += main.cpp BFAbstractionLibrary/bddDump.cpp BFAbstractionLibrary/BFCuddVarVector.cpp BFAbstractionLibrary/BFCudd.cpp BFAbstractionLibrary/BFCuddManager.cpp \
     BFAbstractionLibrary/BFCuddVarCube.cpp tools.cpp synthesisAlgorithm.cpp synthesisContextBasics.cpp variableManager.cpp \

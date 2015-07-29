@@ -56,6 +56,7 @@
 #include "extensionNondeterministicMotion.hpp"
 #include "extensionExtractSymbolicStrategy.hpp"
 #include "extensionTwoDimensionalCost.hpp"
+#include "extensionCooperativeGR1Strategy.hpp"
 
 //===================================================================================
 // List of command line arguments
@@ -85,7 +86,8 @@ const char *commandLineArguments[] = {
     "--extractExplicitPermissiveStrategy","Computes an explicit-state permissive strategy.",
     "--computeIncompleteInformationEstimator","Computes a imcomplete-information state estimation controller.",
     "--nonDeterministicMotion","Computes a controller using an non-deterministic motion abstraction.",
-    "--twoDimensionalCost","Computes a controller that optimizes for waiting and action cost at the same time."
+    "--twoDimensionalCost","Computes a controller that optimizes for waiting and action cost at the same time.",
+    "--cooperativeGR1Strategy","Computes a controller strategy that is cooperative with its environment."
 };
 
 //===================================================================================
@@ -201,7 +203,29 @@ OptionCombination optionCombinations[] = {
     OptionCombination("--symbolicStrategy --sysInitRoboticsSemantics --twoDimensionalCost",XExtractSymbolicStrategy<XTwoDimensionalCost<XRoboticsSemantics<GR1Context> >,false,false>::makeInstance),
     OptionCombination("--simpleRecovery --symbolicStrategy --sysInitRoboticsSemantics --twoDimensionalCost",XExtractSymbolicStrategy<XTwoDimensionalCost<XRoboticsSemantics<GR1Context> >,true,false>::makeInstance),
     OptionCombination("--simpleSymbolicStrategy --sysInitRoboticsSemantics --twoDimensionalCost",XExtractSymbolicStrategy<XTwoDimensionalCost<XRoboticsSemantics<GR1Context> >,false,true>::makeInstance),
-    OptionCombination("--simpleRecovery --simpleSymbolicStrategy --sysInitRoboticsSemantics --twoDimensionalCost",XExtractSymbolicStrategy<XTwoDimensionalCost<XRoboticsSemantics<GR1Context> >,true,true>::makeInstance)
+    OptionCombination("--simpleRecovery --simpleSymbolicStrategy --sysInitRoboticsSemantics --twoDimensionalCost",XExtractSymbolicStrategy<XTwoDimensionalCost<XRoboticsSemantics<GR1Context> >,true,true>::makeInstance),
+
+    OptionCombination("--cooperativeGR1Strategy",XExtractExplicitStrategy<XCooperativeGR1Strategy<GR1Context>,false,false>::makeInstance),
+    OptionCombination("--cooperativeGR1Strategy --jsonOutput",XExtractExplicitStrategy<XCooperativeGR1Strategy<GR1Context>,false,true>::makeInstance),
+    OptionCombination("--cooperativeGR1Strategy --symbolicStrategy",XExtractSymbolicStrategy<XCooperativeGR1Strategy<GR1Context>,false,false>::makeInstance),
+    OptionCombination("--cooperativeGR1Strategy --simpleSymbolicStrategy",XExtractSymbolicStrategy<XCooperativeGR1Strategy<GR1Context>,false,true>::makeInstance),
+    OptionCombination("--cooperativeGR1Strategy --simpleRecovery",XExtractExplicitStrategy<XCooperativeGR1Strategy<GR1Context>,true,false>::makeInstance),
+    OptionCombination("--cooperativeGR1Strategy --jsonOutput --simpleRecovery",XExtractExplicitStrategy<XCooperativeGR1Strategy<GR1Context>,true,true>::makeInstance),
+    OptionCombination("--cooperativeGR1Strategy --simpleRecovery --symbolicStrategy",XExtractSymbolicStrategy<XCooperativeGR1Strategy<GR1Context>,true,false>::makeInstance),
+    OptionCombination("--cooperativeGR1Strategy --simpleRecovery --simpleSymbolicStrategy",XExtractSymbolicStrategy<XCooperativeGR1Strategy<GR1Context>,true,true>::makeInstance),
+    OptionCombination("--cooperativeGR1Strategy --interactiveStrategy",XInteractiveStrategy<XCooperativeGR1Strategy<GR1Context> >::makeInstance),
+    OptionCombination("--cooperativeGR1Strategy --onlyRealizability",XCooperativeGR1Strategy<GR1Context>::makeInstance),
+
+    OptionCombination("--cooperativeGR1Strategy --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<XCooperativeGR1Strategy<GR1Context> >,false,false>::makeInstance),
+    OptionCombination("--cooperativeGR1Strategy --jsonOutput --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<XCooperativeGR1Strategy<GR1Context> >,false,true>::makeInstance),
+    OptionCombination("--cooperativeGR1Strategy --symbolicStrategy --sysInitRoboticsSemantics",XExtractSymbolicStrategy<XRoboticsSemantics<XCooperativeGR1Strategy<GR1Context> >,false,false>::makeInstance),
+    OptionCombination("--cooperativeGR1Strategy --simpleSymbolicStrategy --sysInitRoboticsSemantics",XExtractSymbolicStrategy<XRoboticsSemantics<XCooperativeGR1Strategy<GR1Context> >,false,true>::makeInstance),
+    OptionCombination("--cooperativeGR1Strategy --simpleRecovery --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<XCooperativeGR1Strategy<GR1Context> >,true,false>::makeInstance),
+    OptionCombination("--cooperativeGR1Strategy --jsonOutput --simpleRecovery --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<XCooperativeGR1Strategy<GR1Context> >,true,true>::makeInstance),
+    OptionCombination("--cooperativeGR1Strategy --simpleRecovery --symbolicStrategy --sysInitRoboticsSemantics",XExtractSymbolicStrategy<XRoboticsSemantics<XCooperativeGR1Strategy<GR1Context> >,true,false>::makeInstance),
+    OptionCombination("--cooperativeGR1Strategy --simpleRecovery --simpleSymbolicStrategy --sysInitRoboticsSemantics",XExtractSymbolicStrategy<XRoboticsSemantics<XCooperativeGR1Strategy<GR1Context> >,true,true>::makeInstance),
+    OptionCombination("--cooperativeGR1Strategy --interactiveStrategy --sysInitRoboticsSemantics",XInteractiveStrategy<XRoboticsSemantics<XCooperativeGR1Strategy<GR1Context> > >::makeInstance),
+    OptionCombination("--cooperativeGR1Strategy --onlyRealizability --sysInitRoboticsSemantics",XRoboticsSemantics<XCooperativeGR1Strategy<GR1Context> >::makeInstance)
 
     // TODO: Combination between BiasForAction and FixedPointRecycling is not supported yet but would make sense
 };
