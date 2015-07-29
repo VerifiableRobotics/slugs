@@ -12,7 +12,7 @@ import signal
 import tempfile
 import copy
 import itertools
-import Image
+from PIL import Image
 import os, pygame, pygame.locals
 
 # ==================================
