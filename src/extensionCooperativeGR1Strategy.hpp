@@ -131,10 +131,6 @@ public:
                                 // BF_newDumpDot(*this,muCoop.getValue(),"Pre Post",os.str()); }
                             }
 
-                            // Compute a set of paths that are safe to take - used for the enforceable predecessor operator ('cox')
-                            foundPaths = livetransitions | ((nu0.getValue() & muCoop.getValue()).SwapVariables(varVectorPre,varVectorPost) & !(livenessAssumptions[i]));
-                            foundPaths &= nonDeadEndSafetySys;
-
                             // { std::ostringstream os;
                             // os << "/tmp/foundPathsFinal" << nu2Nr << "-" << j << "-" << mu1Nr << "-" << i << ".dot";
                             // BF_newDumpDot(*this,foundPaths,"Pre Post",os.str()); }
@@ -214,7 +210,7 @@ public:
                 transitionsTowardsLivenessAssumption[j-(livenessGuarantees.size()-livenessAssumptions.size())] = goodTransitions;
 
                 // Backup transitions not towards the goal
-                strategyDumpingData.push_back(std::pair<unsigned int,BF>(j,nonDeadEndSafetySys));
+                strategyDumpingData.push_back(std::pair<unsigned int,BF>(j,nonDeadEndSafetySys & nu2.getValue().SwapVariables(varVectorPre,varVectorPost)));
             }
 
 
