@@ -28,9 +28,9 @@ FORCED_VALUE_ASSUMPTIONS_AND_STRATEGY = 4
 # Check parameters
 # ==================================
 if len(sys.argv)<2:
-    print >>sys.stderr, "Error: Need Slugsin file as parameter"
+    print >>sys.stderr, "Error: Need Slugsin file as parameter. Additional parameters are optional"
     sys.exit(1)
-specFile = sys.argv[1]
+specFile = " ".join(sys.argv[1:])
 
 
 # ==================================
