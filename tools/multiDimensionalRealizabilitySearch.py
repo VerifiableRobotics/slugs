@@ -10,15 +10,6 @@ import subprocess, itertools
 import time
 
 def checkRealizability(scriptName,parameters):
-    
-    assert len(parameters)==3
-    if parameters[0] < 3:
-        return False
-    if -1*parameters[1]+parameters[2] < 3:
-        return False
-    return True
-
-def checkRealizabilityOld(scriptName,parameters):
 
     '''
     This functions calls a script and looks out for lines stating realizability/unrealizability by Slugs.
