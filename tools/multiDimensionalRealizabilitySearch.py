@@ -16,7 +16,7 @@ def checkRealizability(scriptName,parameters):
     It returns an error message if the subprocess returned with a non-zero errorcode or if multiple results are found.
     Otherwise, the result is True or False.    
     '''
-    slugsProcess = subprocess.Popen(scriptName+" "+str(parameters), shell=True, bufsize=1048000, stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+    slugsProcess = subprocess.Popen(scriptName+" "+" ".join([str(p) for p in parameters]), shell=True, bufsize=1048000, stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
 
     nofRealizableLines = 0
     nofUnrealizableLines = 0
