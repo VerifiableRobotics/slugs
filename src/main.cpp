@@ -215,6 +215,8 @@ OptionCombination optionCombinations[] = {
     OptionCombination("--cooperativeGR1Strategy --simpleRecovery --simpleSymbolicStrategy",XExtractSymbolicStrategy<XCooperativeGR1Strategy<GR1Context>,true,true>::makeInstance),
     OptionCombination("--cooperativeGR1Strategy --interactiveStrategy",XInteractiveStrategy<XCooperativeGR1Strategy<GR1Context> >::makeInstance),
     OptionCombination("--cooperativeGR1Strategy --onlyRealizability",XCooperativeGR1Strategy<GR1Context>::makeInstance),
+    OptionCombination("--cooperativeGR1Strategy --extractExplicitPermissiveStrategy",XExtractPermissiveExplicitStrategy<XCooperativeGR1Strategy<GR1Context>,false>::makeInstance),
+    OptionCombination("--cooperativeGR1Strategy --extractExplicitPermissiveStrategy --simpleRecovery",XExtractPermissiveExplicitStrategy<XCooperativeGR1Strategy<GR1Context>,true>::makeInstance),
 
     OptionCombination("--cooperativeGR1Strategy --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<XCooperativeGR1Strategy<GR1Context> >,false,false>::makeInstance),
     OptionCombination("--cooperativeGR1Strategy --jsonOutput --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<XCooperativeGR1Strategy<GR1Context> >,false,true>::makeInstance),
@@ -347,4 +349,5 @@ int main(int argc, const char **args) {
         std::cerr << "Error: " << e.getMessage() << std::endl;
         return 1;
     }
+
 }

@@ -9,7 +9,7 @@ BFMintermEnumerator::BFMintermEnumerator(BF bf, BF careSet, std::vector<BF> cons
 
     //! Build the minterm BDD with the secondary variables being "any" bits
     for (unsigned int i=0;i<primaryVariables.size();i++) {
-        BF case1 = !((!remainingMinterms).ExistAbstractSingleVar(primaryVariables[i])) & secondaryVariables[i];
+        BF case1 = (!((!remainingMinterms).ExistAbstractSingleVar(primaryVariables[i]))) & secondaryVariables[i];
         BF case2 = remainingMinterms & !secondaryVariables[i];
         remainingMinterms = case1 | case2;
     }

@@ -40,14 +40,14 @@ public:
             if (waitingCost < other.waitingCost) return true;
             if (waitingCost > other.waitingCost) return false;
             if (actionCost < other.actionCost) return true;
-            if (actionCost > other.actionCost) return false;
+            //if (actionCost > other.actionCost) return false;
             return false;
         } else {
             // Action preferred
             if (actionCost < other.actionCost) return true;
             if (actionCost > other.actionCost) return false;
             if (waitingCost < other.waitingCost) return true;
-            if (waitingCost > other.waitingCost) return false;
+            //if (waitingCost > other.waitingCost) return false;
             return false;
         }
     }

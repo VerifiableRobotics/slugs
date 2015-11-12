@@ -177,7 +177,7 @@ public:
 	inline BFBdd UnivAbstract(const BFBddVarCube& cube) const;
         inline BFBdd UnivAbstractSingleVar(const BFBdd& var) const;
 	inline BFBdd Implies(const BFBdd& other) const {
-		return !(*this) | other;
+        return (!(*this)) | other;
 	}
 
 	// Not yet supported
