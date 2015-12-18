@@ -57,6 +57,7 @@
 #include "extensionExtractSymbolicStrategy.hpp"
 #include "extensionTwoDimensionalCost.hpp"
 #include "extensionCooperativeGR1Strategy.hpp"
+#include "extensionOptimisticRecovery.hpp"
 
 //===================================================================================
 // List of command line arguments
@@ -87,7 +88,8 @@ const char *commandLineArguments[] = {
     "--computeIncompleteInformationEstimator","Computes a imcomplete-information state estimation controller.",
     "--nonDeterministicMotion","Computes a controller using an non-deterministic motion abstraction.",
     "--twoDimensionalCost","Computes a controller that optimizes for waiting and action cost at the same time.",
-    "--cooperativeGR1Strategy","Computes a controller strategy that is cooperative with its environment."
+    "--cooperativeGR1Strategy","Computes a controller strategy that is cooperative with its environment.",
+    "--optimisticRecovery","Computes a strategy that also permits environment assumption violations under which no winning states can be reached."
 };
 
 //===================================================================================
@@ -227,7 +229,13 @@ OptionCombination optionCombinations[] = {
     OptionCombination("--cooperativeGR1Strategy --simpleRecovery --symbolicStrategy --sysInitRoboticsSemantics",XExtractSymbolicStrategy<XRoboticsSemantics<XCooperativeGR1Strategy<GR1Context> >,true,false>::makeInstance),
     OptionCombination("--cooperativeGR1Strategy --simpleRecovery --simpleSymbolicStrategy --sysInitRoboticsSemantics",XExtractSymbolicStrategy<XRoboticsSemantics<XCooperativeGR1Strategy<GR1Context> >,true,true>::makeInstance),
     OptionCombination("--cooperativeGR1Strategy --interactiveStrategy --sysInitRoboticsSemantics",XInteractiveStrategy<XRoboticsSemantics<XCooperativeGR1Strategy<GR1Context> > >::makeInstance),
-    OptionCombination("--cooperativeGR1Strategy --onlyRealizability --sysInitRoboticsSemantics",XRoboticsSemantics<XCooperativeGR1Strategy<GR1Context> >::makeInstance)
+    OptionCombination("--cooperativeGR1Strategy --onlyRealizability --sysInitRoboticsSemantics",XRoboticsSemantics<XCooperativeGR1Strategy<GR1Context> >::makeInstance),
+
+    // Optimistic Recovery
+    OptionCombination("--optimisticRecovery --simpleRecovery",XExtractExplicitStrategy<XOptimisticRecovery<GR1Context>,true,false>::makeInstance),
+    OptionCombination("--optimisticRecovery --simpleRecovery --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<XOptimisticRecovery<GR1Context>>,true,false>::makeInstance),
+    OptionCombination("--cooperativeGR1Strategy --optimisticRecovery --simpleRecovery --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<XOptimisticRecovery<XCooperativeGR1Strategy<GR1Context>>>,true,false>::makeInstance),
+    OptionCombination("--cooperativeGR1Strategy --interactiveStrategy --optimisticRecovery --sysInitRoboticsSemantics",XInteractiveStrategy<XRoboticsSemantics<XOptimisticRecovery<XCooperativeGR1Strategy<GR1Context>>>>::makeInstance)
 
     // TODO: Combination between BiasForAction and FixedPointRecycling is not supported yet but would make sense
 };

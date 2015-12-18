@@ -43,7 +43,8 @@ HEADERS += BFAbstractionLibrary/BF.h BFAbstractionLibrary/BFCudd.h gr1context.hp
     extensionNondeterministicMotion.hpp \
     extensionExtractSymbolicStrategy.hpp \
     extensionTwoDimensionalCost.hpp \
-    extensionCooperativeGR1Strategy.hpp
+    extensionCooperativeGR1Strategy.hpp \
+    extensionOptimisticRecovery.hpp
 
 SOURCES += main.cpp BFAbstractionLibrary/bddDump.cpp BFAbstractionLibrary/BFCuddVarVector.cpp BFAbstractionLibrary/BFCudd.cpp BFAbstractionLibrary/BFCuddManager.cpp \
     BFAbstractionLibrary/BFCuddVarCube.cpp tools.cpp synthesisAlgorithm.cpp synthesisContextBasics.cpp variableManager.cpp \
