@@ -517,6 +517,7 @@ public:
                 std::cout << ",0" << std::endl; // Flushes, too.
                 currentPosition = initialPosition;
             } else if (command=="XCOMPLETEINIT") {
+
                 // This command takes a set of forced values and completes it such that
                 // the result is an initial state that is winning for the
                 // player that is normally winning and satisfies all constraints
@@ -625,7 +626,6 @@ public:
                                     if (result[resultPtr]=='.') {
                                         if ((possibleInitialPositions & !variables[i]).isFalse()) {
                                             result[resultPtr] = (realizable)?'G':'S';
-                                            std::cerr << "!Nabend!\n";
                                         } else if ((possibleInitialPositions & variables[i]).isFalse()) {
                                             result[resultPtr] = (realizable)?'g':'s';
                                         }
