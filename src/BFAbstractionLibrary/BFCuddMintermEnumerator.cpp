@@ -70,7 +70,7 @@ void BFMintermEnumerator::getNextMinterm(std::vector<int> &resultStorageSpace) {
         todo.pop();
         // std::cerr << "Working on variable " << current.getNode() << " with variable index " << Cudd_NodeReadIndex(current.getNode()) << ", cost " << bestPredecessor[current.getNode()].first << " and precessor " << bestPredecessor[current.getNode()].second << "\n";
         // std::cerr << "Actual successors " << Cudd_T(current.getNode()) << " and " << Cudd_E(current.getNode()) << "\n";
-        if Cudd_IsConstant(current.getNode()) {
+        if (Cudd_IsConstant(current.getNode())) {
 
             //! See if we found a path to the TRUE node
             if (current.getNode() == Cudd_ReadOne(ddMgr)) {
