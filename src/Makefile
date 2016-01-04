@@ -7,7 +7,7 @@ CFLAGS        = -pipe -O3 -g -mtune=native $(COMPILEROPTIONS) -Wall -W -fPIC $(D
 CXXFLAGS      = -pipe -O3 -g -std=c++11 -mtune=native $(COMPILEROPTIONS) -fPIC $(DEFINES)
 INCPATH       = -I. -I../lib/cudd-3.0.0/ -I../lib/cudd-3.0.0/cudd -I../lib/cudd-3.0.0/mtr -I../lib/cudd-3.0.0/epd -I../lib/cudd-3.0.0/st -I../lib/cudd-3.0.0/util -I../lib/cudd-3.0.0/dddmp -IBFAbstractionLibrary 
 LINK          = g++
-LFLAGS        = -Wl,-O1
+LFLAGS        = 
 
 # Object files
 OBJECTS       = main.o \
@@ -19,7 +19,7 @@ OBJECTS       = main.o \
                 $(filter-out ../lib/cudd-3.0.0/mtr/testmtr.o,$(patsubst %.c,%.o,$(wildcard ../lib/cudd-3.0.0/mtr/*.c))) \
                 $(patsubst %.c,%.o,$(wildcard ../lib/cudd-3.0.0/epd/*.c)) \
                 $(filter-out ../lib/cudd-3.0.0/st/testst.o,$(patsubst %.c,%.o,$(wildcard ../lib/cudd-3.0.0/st/*.c))) \
-                $(patsubst %.c,%.o,$(wildcard ../lib/cudd-3.0.0/util/*.c)) \
+                $(filter-out ../lib/cudd-3.0.0/util/cpu_stats.o,$(patsubst %.c,%.o,$(wildcard ../lib/cudd-3.0.0/util/*.c))) \
                 $(filter-out ../lib/cudd-3.0.0/dddmp/testdddmp.o,$(patsubst %.c,%.o,$(wildcard ../lib/cudd-3.0.0/dddmp/*.c)))
 
 # Headers
