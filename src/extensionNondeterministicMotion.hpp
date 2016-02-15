@@ -33,6 +33,7 @@ protected:
     BF robotBDD;
     SlugsVectorOfVarBFs preMotionStateVars{PreMotionState,this};
     SlugsVectorOfVarBFs postMotionStateVars{PostMotionState,this};
+    SlugsVarCube varCubePreMotionState{PreMotionState,this};
     SlugsVarCube varCubePostMotionState{PostMotionState,this};
     SlugsVarCube varCubePostControllerOutput{PostMotionControlOutput,this};
 
@@ -309,8 +310,14 @@ public:
             result = initEnv.Implies((winningPositions & initSys).ExistAbstract(varCubePreOutput)).UnivAbstract(varCubePreInput);
         }
 
+        // Get rid of the PreMotionState
+        result = result.ExistAbstract(varCubePreMotionState);
+
         // Check if the result is well-defind. Might fail after an incorrect modification of the above algorithm
-        if (!result.isConstant()) throw "Internal error: Could not establish realizability/unrealizability of the specification.";
+        if (!result.isConstant()) {
+            BF_newDumpDot(*this,result,NULL,"/tmp/isRealizable.dot");
+            throw "Internal error: Could not establish realizability/unrealizability of the specification!";
+        }
 
         // Return the result in Boolean form.
         realizable = result.isTrue();

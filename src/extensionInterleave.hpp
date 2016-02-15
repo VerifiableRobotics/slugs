@@ -10,9 +10,10 @@
 #include <boost/algorithm/string.hpp>
 
 /**
- * A class that computes a counterstrategy for an unrealizable specification
+ * A class that analyzes if a specification stays realizable if the value of some output variables
+ * have to be set before the input can be read (in a computation cycle).
  *
- * Includes support for the special robotics semantic
+ * This plugin is a part of the specification report generator
  */
 
 

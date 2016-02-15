@@ -42,6 +42,7 @@ public:
         // The system is only allowed to use these.
         BF nonDeadEndSafetySys = safetySys & safetyEnv.ExistAbstract(varCubePost).SwapVariables(varVectorPre,varVectorPost);
         // BF_newDumpDot(*this,nonDeadEndSafetySys,"Pre Post","/tmp/nonDeadEndSys.dot");
+        // BF_newDumpDot(*this,safetyEnv.ExistAbstract(varCubePost).SwapVariables(varVectorPre,varVectorPost),"Pre Post","/tmp/notDeadEndSafetyEnv.dot");
 
         // Copy all liveness assumptions into liveness guarantees - we are
         // them seperately at the end of a "guarantee cycle".
@@ -117,7 +118,7 @@ public:
                             for (;!muCoop.isFixedPointReached();) {
                                 muCoopNr++;
                                 foundPaths = livetransitions | ((nu0.getValue() & muCoop.getValue()).SwapVariables(varVectorPre,varVectorPost) & !(livenessAssumptions[i]));
-                                foundPaths &= nonDeadEndSafetySys;
+                                foundPaths &= nonDeadEndSafetySys & safetyEnv;
 
                                 // { std::ostringstream os;
                                 // os << "/tmp/foundPaths" << nu2Nr << "-" << j << "-" << mu1Nr << "-" << i << "-" << nu0Nr << "--" << muCoopNr << ".dot";

@@ -11,6 +11,7 @@
 #include <stdexcept>
 #include <sstream>
 #include "dddmp.h"
+#include "mtr.h"
 
 /**
  * Creates a new BDDManager.
@@ -68,9 +69,10 @@ void BFBddManager::printStats() {
 
 /**
  * Groups some variables such that they "stick" together during the reordering process.
+ *  --> Not currently supported due to a change in the CUDD API - the makeTreeNode function is no longer available
  * @param which The variables that should be grouped. They must have not been allocated a non-grouped variable in between the allocation of two grouped variables.
  */
-void BFBddManager::groupVariables(const std::vector<BFBdd> &which) {
+/*void BFBddManager::groupVariables(const std::vector<BFBdd> &which) {
 
 	// Only allow continuous variables to be grouped.
 	std::set<DdHalfWord> indices;
@@ -90,7 +92,7 @@ void BFBddManager::groupVariables(const std::vector<BFBdd> &which) {
 		throw std::runtime_error("Error in BFBddManager::groupVariables(const std::vector<BFBdd> &which) - Can only group continuous variables!\n");
 
 	Cudd_MakeTreeNode(mgr, min, max - min + 1, MTR_DEFAULT);
-}
+}*/
 
 BFBddVarCube BFBddManager::computeCube(const BFBdd *vars, const int * phase, int n) const {
 	DdNode **vars2 = new DdNode*[n];

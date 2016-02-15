@@ -83,7 +83,7 @@ def checkRealizability(inputFile):
                 sys.stderr.write(line)
         raise SlugsException("Could not build report")
 
-    command = slugsExecutableAndBasicOptions + " --onlyRealizability "+slugsCompiledFile+" > "+slugsReturnFile+" 2> "+slugsErrorFile
+    command = slugsExecutableAndBasicOptions + " "+slugsCompiledFile+" > "+slugsReturnFile+" 2> "+slugsErrorFile
     print >>sys.stderr, "Executing: "+command
     retValue = os.system(command)
     if (retValue!=0):

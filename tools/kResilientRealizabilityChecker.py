@@ -214,7 +214,7 @@ def checkInftyRobustImplementability(whichAssumptionsAreRobustified):
 
     # Try to perform synthesis
     startTime = time.time()
-    process = subprocess.Popen(basepath+" "+tempfilename+" --onlyRealizability", shell=True, bufsize=1000000, stderr=subprocess.PIPE)
+    process = subprocess.Popen(basepath+" "+tempfilename, shell=True, bufsize=1000000, stderr=subprocess.PIPE)
     output = process.stderr
     realizable = None
     for line in output:

@@ -1,32 +1,23 @@
 slugs - SmalL bUt Complete GROne Synthesizer
 ============================================
-Slugs is a stand-alone reactive synthesis tool for generalized reactivity(1) synthesis.
+Slugs is a stand-alone reactive synthesis tool for generalized reactivity(1) synthesis. It uses binary decision diagrams (BDDs) as the primary data structure for efficient symbolic reasoning. 
+
+The Slugs distribution comes with the CUDD library for manipulating binary decision diagrams, written by Fabio Somenzi. Please see the README and LICENSE files in the lib/cudd-3.0.0 folder for details.
 
 
 Installation
 ============
-Slugs is a reactive synthesis tool for the class of specification commonly referred to as reactive(1) specifications. It uses binary decision diagrams (BDDs) as the primary data structure for efficient symbolic reasoning.
 
 Requirements
 ------------
-- A BDD library - currently, only the library CUDD is supported
-- The make utility qmake
+- A moderately modern C++ and C compiler installed in a Unix-like environment, including the C++ library boost. Linux and MacOS should be fine.
+- An installation of Python 2, version 2.7 or above. The Python curses library must be installed for the interactive specification debugger to be usable.
 
-Using CUDD on Linux
+Using Slugs on Linux
 -------------------
+In order to build slugs, open a terminal in the CUDD directory and type:
 
-The default BDD engine for slugs is 'cudd' by Fabio Somenzi. It can be obtained from the homepage of the author, which is 'http://vlsi.colorado.edu/~fabio/'. For using CUDD with slugs, please extract the the 'tar.gz' to the 'lib' folder. Then, you need to compile CUDD. For this, execute the following commands in the 'cudd-2.5.0' folder.
-
-> patch Makefile ../../tools/CuddMakefile.patch
-
-This will modify CUDD's makefile to automatically adapt to 32- or 64-bit architectures. Then, make cudd by running:
-
-> make
-
-Afterwards, we can compile slugs. For this, move into the src directory of slugs and hit:
-
-> qmake Tool.pro  
-> make
+> cd src; make
 
 The slugs executable will be put into the src directory.
 
@@ -36,11 +27,7 @@ Things should generally work fine if you have a package management system (i.e. 
 Note that you will need to:
 
 - have [`gcc, g++`](https://gcc.gnu.org/) in your `$PATH`,
-- have installed at least the following packages: `qt`, `boost`.
-
-In order to get CUDD to compile, you'll need to apply a small patch.  Inside the 'cudd-2.5.0' folder, run:
-
-> patch -p0 < ../../tools/CuddOSXFixes.patch
+- have installed at least the package: `boost`.
 
 A short primer on the internal structure of slugs
 =================================================

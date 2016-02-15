@@ -1,1 +1,1 @@
-This folder is supposed to contain the external libraries that are used and is filled by the user.
+This folder is supposed to contain the external libraries.

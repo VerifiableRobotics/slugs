@@ -136,7 +136,7 @@ def createSpecificationReport(slugsFile):
     # =====================================================
     print "<details>"
     print "<summary>2. Realizability</summary>"
-    command = slugsExecutableAndBasicOptions + " --onlyRealizability "+slugsCompiledFile+" > "+slugsReturnFile+" 2> "+slugsErrorFile
+    command = slugsExecutableAndBasicOptions + " "+slugsCompiledFile+" > "+slugsReturnFile+" 2> "+slugsErrorFile
     print >>sys.stderr, "Executing: "+command
     retValue = os.system(command)
     if (retValue!=0):
@@ -156,7 +156,7 @@ def createSpecificationReport(slugsFile):
         print "<p>The specification is <B>realizable</B>.</p>"
         sys.stdout.flush()
         # Also check special robotics semantics        
-        command = slugsExecutableAndBasicOptions + " --onlyRealizability --sysInitRoboticsSemantics "+slugsCompiledFile+" > "+slugsReturnFile+" 2> "+slugsErrorFile
+        command = slugsExecutableAndBasicOptions + " --sysInitRoboticsSemantics "+slugsCompiledFile+" > "+slugsReturnFile+" 2> "+slugsErrorFile
         print >>sys.stderr, "Executing: "+command
         retValue = os.system(command)
         if (retValue!=0):
