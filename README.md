@@ -1,16 +1,17 @@
 slugs - SmalL bUt Complete GROne Synthesizer
 ============================================
-Slugs is a stand-alone reactive synthesis tool for generalized reactivity(1) synthesis.
+Slugs is a stand-alone reactive synthesis tool for generalized reactivity(1) synthesis. It uses binary decision diagrams (BDDs) as the primary data structure for efficient symbolic reasoning. 
+
+The Slugs distribution comes with the CUDD library for manipulating binary decision diagrams, written by Fabio Somenzi. Please see the README and LICENSE files in the lib/cudd-3.0.0 folder for details.
 
 
 Installation
 ============
-Slugs is a reactive synthesis tool for the class of specification commonly referred to as reactive(1) specifications. It uses binary decision diagrams (BDDs) as the primary data structure for efficient symbolic reasoning.
 
 Requirements
 ------------
 - A moderately modern C++ and C compiler installed in a Unix-like environment, including the C++ library boost. Linux and MacOS should be fine.
-- An installation of Python 2, version 2.7 or above.
+- An installation of Python 2, version 2.7 or above. The Python curses library must be installed for the interactive specification debugger to be usable.
 
 Using Slugs on Linux
 -------------------

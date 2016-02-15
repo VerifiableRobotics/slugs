@@ -272,7 +272,9 @@ void printToolUsageHelp() {
             } else {
                 left = 80-leftStuff-1;
                 std::cerr << "\n";
-                for (unsigned int i=0;i<leftStuff+1;i++) std::cerr << " ";
+                for (unsigned int i=0;i<leftStuff+2;i++) std::cerr << " ";
+                std::cerr << next;
+                left -= next.size() + 1;
             }
         }
         std::cerr << "\n";

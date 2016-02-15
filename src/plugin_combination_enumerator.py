@@ -52,7 +52,7 @@ listOfCommandLineParameters = [
     ("jsonOutput","When computing an explicit finite-state strategy, use json output."),
     ("sysInitRoboticsSemantics","In standard GR(1) synthesis, a specification is called realizable if for every initial input proposition valuation that is allowed by the initialization contraints, there is some suitable output proposition valuation. In the modified semantics for robotics applications, the controller has to be fine with any admissible initial position in the game."),
     ("computeWeakenedSafetyAssumptions","Extract a minimal conjunctive normal form Boolean formula that represents some minimal CNF for a set of safety assumptions that leads to realiazability and is a weakened form of the safety assumptions given. Requires the option '--onlyRealizability' to be given as well."),
-    ("biasForAction","Extract controllers that rely on the liveness assumptions being satisfies as little as possible."),
+    ("biasForAction","Extract controllers that rely on the liveness assumptions being satisfied as little as possible."),
     ("computeCNFFormOfTheSpecification","Lets the Synthesis tool skip the synthesis step, and only compute a version of the specification that can be used by other synthesis tools that require it to be CNF-based."),
     ("counterStrategy","Computes the environment counterstrategy"),
     ("simpleRecovery","Adds transitions to the system implementation that allow it to recover from sparse environment safety assumption faults in many cases"),

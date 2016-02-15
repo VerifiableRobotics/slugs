@@ -100,9 +100,11 @@ void GR1Context::checkRealizability() {
     result = initEnv.Implies((winningPositions & initSys).ExistAbstract(varCubePreOutput)).UnivAbstract(varCubePreInput);
 
     // Check if the result is well-defind. Might fail after an incorrect modification of the above algorithm
-    if (!result.isConstant()) throw "Internal error: Could not establish realizability/unrealizability of the specification.";
+    if (!result.isConstant()) {
+        BF_newDumpDot(*this,result,NULL,"/tmp/isRealizable.dot");
+        throw "Internal error: Could not establish realizability/unrealizability of the specification.";
+    }
 
     // Return the result in Boolean form.
     realizable = result.isTrue();
 }
-
