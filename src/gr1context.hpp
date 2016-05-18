@@ -29,14 +29,14 @@ protected:
     BF initSys;
     BF safetyEnv;
     BF safetySys;
-    SlugsVarVector varVectorPre{PreInput, PreOutput, this};
-    SlugsVarVector varVectorPost{PostInput, PostOutput, this};
+    SlugsVarVector varVectorPre{Pre, this};
+    SlugsVarVector varVectorPost{Post, this};
     SlugsVarCube varCubePostInput{PostInput,this};
     SlugsVarCube varCubePostOutput{PostOutput,this};
     SlugsVarCube varCubePreInput{PreInput,this};
     SlugsVarCube varCubePreOutput{PreOutput,this};
-    SlugsVarCube varCubePre{PreOutput,PreInput,this};
-    SlugsVarCube varCubePost{PostOutput,PostInput,this};
+    SlugsVarCube varCubePre{Pre,this};
+    SlugsVarCube varCubePost{Post,this};
     SlugsVectorOfVarBFs preVars{Pre, this};
     SlugsVectorOfVarBFs postVars{Post, this};
     SlugsVectorOfVarBFs postInputVars{PostInput, this};

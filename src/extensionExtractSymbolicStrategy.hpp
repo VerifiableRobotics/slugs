@@ -26,6 +26,7 @@ protected:
     using T::realizable;
     using T::postVars;
     using T::varCubePre;
+    using T::varCubePost;
     using T::variableNames;
     using T::varVectorPre;
     using T::varVectorPost;
@@ -79,9 +80,6 @@ public:
         // the BDD manipulations from this point onwards are 'kind of simple'.
         mgr.setAutomaticOptimisation(false);
 
-        // Prepare initial to-do list from the allowed initial states
-        BF init = (oneStepRecovery)?(winningPositions & initSys):(winningPositions & initSys & initEnv);
-
         // Prepare positional strategies for the individual goals
         std::vector<BF> positionalStrategiesForTheIndividualGoals(livenessGuarantees.size());
         for (unsigned int i=0;i<livenessGuarantees.size();i++) {
@@ -106,12 +104,12 @@ public:
         for (unsigned int i=1;i<=livenessGuarantees.size();i = i << 1) {
             std::ostringstream os;
             os << "_jx_b" << counterVarNumbersPre.size();
-            counterVarNumbersPre.push_back(addVariable(SymbolicStrategyCounterVar,os.str()));
-            if (systemGoalEncoded) counterVarNumbersPost.push_back(addVariable(SymbolicStrategyCounterVar,os.str()+"'"));
+            counterVarNumbersPre.push_back(addVariable(SymbolicStrategyCounterVarPre,os.str()));
+            if (systemGoalEncoded) counterVarNumbersPost.push_back(addVariable(SymbolicStrategyCounterVarPost,os.str()+"'"));
         }
 
         if (!systemGoalEncoded) {
-            goalTransitionSelectorVar = addVariable(SymbolicStrategyCounterVar,"strat_type");
+            goalTransitionSelectorVar = addVariable(SymbolicStrategyCounterVarPre,"strat_type");
         }
 
         computeVariableInformation();
@@ -197,10 +195,37 @@ public:
         std::string tempFilename(tmpnam(NULL));
         tempFilename = tempFilename + "_strategyBdd.dot";
         std::cerr << "Writing DOT file of the BDD to: " << tempFilename << std::endl;
-        BF_newDumpDot(*this,combinedStrategy,"SymbolicStrategyCounterVar PreInput PreOutput PostInput PostOutput", tempFilename.c_str());
+        BF_newDumpDot(*this,combinedStrategy,"SymbolicStrategyCounterVarPre PreInput PreOutput SymbolicStrategyCounterVarPost PostInput PostOutput", tempFilename.c_str());
 #endif
 
         mgr.writeBDDToFile(filename.c_str(),fileExtraHeader.str(),combinedStrategy,variables,variableNames);
+
+        // Write Care set to file?
+        if (systemGoalEncoded) {
+            BF initSysMod = initSys;
+            for (unsigned j=0;j<counterVarNumbersPre.size();j++) {
+                initSysMod &= !variables[counterVarNumbersPre[j]];
+            }
+            BFFixedPoint reachable(initSysMod);
+            //unsigned int nr = 0;
+            while (!(reachable.isFixedPointReached())) {
+                BF newreachable = (reachable.getValue() & safetyEnv & combinedStrategy).ExistAbstract(varCubePre).SwapVariables(varVectorPre,varVectorPost);
+                /*std::ostringstream os;
+                os << "/tmp/nr" << nr++ << ".dot";
+                BF_newDumpDot(*this,newreachable,NULL,os.str());
+                std::cerr << "Print to: " << os.str() << std::endl;*/
+                reachable.update(reachable.getValue() | newreachable);
+            }
+
+            BF careSet = reachable.getValue();
+            mgr.writeBDDToFile((filename+".reachableCombinations").c_str(),"",careSet,variables,variableNames);
+#ifndef NDEBUG
+            std::string tempFilename(tmpnam(NULL));
+            tempFilename = tempFilename + "_caresetBdd.dot";
+            std::cerr << "Writing DOT file of the BDD to: " << tempFilename << std::endl;
+            BF_newDumpDot(*this,careSet,"SymbolicStrategyCounterVarPre SymbolicStrategyCounterVarPost PreInput PreOutput PostInput PostOutput", tempFilename.c_str());
+#endif
+        }
 
     }
 

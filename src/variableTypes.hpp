@@ -80,7 +80,7 @@ typedef enum {
     PreMotionControlOutput, PostMotionControlOutput,
 
     // Variables used in extensionExtractSymbolicStrategy.hpp
-    SymbolicStrategyCounterVar,
+    SymbolicStrategyCounterVarPre, SymbolicStrategyCounterVarPost,
 
     // Variables used in extensionTwoDimensionalCost.hpp
     CurrentLivenessAssumptionCounterPre, CurrentLivenessAssumptionCounterPost, IsInftyCostPre,
@@ -120,7 +120,8 @@ REGISTER_VARIABLE_TYPE_STRING(PreOtherOutput,"PreOtherOutput")
 REGISTER_VARIABLE_TYPE_STRING(PostOtherOutput,"PostOtherOutput")
 REGISTER_VARIABLE_TYPE_STRING(PreMotionControlOutput,"PreMotionControlOutput")
 REGISTER_VARIABLE_TYPE_STRING(PostMotionControlOutput,"PostMotionControlOutput")
-REGISTER_VARIABLE_TYPE_STRING(SymbolicStrategyCounterVar,"SymbolicStrategyCounterVar")
+REGISTER_VARIABLE_TYPE_STRING(SymbolicStrategyCounterVarPre,"SymbolicStrategyCounterVarPre")
+REGISTER_VARIABLE_TYPE_STRING(SymbolicStrategyCounterVarPost,"SymbolicStrategyCounterVarPost")
 REGISTER_VARIABLE_TYPE_STRING(CurrentLivenessAssumptionCounterPost, "CurrentLivenessAssumptionCounterPost")
 REGISTER_VARIABLE_TYPE_STRING(IsInftyCostPost,"IsInftyCostPost")
 REGISTER_VARIABLE_TYPE_STRING(CurrentLivenessAssumptionCounterPre, "CurrentLivenessAssumptionCounterPre")
@@ -164,7 +165,8 @@ REGISTER_VARIABLE_TYPE_HIERARCHY(PreMotionControlOutput,PreOutput)
 REGISTER_VARIABLE_TYPE_HIERARCHY(PostMotionControlOutput,PostOutput)
 
 // Variables used in extensionExtractSymbolicStrategy.hpp
-REGISTER_VARIABLE_TYPE_HIERARCHY(SymbolicStrategyCounterVar,NoneVariableType)
+REGISTER_VARIABLE_TYPE_HIERARCHY(SymbolicStrategyCounterVarPre,Pre)
+REGISTER_VARIABLE_TYPE_HIERARCHY(SymbolicStrategyCounterVarPost,Post)
 
 // Variables used in extensionTwoDimensionalCost.hpp
 REGISTER_VARIABLE_TYPE_HIERARCHY(CurrentLivenessAssumptionCounterPre, PreOutput)
