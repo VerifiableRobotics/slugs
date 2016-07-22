@@ -2,7 +2,13 @@ slugs - SmalL bUt Complete GROne Synthesizer
 ============================================
 Slugs is a stand-alone reactive synthesis tool for generalized reactivity(1) synthesis. It uses binary decision diagrams (BDDs) as the primary data structure for efficient symbolic reasoning. 
 
-The Slugs distribution comes with the CUDD library for manipulating binary decision diagrams, written by Fabio Somenzi. Please see the README and LICENSE files in the lib/cudd-3.0.0 folder for details.
+If you want to cite slugs in a scientific paper, please cite its tool paper:
+
+- Rüdiger Ehlers and Vasumathi Raman: _Slugs: Extensible GR(1) Synthesis_. 28th International Conference on Computer Aided Verification (CAV 2016), Volume 2, p.333-339
+
+You can find an author-archived version of the paper [here](http://motesy.cs.uni-bremen.de/pdfs/cav2016.pdf). The paper has an appendix that contains an introduction to using slugs and its input language.
+
+The slugs distribution comes with the CUDD library for manipulating binary decision diagrams, written by Fabio Somenzi. Please see the README and LICENSE files in the lib/cudd-3.0.0 folder for details.
 
 
 Installation
@@ -11,11 +17,11 @@ Installation
 Requirements
 ------------
 - A moderately modern C++ and C compiler installed in a Unix-like environment, including the C++ library boost. Linux and MacOS should be fine.
-- An installation of Python 2, version 2.7 or above. The Python curses library must be installed for the interactive specification debugger to be usable.
+- An installation of Python 2, version 2.7 or above. The Python _curses_ library must be installed for the interactive specification debugger to be usable.
 
 Using Slugs on Linux
 -------------------
-In order to build slugs, open a terminal in the CUDD directory and type:
+In order to build slugs, open a terminal and type:
 
 > cd src; make
 
@@ -46,31 +52,3 @@ There is also a library component for dumping BDDs - this is useful for debuggin
 The actual synthesis part is built around a class that is named "GR1Context". It is explained in the automatically generated doxygen documentation. The class GR1Context is the main class that can be inherited for modifications of the synthesis algorithm. The 'main' function in the file 'main.cpp' is concerned with building the proper context class for synthesis and running the synthesis algorithm then.
 
 
-Developing an extension for slugs
-=================================================
-The main approach for extending slugs is by deriving from the GR1Context class, and overwriting some of its functions. We however want to plug together a set of extensions at runtime. Standard inheritance is not flexible for this. In fact, we want to daisy-chain extensions whenever this makes sense, and prevent the user from daisy-chaining the extensions into meaningless combinations. At the same time, we do not want to the clutter the basic synthesis algorithm implementation, so that it stays understandable and easy to extend.
-
-The way in which this is done in slugs is by *template-based* inheritance. It allows to statically compile implementations for different sets of extensions. The following steps have to be performed for implementing a new extension:
-
-1. Add a new header file whose name should start with "extension" and should end with ".hpp" to the project. Add it to the list of header files in the file Tool.pro.
-2. Implement the header file. It should start and end with the standard C preprocessor directives that make sure that include the file twice is no problem. Then, it should include "gr1context.hpp". Then, start with the following template for the template:
-```c++
-    template<class T> class XYourExtension : public T {
-    protected:
-
-        // Inherited stuff used
-
-
-        // Constructor
-        XYourExtension<T>(std::list<std::string> &filenames) : T(filenames) {}
-      
-    public:
-      
-        static GR1Context* makeInstance(std::list<std::string> &filenames) {
-            return new XYourExtension<T>(filenames);
-        }
-    };
-```
-Replace "XYourExtension" by the name of your extension. Please let its name start with "X" (naming convention). The template can derive from an arbitrary class, namely class "T". This ensures that we can daisy-chain extensions statically. For example, "XExtractStrategy<XRoboticsSemantics<GR1Context> >" is a valid class in slugs that combines the extensions for extracting a strategy and using the special robotics semantics for initialization contraints. You can then overwrite methods from the GR1Context to implement your derived extension. Note that you will need to put under the line "// Inherited stuff used" some directives that give you access to the variables and methods from GR1Context that you use (e.g., "using T::mgr;"). This comes from the multi-stage compilation process in C++, and then the compiler basically deferres checking if variables are accessible to the stage in which the code for the template is actually implemented. The file "extensionBiasForAction.hpp" contains a nice overall example. Note that forgetting the "using" statement will result in strange compilation errors that are hard to interpret.
-
-Now we have to tell slugs that the new extension is avaiable. This is done by modifying the file "main.cpp". First, add an "#include" line that makes sure that the header file for your new extension is found. Then, you need to modify two arrays - "commandLineArguments" and "optionCombinations". Most extensions will add a pair of entries to the first of these arrays, namely a new command line parameter and a description of the parameter. The description is shown when launching slugs with "--help" or without valid parameter combinations. The second step is to extend the array "optionCombinations" by those combinations of options to slugs that represent valid combinations of extensions. Please document the requirements to how your extension is combined with other extensions in the comment box above the list of option combinations. Then add all option combinations that involve your new extension and make sense. The list of command line options must always be lexicographically ordered - otherwise, the new comination is not found at runtime. Right of the option list, a pointer to a factory function for the combination must be given. For this, we added the function "makeInstance" to our new extension.
