@@ -9,6 +9,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-5
+            - libboost-all-dev
       env: CXX=g++-5
       env: CC=g++-5
       env: LINK=g++-5
@@ -20,6 +21,7 @@ matrix:
             - llvm-toolchain-precise-3.6
           packages:
             - clang-3.6
+            - libboost-all-dev
       # Clang 3.6 does not support openmp
       env: CXX=clang++-3.6
       env: CC=clang++-3.6
@@ -32,6 +34,7 @@ matrix:
             - llvm-toolchain-precise-3.7
           packages:
             - clang-3.7
+            - libboost-all-dev
       # Cannot get OMP to run with such an old clang version
       env: CXX=clang++-3.7
       env: CC=clang++-3.7
