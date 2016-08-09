@@ -10,7 +10,7 @@
 
 #include <cassert>
 #include <vector>
-#include <boost/utility.hpp>
+#include <boost/noncopyable.hpp>
 #include <iostream>
 #include <list>
 #include <cstdio>
