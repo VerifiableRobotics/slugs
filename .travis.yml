@@ -26,19 +26,19 @@ matrix:
       env: CXX=clang++-3.6
       env: CC=clang++-3.6
       env: LINK=clang++-3.6  
-    - compiler: clang-3.7
+    - compiler: clang-3.8
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.7
+            - llvm-toolchain-precise-3.8
           packages:
-            - clang-3.7
+            - clang-3.8
             - libboost-all-dev
       # Cannot get OMP to run with such an old clang version
-      env: CXX=clang++-3.7
-      env: CC=clang++-3.7
-      env: LINK=clang++-3.7
+      env: CXX=clang++-3.8
+      env: CC=clang++-3.8
+      env: LINK=clang++-3.8
 script:
   - sudo unlink /usr/bin/gcc && sudo ln -s /usr/bin/gcc-5 /usr/bin/gcc
   - sudo unlink /usr/bin/g++ && sudo ln -s /usr/bin/g++-5 /usr/bin/g++
