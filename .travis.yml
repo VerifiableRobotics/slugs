@@ -20,7 +20,7 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - g++-6
+            - g++-6 
             - libboost-all-dev
       env: CXX=g++-6
       env: CC=g++-6
