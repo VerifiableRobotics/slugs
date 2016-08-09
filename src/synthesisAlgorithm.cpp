@@ -59,10 +59,18 @@
 
                         // Compute a set of paths that are safe to take - used for the enforceable predecessor operator ('cox')
                         foundPaths = livetransitions | (nu0.getValue().SwapVariables(varVectorPre,varVectorPost) & !(livenessAssumptions[i]));
-                        foundPaths &= safetySys;
+
+                        // Compute the set of states/next input combinations
+                        // for which the system can behave correctly
+                        BF goodStatesPlusNextInput = foundPaths.AndAbstract(safetySys,varCubePostOutput);
+
+                        // Now compute the good states: those for which for all
+                        // allowed inputs we reach a combination in "goodStatesPlusNextInput"
+                        // The double-negation comes from the fact that there is no "OrUnivAbstract" function.
+                        BF goodStates = !((!goodStatesPlusNextInput).AndAbstract(safetyEnv,varCubePostInput));
 
                         // Update the inner-most fixed point with the result of applying the enforcable predecessor operator
-                        nu0.update(safetyEnv.Implies(foundPaths).ExistAbstract(varCubePostOutput).UnivAbstract(varCubePostInput));
+                        nu0.update(goodStates);
                     }
 
                     // Update the set of positions that are winning for some liveness assumption
