@@ -40,8 +40,6 @@ matrix:
       env: CC=clang++-3.7
       env: LINK=clang++-3.7
 script:
-  - sudo unlink /usr/bin/gcc && sudo ln -s /usr/bin/$CC /usr/bin/gcc
-  - sudo unlink /usr/bin/g++ && sudo ln -s /usr/bin/$CXX /usr/bin/g++
   - ls -la /usr/bin/
   - cd src
   - make -j2
