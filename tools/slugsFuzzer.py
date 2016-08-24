@@ -29,7 +29,6 @@ nuSMVReturnFile = "/tmp/fuzz_"+str(os.getpid())+".nusmvreturn"
 nuSMVErrorStreamFile = "/tmp/fuzz_"+str(os.getpid())+".nusmverrorstream"
 slugsTranslatorScript = "./translateFromLTLMopLTLFormatToSlugsFormat.py"
 nuSMVTranslatorScript = "./makeNuSMVInstanceToTestAutomatonFileAgainstSlugsSpecification.py"
-uniformCounterExample
 counterExampleTraceGeneratorScript = "./computeBoundedLengthUniformSafetyCounterStrategy.py"
 NuSMVExecutable = "./NuSMV"
 slugsExecutableAndBasicOptions = "../src/slugs " + " ".join(sys.argv[2:])
@@ -120,7 +119,7 @@ def fuzzOnce():
     # =====================================================
     # Slugs
     # =====================================================
-    command = slugsExecutableAndBasicOptions + " --sysInitRoboticsSemantics "+slugsinFile+" "+autFile+" 2> "+slugsReturnFile
+    command = slugsExecutableAndBasicOptions + " --sysInitRoboticsSemantics --explicitStrategy"+slugsinFile+" "+autFile+" 2> "+slugsReturnFile
     retValue = os.system(command)
     if (retValue!=0):
         print >>sys.stderr, "Slugs failed!"
@@ -176,11 +175,6 @@ def fuzzOnce():
         retValue = os.system("timeout 120s "+NuSMVExecutable + " "+nuSMVFile+" > "+nuSMVReturnFile+" 2> "+nuSMVErrorStreamFile)
 
         # Check if a counter-example can be computed
-
-
-
-
-No abstract
 
 
 # =====================================================
