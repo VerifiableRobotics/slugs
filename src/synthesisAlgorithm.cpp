@@ -78,7 +78,7 @@
 
                     // Dump the paths that we just wound into 'strategyDumpingData' - store the current goal long
                     // with the BDD
-                    strategyDumpingData.push_back(std::pair<unsigned int,BF>(j,foundPaths));
+                    strategyDumpingData.push_back(std::pair<unsigned int,BF>(j,foundPaths & safetySys));
                 }
 
                 // Update the moddle fixed point
