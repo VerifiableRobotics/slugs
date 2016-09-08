@@ -6,7 +6,7 @@ DEFINES       = -DUSE_CUDD -DNDEBUG
 CFLAGS        = -pipe -O3 -g -mtune=native $(COMPILEROPTIONS) -Wall -W -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -O3 -g -std=c++11 -mtune=native $(COMPILEROPTIONS) -fPIC $(DEFINES)
 INCPATH       = -I. -I../lib/cudd-3.0.0/ -I../lib/cudd-3.0.0/cudd -I../lib/cudd-3.0.0/mtr -I../lib/cudd-3.0.0/epd -I../lib/cudd-3.0.0/st -I../lib/cudd-3.0.0/util -I../lib/cudd-3.0.0/dddmp -IBFAbstractionLibrary 
-LINK          = g++
+LINK          = $(CXX)
 LFLAGS        = 
 
 # Object files
