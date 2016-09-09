@@ -1,43 +1,56 @@
 language: cpp
-sudo: required
 matrix:
   include:
-    - compiler: gcc
+    - compiler: gcc-5
+      os: linux
+      sudo: required
+      dist: trusty
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
           packages:
             - g++-5
+            - libboost-all-dev
       env: CXX=g++-5
-      env: CC=g++-5
-      env: LINK=g++-5
-    - compiler: clang-3.6
+      env: CC=gcc-5
+      env: GCCPATH=/usr/bin/gcc-5
+      env: GPPPATH=/usr/bin/g++-5
+    - compiler: gcc-6
+      os: linux
+      sudo: required
+      dist: trusty
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.6
           packages:
-            - clang-3.6
-      # Clang 3.6 does not support openmp
-      env: CXX=clang++-3.6
-      env: CC=clang++-3.6
-      env: LINK=clang++-3.6  
+            - g++-6 
+            - libboost-all-dev
+      env: CXX=g++-6
+      env: CC=gcc-6
+      env: GCCPATH=/usr/bin/gcc-6
+      env: GPPPATH=/usr/bin/g++-6
     - compiler: clang-3.7
+      os: linux
+      sudo: required
+      dist: trusty    
       addons:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.7
+            - llvm-toolchain-trusty-3.7
           packages:
             - clang-3.7
-      # Cannot get OMP to run with such an old clang version
+            - libboost-all-dev
       env: CXX=clang++-3.7
       env: CC=clang++-3.7
       env: LINK=clang++-3.7
+    - compiler: clang
+      os: osx
+      env: CXX=clang++
+      env: CC=clang
+      env: LINK=clang++
 script:
-  - sudo unlink /usr/bin/gcc && sudo ln -s /usr/bin/gcc-5 /usr/bin/gcc
-  - sudo unlink /usr/bin/g++ && sudo ln -s /usr/bin/g++-5 /usr/bin/g++
   - cd src
-  - make 
+  - make -j2

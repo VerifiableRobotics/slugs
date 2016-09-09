@@ -1,7 +1,7 @@
 #ifndef __EXTENSION_TWO_DIMENSIONAL_COST_HPP
 #define __EXTENSION_TWO_DIMENSIONAL_COST_HPP
 #include "gr1context.hpp"
-
+#include <cmath>
 
 class TwoDimensionalCostNotionTuple {
 private:
