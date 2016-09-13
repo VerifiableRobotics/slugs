@@ -22,13 +22,17 @@ def checkRealizability(scriptName,translatorName,parameter):
         (handle,tempfilename) = tempfile.mkstemp()
         outFile = os.fdopen(handle, "w")
         translatorProcess = subprocess.Popen(translatorName+" "+parameter.split(" ")[-1], shell=True, bufsize=1048000, stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+        allLines = []
         for line in translatorProcess.stdout.readlines():
             print >>outFile,line
+            allLines.append(line)
         errorCode = translatorProcess.wait()
         outFile.close()
         if (errorCode!=0):
             os.unlink(tempfilename)
-            errorMessage = "Translator script terminated with a non-zero error code: "+str(errorCode)
+            errorMessage = "Translator script terminated with a non-zero error code: "+str(errorCode)+", the messages were:"
+            for line in allLines:
+                errorMessage = errorMessage + "\nM:" + line
             return errorMessage
         parameter = parameter.split(" ")
         parameter = parameter[0:len(parameter)-1]
