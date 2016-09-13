@@ -652,7 +652,10 @@ if __name__ == "__main__":
                 sys.exit(1)
             inputFile = parameter
 
-    resource.setrlimit(resource.RLIMIT_STACK, (2**29,-1))
+    try:
+        resource.setrlimit(resource.RLIMIT_STACK, (2**29,-1))
+    except ValueError:
+        pass # Cannot increase limit
     sys.setrecursionlimit(10**6)
     performConversion(inputFile,thoroughly)
     # print >>sys.stderr, translatedNames
