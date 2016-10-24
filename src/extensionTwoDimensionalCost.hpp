@@ -684,16 +684,15 @@ public:
     }
 
     /**
-     * @brief This function orchestrates the execution of slugs when this plugin is used.
+     * @brief Alternative checkRealizability function --
+     *        makes sure that a strategy is computed as well if the specification
+     *        is realizable.
      */
-    void execute() {
+    void checkRealizability() {
         //addAutomaticallyGeneratedLivenessAssumption();
-        checkRealizability();
+        T::checkRealizability();
         if (realizable) {
-            std::cerr << "RESULT: Specification is realizable.\n";
             computeCostOptimalStrategy();
-        } else {
-            std::cerr << "RESULT: Specification is unrealizable.\n";
         }
     }
 

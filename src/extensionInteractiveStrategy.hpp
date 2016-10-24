@@ -169,7 +169,7 @@ public:
                 std::cout << "From: \n";
                 BF from = mgr.constantTrue();
                 for (unsigned int i=0;i<variables.size();i++) {
-                    if ((variableTypes[i]==PreInput) || (variableTypes[i]==PreOutput)) {
+                    if (doesVariableInheritType(i,Pre)) {
                         std::cout << " - " << variableNames[i] << ": ";
                         std::cout.flush();
                         int value;
@@ -192,7 +192,7 @@ public:
                 std::cout << "To: \n";
                 BF to = mgr.constantTrue();
                 for (unsigned int i=0;i<variables.size();i++) {
-                    if ((variableTypes[i]==PostInput) || (variableTypes[i]==PostOutput)) {
+                    if (doesVariableInheritType(i,Post)) {
                         std::cout << " - " << variableNames[i] << ": ";
                         std::cout.flush();
                         int value;
@@ -269,7 +269,7 @@ public:
                 std::cout << "Position: \n";
                 BF from = mgr.constantTrue();
                 for (unsigned int i=0;i<variables.size();i++) {
-                    if ((variableTypes[i]==PreInput) || (variableTypes[i]==PreOutput)) {
+                    if (doesVariableInheritType(i,Pre)) {
                         std::cout << " - " << variableNames[i] << ": ";
                         std::cout.flush();
                         int value;
@@ -315,7 +315,7 @@ public:
                             BF to = mgr.constantTrue();
                             BF nextPosition = mgr.constantTrue();
                             for (unsigned int i=0;i<variables.size();i++) {
-                                if (variableTypes[i]==PostInput) {
+                                if (doesVariableInheritType(i,PostInput)) {
                                     std::cout << " - " << variableNames[i] << ": ";
                                     std::cout.flush();
                                     int value;
@@ -356,7 +356,7 @@ public:
                                 transition = determinize(transition,postOutputVars);
 
                                 for (unsigned int i=0;i<variables.size();i++) {
-                                    if (variableTypes[i]==PostOutput) {
+                                    if (doesVariableInheritType(i,PostOutput)) {
                                         if ((variables[i] & transition).isFalse()) {
                                             std::cout << " - " << variableNames[i] << " = 0\n";
                                             nextPosition &= !variables[i];
@@ -418,7 +418,7 @@ public:
                 std::cout << "\n"; // Get rid of the prompt
                 BF postInput = mgr.constantTrue();
                 for (unsigned int i=0;i<variables.size();i++) {
-                    if (variableTypes[i]==PostInput) {
+                    if (doesVariableInheritType(i,PostInput)) {
                         char c;
                         std::cin >> c;
                         if (c=='0') {
@@ -454,7 +454,7 @@ public:
 
                     // Print position
                     for (unsigned int i=0;i<variables.size();i++) {
-                        if (variableTypes[i]==PreInput) {
+                        if (doesVariableInheritType(i,PreInput)) {
                             if ((variables[i] & currentPosition).isFalse()) {
                                 std::cout << "0";
                             } else {
@@ -463,7 +463,7 @@ public:
                         }
                     }
                     for (unsigned int i=0;i<variables.size();i++) {
-                        if (variableTypes[i]==PreOutput) {
+                        if (doesVariableInheritType(i,PreOutput)) {
                             if ((variables[i] & currentPosition).isFalse()) {
                                 std::cout << "0";
                             } else {
@@ -477,14 +477,14 @@ public:
             } else if (command=="XPRINTINPUTS") {
                 std::cout << "\n"; // Get rid of the prompt
                 for (unsigned int i=0;i<variables.size();i++) {
-                    if (variableTypes[i]==PreInput)
+                    if (doesVariableInheritType(i,PreInput))
                         std::cout << variableNames[i] << "\n";
                 }
                 std::cout << std::endl; // Flushes
             } else if (command=="XPRINTOUTPUTS") {
                 std::cout << "\n"; // Get rid of the prompt
                 for (unsigned int i=0;i<variables.size();i++) {
-                    if (variableTypes[i]==PreOutput)
+                    if (doesVariableInheritType(i,PreOutput))
                         std::cout << variableNames[i] << "\n";
                 }
                 std::cout << std::endl; // Flushes
@@ -497,7 +497,7 @@ public:
                 BF initialPosition = winningPositions & initEnv & initSys;
                 initialPosition = determinize(initialPosition,preVars);
                 for (unsigned int i=0;i<variables.size();i++) {
-                    if (variableTypes[i]==PreInput) {
+                    if (doesVariableInheritType(i,PreInput)) {
                         if ((variables[i] & initialPosition).isFalse()) {
                             std::cout << "0";
                         } else {
@@ -506,7 +506,7 @@ public:
                     }
                 }
                 for (unsigned int i=0;i<variables.size();i++) {
-                    if (variableTypes[i]==PreOutput) {
+                    if (doesVariableInheritType(i,PreOutput)) {
                         if ((variables[i] & initialPosition).isFalse()) {
                             std::cout << "0";
                         } else {
