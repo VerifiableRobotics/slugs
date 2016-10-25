@@ -581,7 +581,7 @@ public:
                     }
 
                     if (possibleInitialPositions.isFalse()) {
-                        if (realizable) {
+                        if (realizable || (forced.isTrue())) {
                             std::cout << "FAILGUARANTEES" << std::endl;
 
                             resultPtr = 0;
