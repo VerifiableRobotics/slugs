@@ -459,7 +459,7 @@ public:
 
                         // Add new potential elements to the TODO list.
                         if (positionsWinningBeforeProcessingThisCostTuple != positionsAlreadyFoundToBeWinning) {
-                            BF_newDumpDot(*this,(!positionsWinningBeforeProcessingThisCostTuple) & positionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"winningPositionsAdded.dot");
+                            //BF_newDumpDot(*this,(!positionsWinningBeforeProcessingThisCostTuple) & positionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"winningPositionsAdded.dot");
                             // Add new elements to the TODO list
                             std::cerr << "Inserting new elements into the TODO list...\n";
                             assert(currentTuple.getActionCost()==std::numeric_limits<double>::infinity());
@@ -651,7 +651,7 @@ public:
 
                     // Add new potential elements to the TODO list.
                     if (positionsWinningBeforeProcessingThisCostTuple != positionsAlreadyFoundToBeWinning) {
-                        BF_newDumpDot(*this,(!positionsWinningBeforeProcessingThisCostTuple) & positionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"winningPositionsAdded.dot");
+                        //BF_newDumpDot(*this,(!positionsWinningBeforeProcessingThisCostTuple) & positionsAlreadyFoundToBeWinning,"Pre Post",filename.str()+"winningPositionsAdded.dot");
                         // Add new elements to the TODO list
                         std::cerr << "Inserting new elements into the TODO list...\n";
                         todo.insert(MK_COST_TUPLE(currentTuple.getWaitingCost()+1,currentTuple.getActionCost()));

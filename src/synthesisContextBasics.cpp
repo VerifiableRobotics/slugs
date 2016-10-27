@@ -123,8 +123,13 @@ void GR1Context::init(std::list<std::string> &filenames) {
     std::string inFileName = filenames.front();
     filenames.pop_front();
 
+    // Open input file or produce error message if that does not work
     std::ifstream inFile(inFileName.c_str());
-    if (inFile.fail()) throw "Error: Cannot open input file";
+    if (inFile.fail()) {
+        std::ostringstream errorMessage;
+        errorMessage << "Cannot open input file '" << inFileName << "'";
+        throw errorMessage.str();
+    }
 
     // Prepare safety and initialization constraints
     initEnv = mgr.constantTrue();
