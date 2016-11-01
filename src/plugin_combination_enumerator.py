@@ -310,6 +310,17 @@ orderOfPluginClassesInInstantiations = [
 # -------------------------------------------------------    
 listOfCommandLineCombinationToClassInstantiationMappers = []
 
+# Two dimensional cost Motion (needs to know if robotics Semantics has been selected)
+def twoDimensionalCost(params):
+    sysIn = "sysInitRoboticsSemantics" in params
+    if "twoDimensionalCost" in params:
+        ret = [("XTwoDimensionalCost","true" if sysIn else "false")]
+        params.difference_update(["twoDimensionalCost","sysInitRoboticsSemantics"])
+        return ret
+    return []
+listOfCommandLineCombinationToClassInstantiationMappers.append(twoDimensionalCost)
+
+
 # NonDeterministic Motion
 def nondeterministicMotion(params):
     sysIn = "sysInitRoboticsSemantics" in params
@@ -373,7 +384,6 @@ listOfCommandLineCombinationToClassInstantiationMappers.append(basicExtraction)
     
 # Simple Plugins
 listOfCommandLineCombinationToClassInstantiationMappers.append(lambda x: simpleInstantiationMapper("cooperativeGR1Strategy","XCooperativeGR1Strategy",x))
-listOfCommandLineCombinationToClassInstantiationMappers.append(lambda x: simpleInstantiationMapper("twoDimensionalCost","XTwoDimensionalCost",x))
 listOfCommandLineCombinationToClassInstantiationMappers.append(lambda x: simpleInstantiationMapper("computeIncompleteInformationEstimator","XIncompleteInformationEstimatorSynthesis",x))
 listOfCommandLineCombinationToClassInstantiationMappers.append(lambda x: simpleInstantiationMapper("computeAbstractWinningTrace","XAbstractWinningTraceGenerator",x))
 listOfCommandLineCombinationToClassInstantiationMappers.append(lambda x: simpleInstantiationMapper("computeInterestingRunOfTheSystem","XComputeInterestingRunOfTheSystem",x))

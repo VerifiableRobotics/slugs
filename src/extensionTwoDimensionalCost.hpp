@@ -81,7 +81,7 @@ public:
 };
 
 
-template<class T> class XTwoDimensionalCost : public T {
+template<class T, bool isSysInitRoboticsSemantics> class XTwoDimensionalCost : public T {
 protected:
 
     // Inherited stuff used
@@ -104,6 +104,7 @@ protected:
     using T::varCubePostOutput;
     using T::winningPositions;
     using T::varCubePreInput;
+    using T::varCubePre;
     using T::varCubePreOutput;
     using T::realizable;
     using T::checkRealizability;
@@ -114,6 +115,8 @@ protected:
     SlugsVectorOfVarBFs assumptionCounterPreVars{CurrentLivenessAssumptionCounterPre,this};
     SlugsVectorOfVarBFs assumptionCounterPostVars{CurrentLivenessAssumptionCounterPost,this};
     SlugsVarCube assumptionCounterPreCube{CurrentLivenessAssumptionCounterPre,this};
+    SlugsVarCube addedHelperBitsInImplementationPreCube{CurrentLivenessAssumptionCounterPre,IsInftyCostPre,this};
+    SlugsVectorOfVarBFs addedHelperBitsInImplementationPreVars{CurrentLivenessAssumptionCounterPre,IsInftyCostPre,this};
 
     SlugsVectorOfVarBFs transitiveClosureIntermediateVars{TransitiveClosureIntermediateVariables,this};
     SlugsVarVector transitiveClosureIntermediateVarVector{TransitiveClosureIntermediateVariables,this};
@@ -134,10 +137,10 @@ protected:
 
 public:
     static GR1Context* makeInstance(std::list<std::string> &filenames) {
-        return new XTwoDimensionalCost<T>(filenames);
+        return new XTwoDimensionalCost<T,isSysInitRoboticsSemantics>(filenames);
     }
 
-    XTwoDimensionalCost<T>(std::list<std::string> &filenames): T(filenames) {}
+    XTwoDimensionalCost<T,isSysInitRoboticsSemantics>(std::list<std::string> &filenames): T(filenames) {}
 
     void init(std::list<std::string> &filenames) {
 
@@ -544,7 +547,7 @@ public:
                         BF allowedEscapeTransitions = mgr.constantFalse();
                         for (auto it = transitionCosts.begin();it!=transitionCosts.end();it++) {
                             if (MK_COST_TUPLE(currentTuple.getWaitingCost()-1,it->first)<=currentTuple) {
-                                allowedEndingTransitions |= it->second & safetySys & livenessGuarantees[livenessGoal];
+                                allowedEscapeTransitions |= it->second & safetySys & livenessGuarantees[livenessGoal];
                             }
                         }
 
@@ -678,6 +681,44 @@ public:
                 }
             }*/
 
+
+
+            // Alter "initSys", so that the system initially uses the best values available
+            if (livenessGoal==0) {
+                //BF_newDumpDot(*this,initSys,"Pre","/tmp/initSysInitial.dot");
+                if (!isSysInitRoboticsSemantics) {
+                    // Standard GR(1) semantics
+                    BF initEnvCasesCoveredAlready = mgr.constantFalse();
+                    BF initSysUpdates = mgr.constantFalse();
+                    for (auto it : winningPositionsFound) {
+                        initSysUpdates |= winningPositions & it.second & !initEnvCasesCoveredAlready;
+                        initEnvCasesCoveredAlready |= (winningPositions & it.second).ExistAbstract(varCubePreOutput);
+                    }
+                    initSys &= initSysUpdates;
+                } else {
+                    // SysInitRobotic semantics: For every admissible input/output bit combination, find one representative
+                    BF initEnvCasesCoveredAlready = mgr.constantFalse();
+                    BF initSysUpdates = mgr.constantFalse();
+                    for (auto it : winningPositionsFound) {
+
+                        // Determinize the additional bits of it.second
+                        BF newStates = it.second;
+                        for (unsigned int j=0; j<addedHelperBitsInImplementationPreVars.size();j++) {
+                            BF var = addedHelperBitsInImplementationPreVars[j];
+                            newStates &= (!var) | !(newStates & var).ExistAbstractSingleVar(var);
+                        }
+                        initSysUpdates |= winningPositions & newStates & !initEnvCasesCoveredAlready;
+                        initEnvCasesCoveredAlready |= (winningPositions & newStates).ExistAbstract(addedHelperBitsInImplementationPreCube);
+                    }
+                    initSys &= initSysUpdates;
+                }
+                //BF_newDumpDot(*this,initSysUpdates,"Pre","/tmp/initSysUpdate.dot");
+                //BF_newDumpDot(*this,initEnvCasesCoveredAlready,"Pre","/tmp/initSysCovered.dot");
+                BF_newDumpDot(*this,initSys,"Pre","/tmp/initSysFinal.dot");
+                //BF_newDumpDot(*this,(winningPositions & initSys & initEnv),"Pre","/tmp/todolist.dot");
+                //BF_newDumpDot(*this,(transitionCosts[0.0] & safetyEnv & safetySys) & variables[8] & variables[10],"Pre Post","/tmp/freeTransitions.dot");
+            }
+
         } // Iteration through all liveness goals completed
 
 
@@ -689,8 +730,17 @@ public:
      *        is realizable.
      */
     void checkRealizability() {
-        //addAutomaticallyGeneratedLivenessAssumption();
-        T::checkRealizability();
+        if (isSysInitRoboticsSemantics) {
+            T::computeWinningPositions();
+            BF result = (initEnv & initSys).Implies(winningPositions).UnivAbstract(varCubePre);
+            if (!result.isConstant()) throw "Internal error: Could not establish realizability/unrealizability of the specification.";
+            realizable = result.isTrue();
+            if (realizable) {
+                computeCostOptimalStrategy();
+            }
+        } else {
+            T::checkRealizability();
+        }
         if (realizable) {
             computeCostOptimalStrategy();
         }
