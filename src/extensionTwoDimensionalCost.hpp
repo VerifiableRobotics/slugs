@@ -81,7 +81,7 @@ public:
 };
 
 
-template<class T, bool isSysInitRoboticsSemantics> class XTwoDimensionalCost : public T {
+template<class T, bool isSysInitRoboticsSemantics, bool isSimpleRecovery> class XTwoDimensionalCost : public T {
 protected:
 
     // Inherited stuff used
@@ -137,10 +137,10 @@ protected:
 
 public:
     static GR1Context* makeInstance(std::list<std::string> &filenames) {
-        return new XTwoDimensionalCost<T,isSysInitRoboticsSemantics>(filenames);
+        return new XTwoDimensionalCost<T,isSysInitRoboticsSemantics,isSimpleRecovery>(filenames);
     }
 
-    XTwoDimensionalCost<T,isSysInitRoboticsSemantics>(std::list<std::string> &filenames): T(filenames) {}
+    XTwoDimensionalCost<T,isSysInitRoboticsSemantics,isSimpleRecovery>(std::list<std::string> &filenames): T(filenames) {}
 
     void init(std::list<std::string> &filenames) {
 
@@ -686,35 +686,32 @@ public:
             // Alter "initSys", so that the system initially uses the best values available
             if (livenessGoal==0) {
                 //BF_newDumpDot(*this,initSys,"Pre","/tmp/initSysInitial.dot");
-                if (!isSysInitRoboticsSemantics) {
-                    // Standard GR(1) semantics
-                    BF initEnvCasesCoveredAlready = mgr.constantFalse();
-                    BF initSysUpdates = mgr.constantFalse();
-                    for (auto it : winningPositionsFound) {
-                        initSysUpdates |= winningPositions & it.second & !initEnvCasesCoveredAlready;
-                        initEnvCasesCoveredAlready |= (winningPositions & it.second).ExistAbstract(varCubePreOutput);
-                    }
-                    initSys &= initSysUpdates;
-                } else {
-                    // SysInitRobotic semantics: For every admissible input/output bit combination, find one representative
-                    BF initEnvCasesCoveredAlready = mgr.constantFalse();
-                    BF initSysUpdates = mgr.constantFalse();
-                    for (auto it : winningPositionsFound) {
+                //BF_newDumpDot(*this,winningPositions,"Pre","/tmp/winningPositions.dot");
 
-                        // Determinize the additional bits of it.second
-                        BF newStates = it.second;
-                        for (unsigned int j=0; j<addedHelperBitsInImplementationPreVars.size();j++) {
-                            BF var = addedHelperBitsInImplementationPreVars[j];
-                            newStates &= (!var) | !(newStates & var).ExistAbstractSingleVar(var);
-                        }
-                        initSysUpdates |= winningPositions & newStates & !initEnvCasesCoveredAlready;
+                BF initEnvCasesCoveredAlready = mgr.constantFalse();
+                BF initSysUpdates = mgr.constantFalse();
+                //unsigned int nr = 0;
+                for (auto it : winningPositionsFound) {
+                    //std::ostringstream theseWinningPos;
+                    //theseWinningPos << "/tmp/twp" << nr++;
+                    //BF_newDumpDot(*this,it.second,"Pre",(theseWinningPos.str()+".dot").c_str());
+                    // Determinize the additional bits of it.second
+                    BF newStates = it.second;
+                    for (unsigned int j=0; j<addedHelperBitsInImplementationPreVars.size();j++) {
+                        BF var = addedHelperBitsInImplementationPreVars[j];
+                        newStates &= (!var) | var & !((newStates & !var).ExistAbstractSingleVar(var));
+                    }
+                    initSysUpdates |= winningPositions & newStates & !initEnvCasesCoveredAlready;
+                    if (!isSysInitRoboticsSemantics) {
+                        initEnvCasesCoveredAlready |= (winningPositions & newStates & initSys).ExistAbstract(varCubePreOutput);
+                    } else {
                         initEnvCasesCoveredAlready |= (winningPositions & newStates).ExistAbstract(addedHelperBitsInImplementationPreCube);
                     }
-                    initSys &= initSysUpdates;
                 }
+                initSys &= initSysUpdates;
                 //BF_newDumpDot(*this,initSysUpdates,"Pre","/tmp/initSysUpdate.dot");
                 //BF_newDumpDot(*this,initEnvCasesCoveredAlready,"Pre","/tmp/initSysCovered.dot");
-                BF_newDumpDot(*this,initSys,"Pre","/tmp/initSysFinal.dot");
+                //BF_newDumpDot(*this,initSys,"Pre","/tmp/initSysFinal.dot");
                 //BF_newDumpDot(*this,(winningPositions & initSys & initEnv),"Pre","/tmp/todolist.dot");
                 //BF_newDumpDot(*this,(transitionCosts[0.0] & safetyEnv & safetySys) & variables[8] & variables[10],"Pre Post","/tmp/freeTransitions.dot");
             }
@@ -740,9 +737,9 @@ public:
             }
         } else {
             T::checkRealizability();
-        }
-        if (realizable) {
-            computeCostOptimalStrategy();
+            if (realizable) {
+                computeCostOptimalStrategy();
+            }
         }
     }
 

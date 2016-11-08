@@ -310,11 +310,12 @@ orderOfPluginClassesInInstantiations = [
 # -------------------------------------------------------    
 listOfCommandLineCombinationToClassInstantiationMappers = []
 
-# Two dimensional cost Motion (needs to know if robotics Semantics has been selected)
+# Two dimensional cost Motion (needs to know if robotics Semantics has been selected and if simple recovery is active or not)
 def twoDimensionalCost(params):
     sysIn = "sysInitRoboticsSemantics" in params
+    simpleRecovery = "simpleRecovery" in params
     if "twoDimensionalCost" in params:
-        ret = [("XTwoDimensionalCost","true" if sysIn else "false")]
+        ret = [("XTwoDimensionalCost","true" if sysIn else "false","true" if simpleRecovery else "false")]
         params.difference_update(["twoDimensionalCost","sysInitRoboticsSemantics"])
         return ret
     return []
