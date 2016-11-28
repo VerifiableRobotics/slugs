@@ -1,0 +1,89 @@
+[INPUT]
+x:0...23
+y:0...7
+mox6:0...23
+moy6:0...7
+deliveryrequest2
+door4
+
+[OUTPUT]
+left
+right
+up
+down
+pickup
+drop
+requestPending1
+requestPending2
+
+[ENV_INIT]
+x = 0
+y = 0
+mox6 = 16
+moy6 = 6
+! deliveryrequest2
+
+[SYS_INIT]
+! left
+! right
+! up
+! down
+! pickup
+! drop
+
+[SYS_TRANS]
+! left' | ! right'
+! up' | ! down'
+! pickup' | ! drop'
+
+
+[ENV_TRANS]
+# Update robot position according to requirements
+x>0 & left -> x'+1=x
+x<23 & right -> x'=x+1
+y>0 & up -> y'+1=y
+y<7 & down -> y'=y+1
+(!left & !right) -> x'=x
+(!up & !down) -> y'=y
+
+# Update moving obstacle position
+mox6' <= mox6+1
+moy6' <= moy6+1
+mox6 <= mox6'+1
+moy6 <= moy6'+1
+mox6'=mox6 | moy6'=moy6
+
+[SYS_TRANS]
+# No crash of robot with obstacle
+x<4 | x>19 | y!=2
+x<4 | x>19 | y!=5
+x<11 | x>12 | y<3 | y>4
+
+[ENV_TRANS]
+# No crash of moving obstacle with the static obstacle
+mox6'<3 | mox6'>19 | (moy6'!=2 & moy6'!=1)
+mox6'<3 | mox6'>19 | (moy6'!=5 & moy6'!=4)
+mox6'<10 | mox6'>12 | moy6'<2 | moy6'>4
+moy6'<7
+
+[SYS_LIVENESS]
+# Cycling between the goals
+!requestPending1
+!requestPending2
+
+
+[SYS_TRANS]
+# Track delivery requests - Part 1
+(x>=9 & x<=10) & (y>=3 & y<=4) -> ! requestPending1'
+!((x>=9 & x<=10) & (y>=3 & y<=4)) -> (requestPending1' <-> (requestPending1 | deliveryrequest2))
+
+(x>=13 & x<=14) & (y>=3 & y<=4) -> ! requestPending2'
+!((x>=13 & x<=14) & (y>=3 & y<=4)) -> (requestPending2' <-> ((x>=9 & x<=10) & (y>=3 & y<=4) & requestPending1 | requestPending2))
+
+
+[SYS_TRANS]
+# No crash with moving obstacle
+x' < mox6' | y' < moy6' | x' > mox6'+1 | y' > moy6'+1
+
+[ENV_LIVENESS]
+mox6'=11 & moy6'=6

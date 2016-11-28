@@ -129,6 +129,7 @@ combinableParameters = [
     # Bias for Action
     ("biasForAction","extractExplicitPermissiveStrategy"),
     ("biasForAction","simpleRecovery"),
+    ("biasForAction","interactiveStrategy"),
     
     # Simple Recovery
     ("simpleRecovery","IROSfastslow"),
@@ -201,7 +202,6 @@ uncombinableParameters = [
     # Bias For Action
     ("biasForAction","counterStrategy"),
     ("biasForAction","fixedPointRecycling"),
-    ("biasForAction","interactiveStrategy"),
     ("biasForAction","IROSfastslow"),
     ("biasForAction","twoDimensionalCost"),
     
@@ -295,6 +295,7 @@ orderOfPluginClassesInInstantiations = [
     ("XInteractiveStrategy","XCooperativeGR1Strategy"),
     ("XInteractiveStrategy","XTwoDimensionalCost"),
     ("XInteractiveStrategy","XIROSFS"),
+    ("XInteractiveStrategy","XBiasForAction"),
     ("XExtractPermissiveExplicitStrategy","XFixedPointRecycling"),
     ("XInteractiveStrategy","XFixedPointRecycling"),
     ("XExtractPermissiveExplicitStrategy","XBiasForAction"),

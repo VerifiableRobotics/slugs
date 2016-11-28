@@ -147,6 +147,7 @@ OptionCombination optionCombinations[] = {
     OptionCombination("--biasForAction --explicitStrategy",XExtractExplicitStrategy<XBiasForAction<GR1Context>,false,false>::makeInstance),
     OptionCombination("--biasForAction --extractExplicitPermissiveStrategy --sysInitRoboticsSemantics",XExtractPermissiveExplicitStrategy<XRoboticsSemantics<XBiasForAction<GR1Context>>,false>::makeInstance),
     OptionCombination("--biasForAction --extractExplicitPermissiveStrategy",XExtractPermissiveExplicitStrategy<XBiasForAction<GR1Context>,false>::makeInstance),
+    OptionCombination("--biasForAction --interactiveStrategy",XInteractiveStrategy<XBiasForAction<GR1Context>>::makeInstance),
     OptionCombination("--biasForAction --simpleRecovery --simpleSymbolicStrategy --sysInitRoboticsSemantics",XExtractSymbolicStrategy<XRoboticsSemantics<XBiasForAction<GR1Context>>,true,true>::makeInstance),
     OptionCombination("--biasForAction --simpleRecovery --simpleSymbolicStrategy",XExtractSymbolicStrategy<XBiasForAction<GR1Context>,true,true>::makeInstance),
     OptionCombination("--biasForAction --simpleRecovery --symbolicStrategy --sysInitRoboticsSemantics",XExtractSymbolicStrategy<XRoboticsSemantics<XBiasForAction<GR1Context>>,true,false>::makeInstance),
