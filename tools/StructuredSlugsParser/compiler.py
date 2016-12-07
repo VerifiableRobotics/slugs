@@ -497,7 +497,7 @@ def performConversion(inputFile,thoroughly):
             if mode=="" and line.startswith("#"):
                 # Initial comments
                 pass
-            else:
+            elif mode!="":
                 lines[mode].append(line)
 
     specFile.close()
