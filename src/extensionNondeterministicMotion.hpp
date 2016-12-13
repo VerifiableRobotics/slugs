@@ -28,6 +28,7 @@ protected:
     using T::varCubePreInput;
     using T::varCubePreOutput;
     using T::realizable;
+    using T::computeVariableInformation;
 
     // Own variables local to this plugin
     BF robotBDD;
@@ -212,6 +213,10 @@ public:
         std::cerr << "Numer of bits that we expect the robot abstraction BDD to have: " << varsBDDread.size() << std::endl;
         robotBDD = mgr.readBDDFromFile(robotFileName.c_str(),varsBDDread);
 
+        // Finally, add the liveness assumption that if we are executing an action that *can* lead
+        // to motion, we do so.
+        computeVariableInformation();
+        addAutomaticallyGeneratedLivenessAssumption();
 
     }
 
@@ -321,6 +326,9 @@ public:
 
         // Return the result in Boolean form.
         realizable = result.isTrue();
+
+        // Finally, to make the simulator work, we have to change "safetySys" to include the abstraction BDD
+        safetySys &= robotBDD;
     }
 
     void addAutomaticallyGeneratedLivenessAssumption() {
@@ -352,7 +360,6 @@ public:
      * @brief This function orchestrates the execution of slugs when this plugin is used.
      */
     void execute() {
-        addAutomaticallyGeneratedLivenessAssumption();
         checkRealizability();
         if (realizable) {
             std::cerr << "RESULT: Specification is realizable.\n";

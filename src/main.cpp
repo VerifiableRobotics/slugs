@@ -225,6 +225,7 @@ OptionCombination optionCombinations[] = {
     OptionCombination("--fixedPointRecycling --symbolicStrategy",XExtractSymbolicStrategy<XFixedPointRecycling<GR1Context>,false,false>::makeInstance),
     OptionCombination("--fixedPointRecycling --sysInitRoboticsSemantics",XRoboticsSemantics<XFixedPointRecycling<GR1Context>>::makeInstance),
     OptionCombination("--fixedPointRecycling",XFixedPointRecycling<GR1Context>::makeInstance),
+    OptionCombination("--interactiveStrategy --nonDeterministicMotion",XInteractiveStrategy<XNonDeterministicMotion<GR1Context,false>>::makeInstance),
     OptionCombination("--interactiveStrategy --twoDimensionalCost",XInteractiveStrategy<XTwoDimensionalCost<GR1Context,false,false>>::makeInstance),
     OptionCombination("--interactiveStrategy",XInteractiveStrategy<GR1Context>::makeInstance),
     OptionCombination("--nonDeterministicMotion --sysInitRoboticsSemantics",XNonDeterministicMotion<GR1Context,true>::makeInstance),

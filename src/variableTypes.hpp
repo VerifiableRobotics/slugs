@@ -156,8 +156,8 @@ REGISTER_VARIABLE_TYPE_HIERARCHY(ControllablePre,ObservablePre)
 REGISTER_VARIABLE_TYPE_HIERARCHY(ControllablePost,ObservablePost)
 
 // Variables used in extensionNondeterministicMotion.hpp
-REGISTER_VARIABLE_TYPE_HIERARCHY(PreMotionState,Pre)
-REGISTER_VARIABLE_TYPE_HIERARCHY(PostMotionState,Post)
+REGISTER_VARIABLE_TYPE_HIERARCHY(PreMotionState,PreOutput)
+REGISTER_VARIABLE_TYPE_HIERARCHY(PostMotionState,PostOutput)
 REGISTER_VARIABLE_TYPE_HIERARCHY(PreOtherOutput,PreOutput)
 REGISTER_VARIABLE_TYPE_HIERARCHY(PostOtherOutput,PostOutput)
 REGISTER_VARIABLE_TYPE_HIERARCHY(PreMotionControlOutput,PreOutput)

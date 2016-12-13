@@ -72,7 +72,7 @@ public:
                 positionalStrategiesForTheIndividualGoals.push_back(strategy);
                 std::ostringstream filename;
                 filename << "/tmp/realizableStratForSystemGoal" << i << ".dot";
-                BF_newDumpDot(*this,strategy,"PreInput PreOutput PostInput PostOutput",filename.str().c_str());
+                BF_newDumpDot(*this,strategy,"Pre Post",filename.str().c_str());
             }
         } else {
 
@@ -124,7 +124,7 @@ public:
                 positionalStrategiesForTheIndividualGoals.push_back(strategy);
                 std::ostringstream filename;
                 filename << "/tmp/realizableStratForEnvironmentGoal" << i << ".dot";
-                BF_newDumpDot(*this,strategy,"PreInput PreOutput PostInput PostOutput",filename.str().c_str());
+                BF_newDumpDot(*this,strategy,"Pre Post",filename.str().c_str());
             }
         }
 
