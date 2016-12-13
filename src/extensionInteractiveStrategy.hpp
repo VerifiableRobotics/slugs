@@ -30,6 +30,7 @@ protected:
     using T::varCubePost;
     using T::postOutputVars;
     using T::determinize;
+    using T::determinizeRandomized;
     using T::initEnv;
     using T::initSys;
     using T::preVars;
@@ -440,6 +441,66 @@ public:
 
                     // Switching goals
                     BF newCombination = determinize(trans,postVars);
+
+                    // Jump as much forward  in the liveness guarantee list as possible ("stuttering avoidance")
+                    unsigned int nextLivenessGuarantee = currentLivenessGuarantee;
+                    bool firstTry = true;
+                    while (((nextLivenessGuarantee != currentLivenessGuarantee) || firstTry) && !((livenessGuarantees[nextLivenessGuarantee] & newCombination).isFalse())) {
+                        nextLivenessGuarantee = (nextLivenessGuarantee + 1) % livenessGuarantees.size();
+                        firstTry = false;
+                    }
+
+                    currentLivenessGuarantee = nextLivenessGuarantee;
+                    currentPosition = newCombination.ExistAbstract(varCubePre).SwapVariables(varVectorPre,varVectorPost);
+
+                    // Print position
+                    for (unsigned int i=0;i<variables.size();i++) {
+                        if (doesVariableInheritType(i,PreInput)) {
+                            if ((variables[i] & currentPosition).isFalse()) {
+                                std::cout << "0";
+                            } else {
+                                std::cout << "1";
+                            }
+                        }
+                    }
+                    for (unsigned int i=0;i<variables.size();i++) {
+                        if (doesVariableInheritType(i,PreOutput)) {
+                            if ((variables[i] & currentPosition).isFalse()) {
+                                std::cout << "0";
+                            } else {
+                                std::cout << "1";
+                            }
+                        }
+                    }
+                    std::cout << "," << currentLivenessGuarantee << std::endl; // Flushes, too.
+                }
+                std::cout.flush();
+            } else if (command=="XMAKETRANSRANDOM") {
+                std::cout << "\n"; // Get rid of the prompt
+                BF postInput = mgr.constantTrue();
+                for (unsigned int i=0;i<variables.size();i++) {
+                    if (doesVariableInheritType(i,PostInput)) {
+                        char c;
+                        std::cin >> c;
+                        if (c=='0') {
+                            postInput &= !variables[i];
+                        } else if (c=='1') {
+                            postInput &= variables[i];
+                        } else {
+                            std::cerr << "Error: Illegal XMAKETRANS string given.\n";
+                        }
+                    }
+                }
+                BF trans = currentPosition & postInput & safetyEnv;
+                if (trans.isFalse()) {
+                    std::cout << "ERROR\n";
+                    if (currentPosition.isFalse()) {
+                    }
+                } else {
+                    trans &= positionalStrategiesForTheIndividualGoals[currentLivenessGuarantee];
+
+                    // Switching goals
+                    BF newCombination = determinizeRandomized(trans,postVars);
 
                     // Jump as much forward  in the liveness guarantee list as possible ("stuttering avoidance")
                     unsigned int nextLivenessGuarantee = currentLivenessGuarantee;
