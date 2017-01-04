@@ -30,6 +30,7 @@ protected:
     using T::varCubePost;
     using T::postOutputVars;
     using T::determinize;
+    using T::determinizeRandomized;
     using T::initEnv;
     using T::initSys;
     using T::preVars;
@@ -72,7 +73,7 @@ public:
                 positionalStrategiesForTheIndividualGoals.push_back(strategy);
                 std::ostringstream filename;
                 filename << "/tmp/realizableStratForSystemGoal" << i << ".dot";
-                BF_newDumpDot(*this,strategy,"PreInput PreOutput PostInput PostOutput",filename.str().c_str());
+                BF_newDumpDot(*this,strategy,"Pre Post",filename.str().c_str());
             }
         } else {
 
@@ -124,7 +125,7 @@ public:
                 positionalStrategiesForTheIndividualGoals.push_back(strategy);
                 std::ostringstream filename;
                 filename << "/tmp/realizableStratForEnvironmentGoal" << i << ".dot";
-                BF_newDumpDot(*this,strategy,"PreInput PreOutput PostInput PostOutput",filename.str().c_str());
+                BF_newDumpDot(*this,strategy,"Pre Post",filename.str().c_str());
             }
         }
 
@@ -169,7 +170,7 @@ public:
                 std::cout << "From: \n";
                 BF from = mgr.constantTrue();
                 for (unsigned int i=0;i<variables.size();i++) {
-                    if ((variableTypes[i]==PreInput) || (variableTypes[i]==PreOutput)) {
+                    if (doesVariableInheritType(i,Pre)) {
                         std::cout << " - " << variableNames[i] << ": ";
                         std::cout.flush();
                         int value;
@@ -192,7 +193,7 @@ public:
                 std::cout << "To: \n";
                 BF to = mgr.constantTrue();
                 for (unsigned int i=0;i<variables.size();i++) {
-                    if ((variableTypes[i]==PostInput) || (variableTypes[i]==PostOutput)) {
+                    if (doesVariableInheritType(i,Post)) {
                         std::cout << " - " << variableNames[i] << ": ";
                         std::cout.flush();
                         int value;
@@ -269,7 +270,7 @@ public:
                 std::cout << "Position: \n";
                 BF from = mgr.constantTrue();
                 for (unsigned int i=0;i<variables.size();i++) {
-                    if ((variableTypes[i]==PreInput) || (variableTypes[i]==PreOutput)) {
+                    if (doesVariableInheritType(i,Pre)) {
                         std::cout << " - " << variableNames[i] << ": ";
                         std::cout.flush();
                         int value;
@@ -315,7 +316,7 @@ public:
                             BF to = mgr.constantTrue();
                             BF nextPosition = mgr.constantTrue();
                             for (unsigned int i=0;i<variables.size();i++) {
-                                if (variableTypes[i]==PostInput) {
+                                if (doesVariableInheritType(i,PostInput)) {
                                     std::cout << " - " << variableNames[i] << ": ";
                                     std::cout.flush();
                                     int value;
@@ -356,7 +357,7 @@ public:
                                 transition = determinize(transition,postOutputVars);
 
                                 for (unsigned int i=0;i<variables.size();i++) {
-                                    if (variableTypes[i]==PostOutput) {
+                                    if (doesVariableInheritType(i,PostOutput)) {
                                         if ((variables[i] & transition).isFalse()) {
                                             std::cout << " - " << variableNames[i] << " = 0\n";
                                             nextPosition &= !variables[i];
@@ -418,7 +419,7 @@ public:
                 std::cout << "\n"; // Get rid of the prompt
                 BF postInput = mgr.constantTrue();
                 for (unsigned int i=0;i<variables.size();i++) {
-                    if (variableTypes[i]==PostInput) {
+                    if (doesVariableInheritType(i,PostInput)) {
                         char c;
                         std::cin >> c;
                         if (c=='0') {
@@ -454,7 +455,7 @@ public:
 
                     // Print position
                     for (unsigned int i=0;i<variables.size();i++) {
-                        if (variableTypes[i]==PreInput) {
+                        if (doesVariableInheritType(i,PreInput)) {
                             if ((variables[i] & currentPosition).isFalse()) {
                                 std::cout << "0";
                             } else {
@@ -463,7 +464,67 @@ public:
                         }
                     }
                     for (unsigned int i=0;i<variables.size();i++) {
-                        if (variableTypes[i]==PreOutput) {
+                        if (doesVariableInheritType(i,PreOutput)) {
+                            if ((variables[i] & currentPosition).isFalse()) {
+                                std::cout << "0";
+                            } else {
+                                std::cout << "1";
+                            }
+                        }
+                    }
+                    std::cout << "," << currentLivenessGuarantee << std::endl; // Flushes, too.
+                }
+                std::cout.flush();
+            } else if (command=="XMAKETRANSRANDOM") {
+                std::cout << "\n"; // Get rid of the prompt
+                BF postInput = mgr.constantTrue();
+                for (unsigned int i=0;i<variables.size();i++) {
+                    if (doesVariableInheritType(i,PostInput)) {
+                        char c;
+                        std::cin >> c;
+                        if (c=='0') {
+                            postInput &= !variables[i];
+                        } else if (c=='1') {
+                            postInput &= variables[i];
+                        } else {
+                            std::cerr << "Error: Illegal XMAKETRANS string given.\n";
+                        }
+                    }
+                }
+                BF trans = currentPosition & postInput & safetyEnv;
+                if (trans.isFalse()) {
+                    std::cout << "ERROR\n";
+                    if (currentPosition.isFalse()) {
+                    }
+                } else {
+                    trans &= positionalStrategiesForTheIndividualGoals[currentLivenessGuarantee];
+
+                    // Switching goals
+                    BF newCombination = determinizeRandomized(trans,postVars);
+
+                    // Jump as much forward  in the liveness guarantee list as possible ("stuttering avoidance")
+                    unsigned int nextLivenessGuarantee = currentLivenessGuarantee;
+                    bool firstTry = true;
+                    while (((nextLivenessGuarantee != currentLivenessGuarantee) || firstTry) && !((livenessGuarantees[nextLivenessGuarantee] & newCombination).isFalse())) {
+                        nextLivenessGuarantee = (nextLivenessGuarantee + 1) % livenessGuarantees.size();
+                        firstTry = false;
+                    }
+
+                    currentLivenessGuarantee = nextLivenessGuarantee;
+                    currentPosition = newCombination.ExistAbstract(varCubePre).SwapVariables(varVectorPre,varVectorPost);
+
+                    // Print position
+                    for (unsigned int i=0;i<variables.size();i++) {
+                        if (doesVariableInheritType(i,PreInput)) {
+                            if ((variables[i] & currentPosition).isFalse()) {
+                                std::cout << "0";
+                            } else {
+                                std::cout << "1";
+                            }
+                        }
+                    }
+                    for (unsigned int i=0;i<variables.size();i++) {
+                        if (doesVariableInheritType(i,PreOutput)) {
                             if ((variables[i] & currentPosition).isFalse()) {
                                 std::cout << "0";
                             } else {
@@ -477,14 +538,14 @@ public:
             } else if (command=="XPRINTINPUTS") {
                 std::cout << "\n"; // Get rid of the prompt
                 for (unsigned int i=0;i<variables.size();i++) {
-                    if (variableTypes[i]==PreInput)
+                    if (doesVariableInheritType(i,PreInput))
                         std::cout << variableNames[i] << "\n";
                 }
                 std::cout << std::endl; // Flushes
             } else if (command=="XPRINTOUTPUTS") {
                 std::cout << "\n"; // Get rid of the prompt
                 for (unsigned int i=0;i<variables.size();i++) {
-                    if (variableTypes[i]==PreOutput)
+                    if (doesVariableInheritType(i,PreOutput))
                         std::cout << variableNames[i] << "\n";
                 }
                 std::cout << std::endl; // Flushes
@@ -497,7 +558,7 @@ public:
                 BF initialPosition = winningPositions & initEnv & initSys;
                 initialPosition = determinize(initialPosition,preVars);
                 for (unsigned int i=0;i<variables.size();i++) {
-                    if (variableTypes[i]==PreInput) {
+                    if (doesVariableInheritType(i,PreInput)) {
                         if ((variables[i] & initialPosition).isFalse()) {
                             std::cout << "0";
                         } else {
@@ -506,7 +567,7 @@ public:
                     }
                 }
                 for (unsigned int i=0;i<variables.size();i++) {
-                    if (variableTypes[i]==PreOutput) {
+                    if (doesVariableInheritType(i,PreOutput)) {
                         if ((variables[i] & initialPosition).isFalse()) {
                             std::cout << "0";
                         } else {
@@ -581,7 +642,7 @@ public:
                     }
 
                     if (possibleInitialPositions.isFalse()) {
-                        if (realizable) {
+                        if (realizable || (forced.isTrue())) {
                             std::cout << "FAILGUARANTEES" << std::endl;
 
                             resultPtr = 0;

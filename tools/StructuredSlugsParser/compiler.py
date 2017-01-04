@@ -489,9 +489,7 @@ def performConversion(inputFile,thoroughly):
 
     for line in specFile.readlines():
         line = line.strip()
-        if line == "":
-            pass
-        elif line.startswith("["):
+        if line.startswith("["):
             mode = line
             # if not mode in lines:
             #    lines[mode] = []
@@ -499,7 +497,7 @@ def performConversion(inputFile,thoroughly):
             if mode=="" and line.startswith("#"):
                 # Initial comments
                 pass
-            else:
+            elif mode!="":
                 lines[mode].append(line)
 
     specFile.close()
@@ -512,7 +510,7 @@ def performConversion(inputFile,thoroughly):
     translatedIOLines = {"[INPUT]":[],"[OUTPUT]":[],"[OBSERVABLE_INPUT]":[],"[UNOBSERVABLE_INPUT]":[],"[CONTROLLABLE_INPUT]":[]}
     for variableType in ["[INPUT]","[OUTPUT]","[OBSERVABLE_INPUT]","[UNOBSERVABLE_INPUT]","[CONTROLLABLE_INPUT]"]: 
         for line in lines[variableType]:
-            if line.startswith("#"):
+            if line=="" or line.startswith("#"):
                 translatedIOLines[variableType].append(line.strip())
             elif "'" in line:
                 print >>sys.stderr, "Error with atomic signal name "+line+": the name must not contain any \"'\" characters"
@@ -611,7 +609,7 @@ def performConversion(inputFile,thoroughly):
             # Test for conformance with recursive definition
             for a in lines[propertyType]:
                 # print >>sys.stderr, a.strip().split(" ")
-                if a.strip()[0:1] == "#":
+                if (len(a.strip())==0) or a.strip()[0:1] == "#":
                     print a
                 else:
                     (isSlugsFormula,reasonForNotBeingASlugsFormula) = isValidRecursiveSlugsProperty(a.strip().split(" "))
@@ -652,7 +650,10 @@ if __name__ == "__main__":
                 sys.exit(1)
             inputFile = parameter
 
-    resource.setrlimit(resource.RLIMIT_STACK, (2**29,-1))
+    try:
+        resource.setrlimit(resource.RLIMIT_STACK, (2**29,-1))
+    except ValueError:
+        pass # Cannot increase limit
     sys.setrecursionlimit(10**6)
     performConversion(inputFile,thoroughly)
     # print >>sys.stderr, translatedNames

@@ -125,10 +125,12 @@ combinableParameters = [
     
     # NondeterministicMotion
     ("nonDeterministicMotion","sysInitRoboticsSemantics"),
+    ("nonDeterministicMotion","interactiveStrategy"),
     
     # Bias for Action
     ("biasForAction","extractExplicitPermissiveStrategy"),
     ("biasForAction","simpleRecovery"),
+    ("biasForAction","interactiveStrategy"),
     
     # Simple Recovery
     ("simpleRecovery","IROSfastslow"),
@@ -201,7 +203,6 @@ uncombinableParameters = [
     # Bias For Action
     ("biasForAction","counterStrategy"),
     ("biasForAction","fixedPointRecycling"),
-    ("biasForAction","interactiveStrategy"),
     ("biasForAction","IROSfastslow"),
     ("biasForAction","twoDimensionalCost"),
     
@@ -217,7 +218,7 @@ uncombinableParameters = [
     ("extractExplicitPermissiveStrategy","cooperativeGR1Strategy"),
     ("twoDimensionalCost","cooperativeGR1Strategy"),
 
-] + combineWithAllOtherParameters("computeIncompleteInformationEstimator") + combineWithAllOtherParameters("computeAbstractWinningTrace") + combineWithAllOtherParameters("computeInterestingRunOfTheSystem") + combineWithAllOtherParameters("analyzeSafetyLivenessInteraction") + combineWithAllOtherParameters("analyzeAssumptions") + combineWithAllOtherParameters("computeCNFFormOfTheSpecification") + combineWithAllOtherParameters("analyzeInterleaving") + combineWithAllOtherParametersBut("analyzeInitialPositions",["restrictToReachableStates"]) + combineWithAllOtherParametersBut("restrictToReachableStates",["analyzeInitialPositions"]) + combineWithAllOtherParametersBut("nonDeterministicMotion",["sysInitRoboticsSemantics"]) + combineWithAllOtherParameters("computeWeakenedSafetyAssumptions")
+] + combineWithAllOtherParameters("computeIncompleteInformationEstimator") + combineWithAllOtherParameters("computeAbstractWinningTrace") + combineWithAllOtherParameters("computeInterestingRunOfTheSystem") + combineWithAllOtherParameters("analyzeSafetyLivenessInteraction") + combineWithAllOtherParameters("analyzeAssumptions") + combineWithAllOtherParameters("computeCNFFormOfTheSpecification") + combineWithAllOtherParameters("analyzeInterleaving") + combineWithAllOtherParametersBut("analyzeInitialPositions",["restrictToReachableStates"]) + combineWithAllOtherParametersBut("restrictToReachableStates",["analyzeInitialPositions"]) + combineWithAllOtherParametersBut("nonDeterministicMotion",["sysInitRoboticsSemantics","interactiveStrategy"]) + combineWithAllOtherParameters("computeWeakenedSafetyAssumptions")
 
 # Which ones require (one of) another parameter(s)
 requiredParameters = [
@@ -295,6 +296,8 @@ orderOfPluginClassesInInstantiations = [
     ("XInteractiveStrategy","XCooperativeGR1Strategy"),
     ("XInteractiveStrategy","XTwoDimensionalCost"),
     ("XInteractiveStrategy","XIROSFS"),
+    ("XInteractiveStrategy","XNonDeterministicMotion"),
+    ("XInteractiveStrategy","XBiasForAction"),
     ("XExtractPermissiveExplicitStrategy","XFixedPointRecycling"),
     ("XInteractiveStrategy","XFixedPointRecycling"),
     ("XExtractPermissiveExplicitStrategy","XBiasForAction"),
@@ -309,6 +312,18 @@ orderOfPluginClassesInInstantiations = [
 # Mapping Plugin combinations to class instantiations
 # -------------------------------------------------------    
 listOfCommandLineCombinationToClassInstantiationMappers = []
+
+# Two dimensional cost Motion (needs to know if robotics Semantics has been selected and if simple recovery is active or not)
+def twoDimensionalCost(params):
+    sysIn = "sysInitRoboticsSemantics" in params
+    simpleRecovery = "simpleRecovery" in params
+    if "twoDimensionalCost" in params:
+        ret = [("XTwoDimensionalCost","true" if sysIn else "false","true" if simpleRecovery else "false")]
+        params.difference_update(["twoDimensionalCost","sysInitRoboticsSemantics"])
+        return ret
+    return []
+listOfCommandLineCombinationToClassInstantiationMappers.append(twoDimensionalCost)
+
 
 # NonDeterministic Motion
 def nondeterministicMotion(params):
@@ -373,7 +388,6 @@ listOfCommandLineCombinationToClassInstantiationMappers.append(basicExtraction)
     
 # Simple Plugins
 listOfCommandLineCombinationToClassInstantiationMappers.append(lambda x: simpleInstantiationMapper("cooperativeGR1Strategy","XCooperativeGR1Strategy",x))
-listOfCommandLineCombinationToClassInstantiationMappers.append(lambda x: simpleInstantiationMapper("twoDimensionalCost","XTwoDimensionalCost",x))
 listOfCommandLineCombinationToClassInstantiationMappers.append(lambda x: simpleInstantiationMapper("computeIncompleteInformationEstimator","XIncompleteInformationEstimatorSynthesis",x))
 listOfCommandLineCombinationToClassInstantiationMappers.append(lambda x: simpleInstantiationMapper("computeAbstractWinningTrace","XAbstractWinningTraceGenerator",x))
 listOfCommandLineCombinationToClassInstantiationMappers.append(lambda x: simpleInstantiationMapper("computeInterestingRunOfTheSystem","XComputeInterestingRunOfTheSystem",x))

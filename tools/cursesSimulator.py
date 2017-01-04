@@ -264,7 +264,7 @@ try:
                         traceFlags[0].remove("G")
                 if (initLine=="FORCEDNONWINNING"):
                     traceFlags[0].add("L")
-                    isValidElement = True
+                    isValidElement = False
                 else:
                     if "L" in traceFlags[0]:
                         traceFlags[0].remove("L")

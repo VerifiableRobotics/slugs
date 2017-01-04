@@ -14,7 +14,6 @@ protected:
     using T::safetySys;
     using T::lineNumberCurrentlyRead;
     using T::addVariable;
-    using T::parseBooleanFormula;
     using T::livenessGuarantees;
     using T::livenessAssumptions;
     using T::variableNames;
@@ -28,6 +27,7 @@ protected:
     using T::varCubePreInput;
     using T::varCubePreOutput;
     using T::realizable;
+    using T::computeVariableInformation;
 
     // Own variables local to this plugin
     BF robotBDD;
@@ -43,6 +43,109 @@ public:
     }
 
     XNonDeterministicMotion<T,initSpecialRoboticsSemantics>(std::list<std::string> &filenames): T(filenames) {}
+
+    /**
+     * @brief Recurse internal function to parse a Boolean formula from a line in the input file
+     * @param is the input stream from which the tokens in the line are read
+     * @param allowedTypes a list of allowed variable types - this allows to check that assumptions do not refer to 'next' output values.
+     * @param readBDDs a list of bdds that can be accessed by names
+     * @return a BF that represents the transition constraint read from the line
+     */
+    BF parseBooleanFormulaRecurseEx(std::istringstream &is,std::set<VariableType> &allowedTypes, std::vector<BF> &memory,const std::map<std::string,BF> &readBDDs) {
+        std::string operation = "";
+        is >> operation;
+        if (operation=="") {
+            SlugsException e(false);
+            e << "Error reading line " << lineNumberCurrentlyRead << ". Premature end of line.";
+            throw e;
+        }
+        if (operation=="|") return parseBooleanFormulaRecurseEx(is,allowedTypes,memory,readBDDs) | parseBooleanFormulaRecurseEx(is,allowedTypes,memory,readBDDs);
+        if (operation=="^") return parseBooleanFormulaRecurseEx(is,allowedTypes,memory,readBDDs) ^ parseBooleanFormulaRecurseEx(is,allowedTypes,memory,readBDDs);
+        if (operation=="&") return parseBooleanFormulaRecurseEx(is,allowedTypes,memory,readBDDs) & parseBooleanFormulaRecurseEx(is,allowedTypes,memory,readBDDs);
+        if (operation=="!") return !parseBooleanFormulaRecurseEx(is,allowedTypes,memory,readBDDs);
+        if (operation=="1") return mgr.constantTrue();
+        if (operation=="0") return mgr.constantFalse();
+
+        // Memory Functionality - Create Buffer
+        if (operation=="$") {
+            unsigned nofElements;
+            is >> nofElements;
+            if (is.fail()) {
+                SlugsException e(false);
+                e << "Error reading line " << lineNumberCurrentlyRead << ". Expected number of memory elements.";
+                throw e;
+            }
+            std::vector<BF> memoryNew(nofElements);
+            for (unsigned int i=0;i<nofElements;i++) {
+                memoryNew[i] = parseBooleanFormulaRecurseEx(is,allowedTypes,memoryNew,readBDDs);
+            }
+            return memoryNew[nofElements-1];
+        }
+
+        // Memory Functionality - Recall from Buffer
+        if (operation=="?") {
+            unsigned int element;
+            is >> element;
+            if (is.fail()) {
+                SlugsException e(false);
+                e << "Error reading line " << lineNumberCurrentlyRead << ". Expected number after memory recall operator '?'.";
+                throw e;
+            }
+            if (element>=memory.size()) {
+                SlugsException e(false);
+                e << "Error reading line " << lineNumberCurrentlyRead << ". Trying to recall a memory element that has not been stored (yet).";
+                throw e;
+            }
+            return memory[element];
+        }
+
+        // Is BDD?
+        auto it = readBDDs.find(operation);
+        if (it!=readBDDs.end()) {
+            return it->second;
+        }
+
+        // Has to be a variable!
+        for (unsigned int i=0;i<variableNames.size();i++) {
+            if (variableNames[i]==operation) {
+                if (allowedTypes.count(variableTypes[i])==0) {
+                    SlugsException e(false);
+                    e << "Error reading line " << lineNumberCurrentlyRead << ". The variable " << operation << " is not allowed for this type of expression.";
+                    throw e;
+                }
+                return variables[i];
+            }
+        }
+        SlugsException e(false);
+        e << "Error reading line " << lineNumberCurrentlyRead << ". The variable " << operation << " has not been found.";
+        throw e;
+    }
+
+    /**
+     * @brief Internal function for parsing a Boolean formula from a line in the input file - calls the recursive function to do all the work.
+     * @param currentLine the line to parse
+     * @param allowedTypes a list of allowed variable types - this allows to check that assumptions do not refer to 'next' output values.
+     * @param readBDDs a list of bdds that can be accessed by names
+     * @return a BF that represents the transition constraint read from the line
+     */
+    BF parseBooleanFormulaEx(std::string currentLine, std::set<VariableType> &allowedTypes, const std::map<std::string,BF> &readBDDs) {
+
+        std::istringstream is(currentLine);
+
+        std::vector<BF> memory;
+        BF result = parseBooleanFormulaRecurseEx(is,allowedTypes,memory,readBDDs);
+        assert(memory.size()==0);
+        std::string nextPart = "";
+        is >> nextPart;
+        if (nextPart=="") return result;
+
+        SlugsException e(false);
+        e << "Error reading line " << lineNumberCurrentlyRead << ". There are stray characters: '" << nextPart << "'";
+        throw e;
+    }
+
+
+
 
     /**
      * @brief init - Read input file(s)
@@ -76,6 +179,7 @@ public:
         int readMode = -1;
         std::string currentLine;
         lineNumberCurrentlyRead = 0;
+        std::map<std::string,BF> readBDDs;
         while (std::getline(inFile,currentLine)) {
             lineNumberCurrentlyRead++;
             boost::trim(currentLine);
@@ -101,6 +205,8 @@ public:
                         readMode = 8;
                     } else if (currentLine=="[SYS_LIVENESS]") {
                         readMode = 9;
+                    } else if (currentLine=="[ABSTRACTION_REGION_BDDS]") {
+                        readMode = 10;
                     } else {
                         std::cerr << "Sorry. Didn't recognize category " << currentLine << "\n";
                         throw "Aborted.";
@@ -140,14 +246,14 @@ public:
                         allowedTypes.insert(PreMotionState);
                         // allowedTypes.insert(PreMotionControlOutput); -> Is not taken into account
                         allowedTypes.insert(PreOtherOutput);
-                        initEnv &= parseBooleanFormula(currentLine,allowedTypes);
+                        initEnv &= parseBooleanFormulaEx(currentLine,allowedTypes,readBDDs);
                     } else if (readMode==5) {
                         std::set<VariableType> allowedTypes;
                         allowedTypes.insert(PreInput);
                         allowedTypes.insert(PreMotionState);
                          // allowedTypes.insert(PreMotionControlOutput); -> Is not taken into account
                         allowedTypes.insert(PreOtherOutput);
-                        initSys &= parseBooleanFormula(currentLine,allowedTypes);
+                        initSys &= parseBooleanFormulaEx(currentLine,allowedTypes,readBDDs);
                     } else if (readMode==6) {
                         std::set<VariableType> allowedTypes;
                         allowedTypes.insert(PreInput);
@@ -157,7 +263,7 @@ public:
                         allowedTypes.insert(PostInput);
                         allowedTypes.insert(PostMotionState);
                         allowedTypes.insert(PostOtherOutput);
-                        safetyEnv &= parseBooleanFormula(currentLine,allowedTypes);
+                        safetyEnv &= parseBooleanFormulaEx(currentLine,allowedTypes,readBDDs);
                     } else if (readMode==7) {
                         std::set<VariableType> allowedTypes;
                         allowedTypes.insert(PreInput);
@@ -167,7 +273,7 @@ public:
                         allowedTypes.insert(PostInput);
                         allowedTypes.insert(PostMotionState);
                         allowedTypes.insert(PostOtherOutput);
-                        safetySys &= parseBooleanFormula(currentLine,allowedTypes);
+                        safetySys &= parseBooleanFormulaEx(currentLine,allowedTypes,readBDDs);
                     } else if (readMode==8) {
                         std::set<VariableType> allowedTypes;
                         allowedTypes.insert(PreInput);
@@ -175,7 +281,7 @@ public:
                          // allowedTypes.insert(PreMotionControlOutput); -> Is not taken into account
                         allowedTypes.insert(PreOtherOutput);
                         allowedTypes.insert(PostInput);
-                        livenessAssumptions.push_back(parseBooleanFormula(currentLine,allowedTypes));
+                        livenessAssumptions.push_back(parseBooleanFormulaEx(currentLine,allowedTypes,readBDDs));
                     } else if (readMode==9) {
                         std::set<VariableType> allowedTypes;
                         allowedTypes.insert(PreInput);
@@ -185,7 +291,36 @@ public:
                         allowedTypes.insert(PostInput);
                         allowedTypes.insert(PostMotionState);
                         allowedTypes.insert(PostOtherOutput);
-                        livenessGuarantees.push_back(parseBooleanFormula(currentLine,allowedTypes));
+                        livenessGuarantees.push_back(parseBooleanFormulaEx(currentLine,allowedTypes,readBDDs));
+                    } else if (readMode==10) {
+                        if (currentLine.find(" ")==std::string::npos) {
+                            std::cerr << "Error with line " << lineNumberCurrentlyRead << "!";
+                            throw "There must be at least one space in a BDD definition line.";
+                        }
+                        std::string bddName = currentLine.substr(0,currentLine.find(" "));
+                        std::string bddFile = currentLine.substr(currentLine.find(" ")+1,std::string::npos);
+                        std::vector<BF> varsBDDread;
+                        // Invert all order to get the least significant bit first
+                        for (int i=variables.size()-1;i>=0;i--) {
+                            if (variableTypes[i]==PreMotionState)
+                            varsBDDread.push_back(variables[i]);
+                        }
+                        /*for (int i=variables.size()-1;i>=0;i--) {
+                            if (variableTypes[i]==PostMotionControlOutput)
+                            varsBDDread.push_back(variables[i]);
+                        }
+                        for (int i=variables.size()-1;i>=0;i--) {
+                            if (variableTypes[i]==PostMotionState)
+                            varsBDDread.push_back(variables[i]);
+                        }*/
+                        BF newBDD = mgr.readBDDFromFile(bddFile.c_str(),varsBDDread);
+                        if (readBDDs.count(bddName)>0) {
+                            std::cerr << "Error with line " << lineNumberCurrentlyRead << "!";
+                            throw "A BDD with that name already exists.";
+                        }
+                        readBDDs[bddName] = newBDD;
+                        computeVariableInformation(); // Becuase varVectors are used below.
+                        readBDDs[bddName+"'"] = newBDD.SwapVariables(varVectorPre,varVectorPost);
                     } else {
                         std::cerr << "Error with line " << lineNumberCurrentlyRead << "!";
                         throw "Found a line in the specification file that has no proper categorial context.";
@@ -195,7 +330,6 @@ public:
         }
 
         std::vector<BF> varsBDDread;
-
         // Invert all order to get the least significant bit first
         for (int i=variables.size()-1;i>=0;i--) {
             if (variableTypes[i]==PreMotionState)
@@ -212,6 +346,10 @@ public:
         std::cerr << "Numer of bits that we expect the robot abstraction BDD to have: " << varsBDDread.size() << std::endl;
         robotBDD = mgr.readBDDFromFile(robotFileName.c_str(),varsBDDread);
 
+        // Finally, add the liveness assumption that if we are executing an action that *can* lead
+        // to motion, we do so.
+        computeVariableInformation();
+        addAutomaticallyGeneratedLivenessAssumption();
 
     }
 
@@ -280,7 +418,7 @@ public:
 
                         // Dump the paths that we just wound into 'strategyDumpingData' - store the current goal long
                         // with the BDD
-                        strategyDumpingData.push_back(std::pair<unsigned int,BF>(j,foundPaths));
+                        strategyDumpingData.push_back(std::pair<unsigned int,BF>(j,foundPaths & robotBDD));
                     }
 
                     // Update the moddle fixed point
@@ -321,6 +459,7 @@ public:
 
         // Return the result in Boolean form.
         realizable = result.isTrue();
+
     }
 
     void addAutomaticallyGeneratedLivenessAssumption() {
@@ -352,7 +491,6 @@ public:
      * @brief This function orchestrates the execution of slugs when this plugin is used.
      */
     void execute() {
-        addAutomaticallyGeneratedLivenessAssumption();
         checkRealizability();
         if (realizable) {
             std::cerr << "RESULT: Specification is realizable.\n";
@@ -365,11 +503,5 @@ public:
 
 
 };
-
-
-
-
-
-
 
 #endif

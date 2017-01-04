@@ -189,6 +189,11 @@ public:
                     (currentPossibilities & safetyEnv);
 
             // Switching goals
+#ifndef NDEBUG
+            // If we are in debugging mode, we need to check that
+            // the transition list is complete.
+            BF envTransDone = mgr.constantFalse();
+#endif
             while (!(remainingTransitions.isFalse())) {
                 BF newCombination = determinize(remainingTransitions,postVars);
 
@@ -202,6 +207,9 @@ public:
 
                 // Mark which input has been captured by this case
                 BF inputCaptured = newCombination.ExistAbstract(varCubePostOutput);
+#ifndef NDEBUG
+                envTransDone |= inputCaptured;
+#endif
                 newCombination = newCombination.ExistAbstract(varCubePre).SwapVariables(varVectorPre,varVectorPost);
                 remainingTransitions &= !inputCaptured;
 
@@ -225,6 +233,11 @@ public:
 
                 outputStream << tn;
             }
+
+#ifndef NDEBUG
+             if (!((bfsUsedInTheLookupTable[stateNum] & safetyEnv &!envTransDone).isFalse()))
+                 throw "Error: Missing transition. Strategy generating plugin seems to be unsound.";
+#endif
 
             if (jsonOutput) {
                 outputStream << "]\n}";

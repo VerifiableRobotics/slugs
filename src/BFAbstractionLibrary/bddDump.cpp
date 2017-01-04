@@ -13,7 +13,7 @@
 #include <fstream>
 #include <algorithm>
 #undef fail
-#define MAX_NODES_GRAPH 2000
+#define MAX_NODES_GRAPH 100
 using namespace std;
 
 /**
