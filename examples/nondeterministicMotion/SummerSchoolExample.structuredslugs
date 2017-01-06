@@ -1,0 +1,51 @@
+# Note: This example is based on a BDD computer using the tool PESSOA by Matthias Rungger
+#
+[INPUT]
+door8
+
+[MOTION STATE OUTPUT]
+uninterpretedMotionStateBits:0...63
+ybit:0...20
+xbit:0...20
+
+[MOTION CONTROLLER OUTPUT]
+wbit:0...15
+vbit:0...7
+
+[OTHER OUTPUT]
+
+# [ABSTRACTION_REGION_BDDS]
+# yadda /tmp/hello.bdd
+
+[ENV_INIT]
+1
+
+[ENV_TRANS]
+1
+
+[ENV_LIVENESS]
+1
+
+[SYS_INIT]
+1
+
+[SYS_TRANS]
+vbit' > 0
+
+# Prevent (8,7)-(9,7)-(10,7)
+xbit<8 | xbit>10 | ybit!=7
+# Prevent (7,8)-(7,9)-(7,10)
+xbit!=7 | ybit<8 | ybit>10
+# Prevent (8,8)-(12,9)
+xbit<8 | xbit>12 | ybit<8 | ybit>9
+# Prevent (8,10)-(12,10)
+xbit<8 | xbit>12 | ybit!=10
+# Prevent (8,11)-(9,11)-(10,11)
+ybit!=11 | xbit<8 | xbit>10
+
+
+[SYS_LIVENESS]
+# Visit the marked regions
+xbit>14 & ybit>14 | ! door8
+xbit<8 & ybit<8 | door8
+
