@@ -428,6 +428,7 @@ for (a,b) in combinableParameters+uncombinableParameters:
         sys.exit(1)
 del allParamsStraight
 
+
 #============================================================
 # Compute the combinations now
 #============================================================
@@ -448,6 +449,16 @@ def recurse(optionsSoFar,remainingCommandLineOptions):
                 if not found:
                     # A constraint is not fulfilled
                     return
+        
+        # Sanity check:            
+        # No two parameters may be marked as combinable *and* uncombinable at the same time
+        # -> We check that here, so tha the requiredParameters are taken into account.
+        for a in optionsSoFar:
+            for b in optionsSoFar:
+                if (a,b) in combinableParameters or (b,a) in combinableParameters:
+                    if (a,b) in uncombinableParameters or (b,a) in uncombinableParameters:
+                        print >>sys.stderr,"Two parameters are both combinable and uncombinable: "+a+", "+b
+                        sys.exit(1)
 
         # Obtain the list of instantiations.
         optionsSoFarOrig = optionsSoFar
