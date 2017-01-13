@@ -210,6 +210,8 @@ OptionCombination optionCombinations[] = {
     OptionCombination("--explicitStrategy",XExtractExplicitStrategy<GR1Context,false,false>::makeInstance),
     OptionCombination("--extractExplicitPermissiveStrategy --fixedPointRecycling --sysInitRoboticsSemantics",XExtractPermissiveExplicitStrategy<XRoboticsSemantics<XFixedPointRecycling<GR1Context>>,false>::makeInstance),
     OptionCombination("--extractExplicitPermissiveStrategy --fixedPointRecycling",XExtractPermissiveExplicitStrategy<XFixedPointRecycling<GR1Context>,false>::makeInstance),
+    OptionCombination("--extractExplicitPermissiveStrategy --nonDeterministicMotion --sysInitRoboticsSemantics",XExtractPermissiveExplicitStrategy<XNonDeterministicMotion<GR1Context,true>,false>::makeInstance),
+    OptionCombination("--extractExplicitPermissiveStrategy --nonDeterministicMotion",XExtractPermissiveExplicitStrategy<XNonDeterministicMotion<GR1Context,false>,false>::makeInstance),
     OptionCombination("--extractExplicitPermissiveStrategy --sysInitRoboticsSemantics --twoDimensionalCost",XExtractPermissiveExplicitStrategy<XTwoDimensionalCost<GR1Context,true,false>,false>::makeInstance),
     OptionCombination("--extractExplicitPermissiveStrategy --sysInitRoboticsSemantics",XExtractPermissiveExplicitStrategy<XRoboticsSemantics<GR1Context>,false>::makeInstance),
     OptionCombination("--extractExplicitPermissiveStrategy --twoDimensionalCost",XExtractPermissiveExplicitStrategy<XTwoDimensionalCost<GR1Context,false,false>,false>::makeInstance),

@@ -126,6 +126,7 @@ combinableParameters = [
     # NondeterministicMotion
     ("nonDeterministicMotion","sysInitRoboticsSemantics"),
     ("nonDeterministicMotion","interactiveStrategy"),
+    ("nonDeterministicMotion","extractExplicitPermissiveStrategy"),
     
     # Bias for Action
     ("biasForAction","extractExplicitPermissiveStrategy"),
@@ -218,7 +219,7 @@ uncombinableParameters = [
     ("extractExplicitPermissiveStrategy","cooperativeGR1Strategy"),
     ("twoDimensionalCost","cooperativeGR1Strategy"),
 
-] + combineWithAllOtherParameters("computeIncompleteInformationEstimator") + combineWithAllOtherParameters("computeAbstractWinningTrace") + combineWithAllOtherParameters("computeInterestingRunOfTheSystem") + combineWithAllOtherParameters("analyzeSafetyLivenessInteraction") + combineWithAllOtherParameters("analyzeAssumptions") + combineWithAllOtherParameters("computeCNFFormOfTheSpecification") + combineWithAllOtherParameters("analyzeInterleaving") + combineWithAllOtherParametersBut("analyzeInitialPositions",["restrictToReachableStates"]) + combineWithAllOtherParametersBut("restrictToReachableStates",["analyzeInitialPositions"]) + combineWithAllOtherParametersBut("nonDeterministicMotion",["sysInitRoboticsSemantics","interactiveStrategy"]) + combineWithAllOtherParameters("computeWeakenedSafetyAssumptions")
+] + combineWithAllOtherParameters("computeIncompleteInformationEstimator") + combineWithAllOtherParameters("computeAbstractWinningTrace") + combineWithAllOtherParameters("computeInterestingRunOfTheSystem") + combineWithAllOtherParameters("analyzeSafetyLivenessInteraction") + combineWithAllOtherParameters("analyzeAssumptions") + combineWithAllOtherParameters("computeCNFFormOfTheSpecification") + combineWithAllOtherParameters("analyzeInterleaving") + combineWithAllOtherParametersBut("analyzeInitialPositions",["restrictToReachableStates"]) + combineWithAllOtherParametersBut("restrictToReachableStates",["analyzeInitialPositions"]) + combineWithAllOtherParametersBut("nonDeterministicMotion",["sysInitRoboticsSemantics","interactiveStrategy","extractExplicitPermissiveStrategy"]) + combineWithAllOtherParameters("computeWeakenedSafetyAssumptions")
 
 # Which ones require (one of) another parameter(s)
 requiredParameters = [
@@ -291,6 +292,7 @@ orderOfPluginClassesInInstantiations = [
     ("XExtractPermissiveExplicitStrategy","XTwoDimensionalCost"),
     ("XExtractExplicitStrategy","XFixedPointRecycling"),
     ("XExtractExplicitStrategy","XTwoDimensionalCost"),
+    ("XExtractPermissiveExplicitStrategy","XNonDeterministicMotion"),
     ("XExtractSymbolicStrategy","XIROSFS"),
     ("XExtractExplicitCounterStrategy","XCounterStrategy"),
     ("XInteractiveStrategy","XCooperativeGR1Strategy"),
