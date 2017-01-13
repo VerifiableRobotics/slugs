@@ -127,6 +127,8 @@ combinableParameters = [
     ("nonDeterministicMotion","sysInitRoboticsSemantics"),
     ("nonDeterministicMotion","interactiveStrategy"),
     ("nonDeterministicMotion","extractExplicitPermissiveStrategy"),
+    ("simpleSymbolicStrategy","nonDeterministicMotion"),
+    ("symbolicStrategy","nonDeterministicMotion"),
     
     # Bias for Action
     ("biasForAction","extractExplicitPermissiveStrategy"),
