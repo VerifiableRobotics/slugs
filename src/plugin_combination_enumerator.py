@@ -221,7 +221,7 @@ uncombinableParameters = [
     ("extractExplicitPermissiveStrategy","cooperativeGR1Strategy"),
     ("twoDimensionalCost","cooperativeGR1Strategy"),
 
-] + combineWithAllOtherParameters("computeIncompleteInformationEstimator") + combineWithAllOtherParameters("computeAbstractWinningTrace") + combineWithAllOtherParameters("computeInterestingRunOfTheSystem") + combineWithAllOtherParameters("analyzeSafetyLivenessInteraction") + combineWithAllOtherParameters("analyzeAssumptions") + combineWithAllOtherParameters("computeCNFFormOfTheSpecification") + combineWithAllOtherParameters("analyzeInterleaving") + combineWithAllOtherParametersBut("analyzeInitialPositions",["restrictToReachableStates"]) + combineWithAllOtherParametersBut("restrictToReachableStates",["analyzeInitialPositions"]) + combineWithAllOtherParametersBut("nonDeterministicMotion",["sysInitRoboticsSemantics","interactiveStrategy","extractExplicitPermissiveStrategy"]) + combineWithAllOtherParameters("computeWeakenedSafetyAssumptions")
+] + combineWithAllOtherParameters("computeIncompleteInformationEstimator") + combineWithAllOtherParameters("computeAbstractWinningTrace") + combineWithAllOtherParameters("computeInterestingRunOfTheSystem") + combineWithAllOtherParameters("analyzeSafetyLivenessInteraction") + combineWithAllOtherParameters("analyzeAssumptions") + combineWithAllOtherParameters("computeCNFFormOfTheSpecification") + combineWithAllOtherParameters("analyzeInterleaving") + combineWithAllOtherParametersBut("analyzeInitialPositions",["restrictToReachableStates"]) + combineWithAllOtherParametersBut("restrictToReachableStates",["analyzeInitialPositions"]) + combineWithAllOtherParametersBut("nonDeterministicMotion",["sysInitRoboticsSemantics","interactiveStrategy","extractExplicitPermissiveStrategy","simpleSymbolicStrategy","symbolicStrategy"]) + combineWithAllOtherParameters("computeWeakenedSafetyAssumptions")
 
 # Which ones require (one of) another parameter(s)
 requiredParameters = [
@@ -296,6 +296,7 @@ orderOfPluginClassesInInstantiations = [
     ("XExtractExplicitStrategy","XTwoDimensionalCost"),
     ("XExtractPermissiveExplicitStrategy","XNonDeterministicMotion"),
     ("XExtractSymbolicStrategy","XIROSFS"),
+    ("XExtractSymbolicStrategy","XNonDeterministicMotion"),
     ("XExtractExplicitCounterStrategy","XCounterStrategy"),
     ("XInteractiveStrategy","XCooperativeGR1Strategy"),
     ("XInteractiveStrategy","XTwoDimensionalCost"),
