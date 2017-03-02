@@ -150,6 +150,27 @@ BFBdd BFBddManager::readBDDFromFile(const char *filename, std::vector<BFBdd> &va
     return BFBdd(this,node);   
 }
 
+BFBdd BFBddManager::readBDDFromFile(const char *filename, std::vector<BFBdd> &vars, std::vector<std::string> &varNames) const {
+
+    FILE *file = fopen (filename,"r");
+    if (file == NULL){
+        std::ostringstream os;
+        os << "Error in BFBddManager::readBDDFromFile(const char *filename, std::vector<BFBdd> &vars) - Could not read a BDD from from file '" << filename << "'.";
+        throw std::runtime_error(os.str().c_str());
+    }
+
+    const char *idMatcher[Cudd_ReadSize(mgr)];
+    for (unsigned int i=0;i<Cudd_ReadSize(mgr);i++) { idMatcher[i] = ""; }
+    for (unsigned int i=0;i<Cudd_ReadSize(mgr);i++) { idMatcher[vars[i].readNodeIndex()] = varNames[i].c_str(); }
+
+    DdNode *node = Dddmp_cuddBddLoad(mgr, DDDMP_VAR_MATCHNAMES, const_cast<char**>(idMatcher), NULL, NULL, DDDMP_MODE_DEFAULT,NULL,file);
+    fclose(file);
+    //delete[] idMatcher;
+    Cudd_Deref(node);
+    return BFBdd(this,node);
+}
+
+
 void BFBddManager::writeBDDToFile(const char *filename, std::string fileprefix, BFBdd bdd, std::vector<BFBdd> &vars, std::vector<std::string> variableNames) const {
 
     FILE *file = fopen (filename,"w");

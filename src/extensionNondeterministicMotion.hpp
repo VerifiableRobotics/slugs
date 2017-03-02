@@ -345,6 +345,8 @@ public:
         }
         std::cerr << "Numer of bits that we expect the robot abstraction BDD to have: " << varsBDDread.size() << std::endl;
         robotBDD = mgr.readBDDFromFile(robotFileName.c_str(),varsBDDread);
+        robotBDD = mgr.readBDDFromFile(robotFileName.c_str(),variables,variableNames);
+        if (robotBDD.isConstant()) throw "Failed to read Robot Abstraction.";
 
         // Finally, add the liveness assumption that if we are executing an action that *can* lead
         // to motion, we do so.
@@ -474,7 +476,7 @@ public:
         BF newLivenessAssumption = (!preMotionInputCombinationsThatCanChangeState) | prePostMotionStatesDifferent;
         livenessAssumptions.push_back(newLivenessAssumption);
         if (!(newLivenessAssumption.isTrue())) {
-            std::cerr << "Note: Added a liveness assumption that always eventually, we are moving if an action is taken at allows moving.\n";
+            std::cerr << "Note: Added a liveness assumption that always eventually, we are moving if an action is taken that allows moving.\n";
         }
         BF_newDumpDot(*this,newLivenessAssumption,"PreMotionState PostMotionControlOutput PostMotionState","/tmp/changeMotionStateLivenessAssumption.dot");
 
