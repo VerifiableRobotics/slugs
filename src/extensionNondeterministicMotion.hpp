@@ -344,13 +344,22 @@ public:
             varsBDDread.push_back(variables[i]);
         }
         std::cerr << "Numer of bits that we expect the robot abstraction BDD to have: " << varsBDDread.size() << std::endl;
-        robotBDD = mgr.readBDDFromFile(robotFileName.c_str(),varsBDDread);
         robotBDD = mgr.readBDDFromFile(robotFileName.c_str(),variables,variableNames);
         if (robotBDD.isConstant()) throw "Failed to read Robot Abstraction.";
 
         // Finally, add the liveness assumption that if we are executing an action that *can* lead
         // to motion, we do so.
         computeVariableInformation();
+
+        // Paint robot BDD
+        //std::cerr << "DOTTing Robot BDD\n";
+        //BF toDraw = robotBDD & (!variables[0]) & (variables[2]) & (variables[4]) & (variables[6]) & (!variables[8]) & (!variables[10]) & !variables[12] & !variables[14] & !variables[16] & !variables[18] & !variables[20];
+        //std::cerr << "Restricting: " << variableNames[0] << "," << variableNames[2]<< "," << variableNames[4]<< "," << variableNames[5] << variableNames[6] << "," << variableNames[7]<< "," << variableNames[8]<< "," << variableNames[9]<< "," << variableNames[10]<< "," << variableNames[11];
+        //std::cerr << "Restricting to 3: " << variableNames[12] << "," << variableNames[14] << "," << variableNames[16] << std::endl;
+        //BF_newDumpDot(*this,robotBDD,NULL,"/tmp/robotBDD.dot");
+        //std::cerr << "DOTTing Robot BDD done!\n";
+
+        // Add liveness assumption
         addAutomaticallyGeneratedLivenessAssumption();
 
     }

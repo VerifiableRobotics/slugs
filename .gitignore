@@ -29,6 +29,7 @@ src/Tool.pro.user
 
 # CUDD stuff
 lib/cudd-2.5.0/*
+lib/cudd-3.0.0/*
 
 # Doxygen generated stuff
 src/html/*

@@ -605,7 +605,7 @@ def performConversion(inputFile,thoroughly):
     # ---------------------------------------    
     # Output new input/output lines
     # ---------------------------------------    
-    for variableType in ["[INPUT]","[OUTPUT]","[OBSERVABLE_INPUT]","[UNOBSERVABLE_INPUT]","[CONTROLLABLE_INPUT]","[MOTION STATE OUTPUT]","[MOTION CONTROLLER OUTPUT]","[OTHER OUTPUT]","[ABSTRACTION_REGION_BDDS]"]: 
+    for variableType in ["[MOTION STATE OUTPUT]","[MOTION CONTROLLER OUTPUT]","[INPUT]","[OUTPUT]","[OBSERVABLE_INPUT]","[UNOBSERVABLE_INPUT]","[CONTROLLABLE_INPUT]","[OTHER OUTPUT]","[ABSTRACTION_REGION_BDDS]"]: 
         if len(translatedIOLines[variableType])>0:
             print variableType
             for a in translatedIOLines[variableType]:
