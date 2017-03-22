@@ -30,7 +30,15 @@ src/Tool.pro.user
 # CUDD stuff
 lib/cudd-2.5.0/*
 lib/cudd-3.0.0/*
+lib/cudd-3.0.0/Makefile.in
+lib/cudd-3.0.0/aclocal.m4
+lib/cudd-3.0.0/configure
 
 # Doxygen generated stuff
 src/html/*
 src/latex/*
+
+# Misc
+examples/nondeterministicMotion/SummerSchoolExample.slugsin
+src/.qmake.stash
+

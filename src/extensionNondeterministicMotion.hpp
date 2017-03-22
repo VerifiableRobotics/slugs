@@ -19,20 +19,27 @@ protected:
     using T::variableNames;
     using T::variables;
     using T::variableTypes;
+    using T::varCubePost;
+    using T::varCubePre;
     using T::varVectorPre;
     using T::varVectorPost;
     using T::strategyDumpingData;
+    using T::doesVariableInheritType;
     using T::varCubePostInput;
     using T::winningPositions;
     using T::varCubePreInput;
     using T::varCubePreOutput;
     using T::realizable;
+    using T::preVars;
+    using T::postVars;
+    using T::determinize;
     using T::computeVariableInformation;
 
     // Own variables local to this plugin
     BF robotBDD;
     SlugsVectorOfVarBFs preMotionStateVars{PreMotionState,this};
     SlugsVectorOfVarBFs postMotionStateVars{PostMotionState,this};
+    SlugsVectorOfVarBFs postMotionControlVars{PostMotionControlOutput,this};
     SlugsVarCube varCubePreMotionState{PreMotionState,this};
     SlugsVarCube varCubePostMotionState{PostMotionState,this};
     SlugsVarCube varCubePostControllerOutput{PostMotionControlOutput,this};
@@ -162,8 +169,6 @@ public:
         }
 
         std::string specFileName = *(filenames.begin());
-        filenames.pop_front();
-        std::string robotFileName = *(filenames.begin());
         filenames.pop_front();
 
         std::ifstream inFile(specFileName.c_str());
@@ -344,20 +349,170 @@ public:
             varsBDDread.push_back(variables[i]);
         }
         std::cerr << "Numer of bits that we expect the robot abstraction BDD to have: " << varsBDDread.size() << std::endl;
-        robotBDD = mgr.readBDDFromFile(robotFileName.c_str(),variables,variableNames);
+        mgr.setAutomaticOptimisation(false);
+        computeVariableInformation();
+
+        robotBDD = mgr.constantFalse();
+        while (filenames.size()>0) {
+            std::string robotFileName = *(filenames.begin());
+            filenames.pop_front();
+
+            BF newPart = mgr.readBDDFromFile(robotFileName.c_str(),variables,variableNames);
+            if (!((newPart.ExistAbstract(varCubePostMotionState) & robotBDD.ExistAbstract(varCubePostMotionState)).isFalse())) {
+                std::cerr << "Warning: Partitioned Robot BDDs are not split up correctly\n";
+            }
+            robotBDD |= mgr.readBDDFromFile(robotFileName.c_str(),variables,variableNames);
+        }
+
         if (robotBDD.isConstant()) throw "Failed to read Robot Abstraction.";
+        std::cerr << "Continuing computation...\n";
 
         // Finally, add the liveness assumption that if we are executing an action that *can* lead
         // to motion, we do so.
         computeVariableInformation();
 
+
+        // Compute reachability fixpoint
+        /*BFFixedPoint nu2(mgr.constantTrue());
+
+        {
+            unsigned int outerIteration = 0;
+
+            // Iterate until we have found a fixed point
+            for (;!nu2.isFixedPointReached();) {
+
+                outerIteration++;
+                BF newBackReach = robotBDD & nu2.getValue().SwapVariables(varVectorPre,varVectorPost);
+                newBackReach = newBackReach.ExistAbstract(varCubePost);
+                nu2.update(newBackReach);
+
+            }
+        }
+
+        std::map<std::string,BF> inspectorContext;
+        inspectorContext["onePlayerStable"] = nu2.getValue();
+
+        // From where are we unable to change direction?
+        BF curHeadingChange = mgr.constantFalse();
+        for (unsigned int i=0;i<variables.size();i++) {
+            if (doesVariableInheritType(i,Pre)) {
+                if (variableNames[i].substr(0,10)=="curHeading") {
+                    curHeadingChange |= variables[i] ^ variables[i+1];
+                }
+            }
+        }
+
+        BF actionsWithoutChange = (robotBDD & !curHeadingChange).ExistAbstract(varCubePostMotionState);
+        BF actionsWithOnlyChanges = (!actionsWithoutChange & robotBDD.ExistAbstract(varCubePostMotionState));
+        BF statesThatAllowToEnforceChanges = actionsWithOnlyChanges.ExistAbstract(varCubePost);
+        BF cannotChange = nu2.getValue() & !statesThatAllowToEnforceChanges;
+        inspectorContext["cannotChange"] = cannotChange;
+
+        // bddInspector(inspectorContext);
+
         // Paint robot BDD
         //std::cerr << "DOTTing Robot BDD\n";
-        //BF toDraw = robotBDD & (!variables[0]) & (variables[2]) & (variables[4]) & (variables[6]) & (!variables[8]) & (!variables[10]) & !variables[12] & !variables[14] & !variables[16] & !variables[18] & !variables[20];
-        //std::cerr << "Restricting: " << variableNames[0] << "," << variableNames[2]<< "," << variableNames[4]<< "," << variableNames[5] << variableNames[6] << "," << variableNames[7]<< "," << variableNames[8]<< "," << variableNames[9]<< "," << variableNames[10]<< "," << variableNames[11];
+        BF toDraw = robotBDD & (!variables[0])
+                             & (variables[2])
+                             & (!variables[4])
+                             & (!variables[6])
+                             & (!variables[8])
+                             & (!variables[10])
+                             & (!variables[12])
+                             & (!variables[14]) & variables[16] & variables[18] & !variables[20]
+                             & (!variables[22]) & variables[24] & variables[26] & !variables[28]
+                            // Motion Control
+                             & (!variables[31]) & !variables[33] & !variables[35] & !variables[37] & !variables[39] & !variables[41] & !variables[43] & !variables[45] & !variables[47];
+
+
+        std::cerr << "Restricting: " << variableNames[0] << " to " << variableNames[28] << " to " << variableNames[47];
         //std::cerr << "Restricting to 3: " << variableNames[12] << "," << variableNames[14] << "," << variableNames[16] << std::endl;
-        //BF_newDumpDot(*this,robotBDD,NULL,"/tmp/robotBDD.dot");
+        BF_newDumpDot(*this,robotBDD,NULL,"/tmp/robotBDD.dot");
         //std::cerr << "DOTTing Robot BDD done!\n";
+
+
+        // Compute non-crashing game
+        BFFixedPoint nonCrash(mgr.constantTrue());
+        std::vector<BF> prefixPoints;
+        {
+            unsigned int outerIteration = 0;
+            BF robotBDDAvailableActions = robotBDD.ExistAbstract(varCubePostMotionState);
+
+            // Iterate until we have found a fixed point
+            for (;!nonCrash.isFixedPointReached();) {
+
+                outerIteration++;
+                BF badActions = robotBDD & !(nonCrash.getValue().SwapVariables(varVectorPre,varVectorPost));
+                badActions = badActions.ExistAbstract(varCubePostMotionState);
+                BF goodStates = (robotBDDAvailableActions & !badActions).ExistAbstract(varCubePost);
+
+                // Good states debugging hack
+                for (unsigned int i=0;i<variables.size();i++) {
+                    if (doesVariableInheritType(i,Pre)) {
+                        if (variableNames[i].substr(0,7)=="xbit@0.") {
+                            goodStates = goodStates.UnivAbstractSingleVar(variables[i]);
+                            std::cerr << "(FoundXVAR)";
+                        } else if (variableNames[i].substr(0,7)=="ybit@0.") {
+                            goodStates = goodStates.UnivAbstractSingleVar(variables[i]);
+                            std::cerr << "(FoundYVAR)";
+                        }
+                    }
+                }
+
+                nonCrash.update(goodStates);
+                if (!(goodStates.isFalse())) {
+                    prefixPoints.push_back(goodStates);
+                } else {
+                    std::cerr << "---UNCONTROLLABLE!---";
+                }
+
+                // Dumping dot
+                std::ostringstream filename;
+                filename << "/tmp/prefix" << outerIteration << ".dot";
+                BF_newDumpDot(*this,nonCrash.getValue(),NULL,filename.str());
+
+            }
+        }
+
+        // Generate a trace
+        std::cerr << "\nTrace:\n";
+        BF currentState = determinize(prefixPoints.back(),preVars);
+        int outerIteration  = 0;
+        BF robotBDDAvailableActions = robotBDD.ExistAbstract(varCubePostMotionState);
+
+        for (int i = prefixPoints.size()-1;i>0;i--) {
+
+            outerIteration++;
+
+            std::ostringstream filename;
+            filename << "/tmp/currState" << outerIteration << ".dot";
+            BF_newDumpDot(*this,currentState,NULL,filename.str());
+
+            printPreState(currentState);
+
+            BF nextTrans = (robotBDD & currentState).ExistAbstract(varCubePre);
+
+            BF locallyAvailableActions = nextTrans.ExistAbstract(varCubePostMotionState);
+
+            nextTrans = !nextTrans | prefixPoints[i-1].SwapVariables(varVectorPre,varVectorPost);
+
+            std::ostringstream filenameC;
+            filenameC << "/tmp/nextTrans" << outerIteration << ".dot";
+            BF_newDumpDot(*this,nextTrans,"Post",filenameC.str());
+
+            BF selectedAction = determinize((locallyAvailableActions & nextTrans).UnivAbstract(varCubePostMotionState),postMotionControlVars);
+            if (selectedAction.isFalse()) std::cerr << "Found no transition.";
+
+            std::ostringstream filenameB;
+            filenameB << "/tmp/selectedAction" << outerIteration << ".dot";
+            BF_newDumpDot(*this,selectedAction,NULL,filenameB.str());
+
+
+            BF nextState = determinize((robotBDD & currentState & selectedAction & !prefixPoints[i].SwapVariables(varVectorPre,varVectorPost)).ExistAbstract(varCubePre),postVars).SwapVariables(varVectorPre,varVectorPost);
+            currentState = nextState;
+        }
+        printPreState(currentState);
+        */
 
         // Add liveness assumption
         addAutomaticallyGeneratedLivenessAssumption();
@@ -372,8 +527,16 @@ public:
         // The greatest fixed point - called "Z" in the GR(1) synthesis paper
         BFFixedPoint nu2(mgr.constantTrue());
 
+        unsigned int outerIteration = 0;
+
         // Iterate until we have found a fixed point
         for (;!nu2.isFixedPointReached();) {
+
+            outerIteration++;
+
+            std::ostringstream os;
+            os << "/tmp/pfp" << outerIteration << ".dot";
+            BF_newDumpDot(*this,nu2.getValue(),NULL,os.str());
 
             // To extract a strategy in case of realizability, we need to store a sequence of 'preferred' transitions in the
             // game structure. These preferred transitions only need to be computed during the last execution of the outermost
@@ -441,6 +604,12 @@ public:
             }
 
             // Update the outer-most fixed point
+            std::ostringstream diffFileDot;
+            diffFileDot << "/tmp/diff" << outerIteration << ".dot";
+            BF diff = nu2.getValue() & !nextContraintsForGoals;
+            diff = determinize(diff,preVars);
+            BF_newDumpDot(*this,diff,"Pre",diffFileDot.str());
+
             nu2.update(nextContraintsForGoals);
 
         }
@@ -458,6 +627,9 @@ public:
         } else {
             result = initEnv.Implies((winningPositions & initSys).ExistAbstract(varCubePreOutput)).UnivAbstract(varCubePreInput);
         }
+
+        BF_newDumpDot(*this,(winningPositions & initSys),NULL,"/tmp/resultR.dot");
+        BF_newDumpDot(*this,initEnv.Implies((winningPositions & initSys)).ExistAbstract(varCubePreOutput),NULL,"/tmp/resultA.dot");
 
         // Get rid of the PreMotionState
         result = result.ExistAbstract(varCubePreMotionState);
@@ -510,6 +682,165 @@ public:
         }
     }
 
+
+    void bddInspector(std::map<std::string,BF> bdds) {
+        std::cerr << "BDD Inspector\n";
+
+        // Main loop
+        while (true) {
+            std::cerr << "> ";
+            std::string command;
+            std::getline(std::cin,command);
+            std::istringstream commandReader(command);
+            std::string operation;
+            commandReader >> operation;
+            if (!(commandReader.fail())) {
+                std::transform(operation.begin(), operation.end(), operation.begin(), toupper);
+                if (operation=="QUIT") {
+                    return;
+                } else if (operation=="LIST") {
+                    std::cerr << "BDDs defined:\n";
+                    for (auto it : bdds) {
+                        std::cerr << "- " << it.first << "\t" << it.second.getSize() << std::endl;
+                    }
+                } else if (operation=="COPY") {
+                    std::string from;
+                    commandReader >> from;
+                    std::string to;
+                    commandReader >> to;
+                    if (commandReader.fail()) {
+                        std::cerr << "Error: Two parameters expected.\n";
+                    } else {
+                        if (bdds.count(from)==0) {
+                            std::cerr << "Error: BDD '" << from << "' not found.\n";
+                        } else {
+                            std::cerr << "Copy from: " << from << " to " << to << std::endl;
+                            bdds[to] = bdds[from];
+                        }
+                    }
+                } else if (operation=="RESTRICT") {
+                    std::string from;
+                    commandReader >> from;
+                    if (commandReader.fail()) {
+                        std::cerr << "Error: A parameters expected.\n";
+                    } else if (bdds.count(from)==0) {
+                        std::cerr << "Error: BDD '" << from << "' not found.\n";
+                    } else {
+                        BF result = bdds[from];
+                        for (unsigned int i=0;i<variables.size();i++) {
+                            std::cerr << "- " << variableNames[i] << ": ";
+                            BF test = (result & variables[i]).ExistAbstractSingleVar(variables[i]);
+                            if (test==result) {
+                                std::cerr << " not in (suffix-)support\n";
+                            } else if ((result & variables[i]).isFalse()) {
+                                std::cerr << " 0 (forced)\n";
+                            } else if ((result & !(variables[i])).isFalse()) {
+                                std::cerr << " 1 (forced)\n";
+                            } else {
+                                std::string line;
+                                std::getline(std::cin,line);
+                                if (line=="1") {
+                                    result &= variables[i];
+                                } else if (line=="0") {
+                                    result &= !(variables[i]);
+                                } else if ((line=="X") || (line=="x")) {
+                                    // Nothing.
+                                } else {
+                                    std::cerr << "     (sorry, didn't get it -- assuming 'X')\n";
+                                    //result &= !(variables[i]);
+                                }
+                            }
+                        }
+                        std::cerr << "Final result: " << result.getSize() << " nodes.";
+                        bdds[from] = result;
+                    }
+                } else if (operation=="DOT") {
+                    std::string from;
+                    commandReader >> from;
+                    std::string filename;
+                    commandReader >> filename;
+                    if (commandReader.fail()) {
+                        std::cerr << "Error: Two parameters expected.\n";
+                    } else if (bdds.count(from)==0) {
+                        std::cerr << "Error: BDD '" << from << "' not found.\n";
+                    } else {
+                        BF_newDumpDot(*this,bdds[from],"Pre Post",filename);
+                    }
+
+                } else {
+                    std::cerr << "Error: Unrecognized command: " << operation << std::endl;
+                }
+            }
+        }
+    }
+
+    /**
+     * @brief Prints a state to Stderr
+     * @param preState
+     */
+    void printPreState(BF preState) {
+
+        if (preState.isFalse()) {
+            std::cerr << "False\n";
+            return;
+        }
+
+        std::map<std::string,int> values;
+        for (unsigned int i=0;i<variables.size();i++) {
+            if (doesVariableInheritType(i,Pre)) {
+
+                // True or not?
+                int value = 0;
+                if ((preState & variables[i]).isFalse()) {
+                    value = 0;
+                } else if ((preState & !(variables[i])).isFalse()) {
+                    value = 1;
+                } else {
+                    std::cerr << "Indetermined.\n";
+                    return;
+                }
+
+                auto atPos = variableNames[i].find("@");
+                if (atPos==std::string::npos) {
+                    values[variableNames[i]] = value;
+                } else {
+
+                    std::string baseName = variableNames[i].substr(0,atPos);
+                    std::string rest = variableNames[i].substr(atPos+1,std::string::npos);
+
+                    // Find a dot now
+                    auto firstDotPos = rest.find(".");
+                    if (firstDotPos==std::string::npos) {
+                        std::istringstream rd(rest);
+                        int bit;
+                        rd >> bit;
+                        if (rd.fail()) throw "RDFAIL";
+                        values[baseName] += value*(1 << bit);
+                    } else {
+                        // This is part one
+                        if (rest.substr(0,firstDotPos)!="0") throw "IllegalEncoding.";
+                        rest = rest.substr(firstDotPos+1,std::string::npos);
+                        auto nextDot = rest.find(".");
+                        std::string minPart = rest.substr(0,nextDot);
+                        std::istringstream minReader(minPart);
+                        int min;
+                        minReader >> min;
+                        if (minReader.fail()) throw "MINFAIL.";
+                        values[baseName] += value + min;
+                    }
+                }
+            }
+
+        }
+
+        // Print
+        for (auto it : values) {
+            std::cerr << it.first << ": " << it.second << ", ";
+        }
+        std::cerr << std::endl;
+
+
+    }
 
 
 
