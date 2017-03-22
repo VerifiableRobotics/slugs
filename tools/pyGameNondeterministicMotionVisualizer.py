@@ -20,7 +20,7 @@ import resource
 import subprocess
 import signal
 import tempfile
-import copy
+import copy, glob
 import itertools
 import Image
 import os, pygame, pygame.locals
@@ -117,7 +117,8 @@ for (a,b) in colorCoding:
 bddinfile = specFile
 while bddinfile.rfind(".") > bddinfile.rfind(os.sep):
     bddinfile = bddinfile[0:bddinfile.rfind(".")]
-bddinfile = bddinfile+".bdd"
+bddinfile = bddinfile+"*.bdd"
+bddinfile = " ".join(glob.glob(bddinfile))
 print "Using BDD file: "+bddinfile
 slugsLink = sys.argv[0][0:sys.argv[0].rfind("pyGameNondeterministicMotionVisualizer.py")]+"../src/slugs"
 print slugsLink
