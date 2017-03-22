@@ -248,9 +248,9 @@ public:
                     } else if (readMode==4) {
                         std::set<VariableType> allowedTypes;
                         allowedTypes.insert(PreInput);
-                        allowedTypes.insert(PreMotionState);
+                        // allowedTypes.insert(PreMotionState);
                         // allowedTypes.insert(PreMotionControlOutput); -> Is not taken into account
-                        allowedTypes.insert(PreOtherOutput);
+                        // allowedTypes.insert(PreOtherOutput);
                         initEnv &= parseBooleanFormulaEx(currentLine,allowedTypes,readBDDs);
                     } else if (readMode==5) {
                         std::set<VariableType> allowedTypes;
@@ -266,8 +266,8 @@ public:
                          // allowedTypes.insert(PreMotionControlOutput); -> Is not taken into account
                         allowedTypes.insert(PreOtherOutput);
                         allowedTypes.insert(PostInput);
-                        allowedTypes.insert(PostMotionState);
-                        allowedTypes.insert(PostOtherOutput);
+                        //allowedTypes.insert(PostMotionState);
+                        //allowedTypes.insert(PostOtherOutput);
                         safetyEnv &= parseBooleanFormulaEx(currentLine,allowedTypes,readBDDs);
                     } else if (readMode==7) {
                         std::set<VariableType> allowedTypes;
