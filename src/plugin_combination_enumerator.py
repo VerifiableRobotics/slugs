@@ -69,6 +69,7 @@ listOfCommandLineParameters = [
     ("extractExplicitPermissiveStrategy","Computes an explicit-state permissive strategy."),
     ("computeIncompleteInformationEstimator","Computes a imcomplete-information state estimation controller."),
     ("nonDeterministicMotion","Computes a controller using an non-deterministic motion abstraction."),
+    ("nonDeterministicMotionSelfLoopLivenessAssumption","Adds a liveness assumption for the nondeterministic Motion plugin that prevents the abstraction from self-looping forever."),
     ("twoDimensionalCost","Computes a controller that optimizes for waiting and action cost at the same time."),
     ("cooperativeGR1Strategy","Computes a controller strategy that is cooperative with its environment.")    
 ]
@@ -130,6 +131,16 @@ combinableParameters = [
     ("simpleSymbolicStrategy","nonDeterministicMotion"),
     ("symbolicStrategy","nonDeterministicMotion"),
     
+    # Nondet-Motion --> Self loops
+    ("nonDeterministicMotionSelfLoopLivenessAssumption","nonDeterministicMotion"),
+    ("nonDeterministicMotionSelfLoopLivenessAssumption","sysInitRoboticsSemantics"),
+    ("nonDeterministicMotionSelfLoopLivenessAssumption","interactiveStrategy"),
+    ("nonDeterministicMotionSelfLoopLivenessAssumption","extractExplicitPermissiveStrategy"),
+    ("simpleSymbolicStrategy","nonDeterministicMotionSelfLoopLivenessAssumption"),
+    ("symbolicStrategy","nonDeterministicMotionSelfLoopLivenessAssumption"),
+    ("explicitStrategy","nonDeterministicMotionSelfLoopLivenessAssumption"),
+    
+    
     # Bias for Action
     ("biasForAction","extractExplicitPermissiveStrategy"),
     ("biasForAction","simpleRecovery"),
@@ -147,6 +158,7 @@ combinableParameters = [
     ("interactiveStrategy","IROSfastslow"),
     ("interactiveStrategy","twoDimensionalCost"),
     ("interactiveStrategy","cooperativeGR1Strategy"),
+    
     
     # Misc
     ("IROSfastslow","extractExplicitPermissiveStrategy"),
@@ -221,13 +233,14 @@ uncombinableParameters = [
     ("extractExplicitPermissiveStrategy","cooperativeGR1Strategy"),
     ("twoDimensionalCost","cooperativeGR1Strategy"),
 
-] + combineWithAllOtherParameters("computeIncompleteInformationEstimator") + combineWithAllOtherParameters("computeAbstractWinningTrace") + combineWithAllOtherParameters("computeInterestingRunOfTheSystem") + combineWithAllOtherParameters("analyzeSafetyLivenessInteraction") + combineWithAllOtherParameters("analyzeAssumptions") + combineWithAllOtherParameters("computeCNFFormOfTheSpecification") + combineWithAllOtherParameters("analyzeInterleaving") + combineWithAllOtherParametersBut("analyzeInitialPositions",["restrictToReachableStates"]) + combineWithAllOtherParametersBut("restrictToReachableStates",["analyzeInitialPositions"]) + combineWithAllOtherParametersBut("nonDeterministicMotion",["sysInitRoboticsSemantics","interactiveStrategy","extractExplicitPermissiveStrategy","simpleSymbolicStrategy","symbolicStrategy"]) + combineWithAllOtherParameters("computeWeakenedSafetyAssumptions")
+] + combineWithAllOtherParameters("computeIncompleteInformationEstimator") + combineWithAllOtherParameters("computeAbstractWinningTrace") + combineWithAllOtherParameters("computeInterestingRunOfTheSystem") + combineWithAllOtherParameters("analyzeSafetyLivenessInteraction") + combineWithAllOtherParameters("analyzeAssumptions") + combineWithAllOtherParameters("computeCNFFormOfTheSpecification") + combineWithAllOtherParameters("analyzeInterleaving") + combineWithAllOtherParametersBut("analyzeInitialPositions",["restrictToReachableStates"]) + combineWithAllOtherParametersBut("restrictToReachableStates",["analyzeInitialPositions"]) + combineWithAllOtherParametersBut("nonDeterministicMotion",["sysInitRoboticsSemantics","interactiveStrategy","extractExplicitPermissiveStrategy","simpleSymbolicStrategy","symbolicStrategy","nonDeterministicMotionSelfLoopLivenessAssumption"]) + combineWithAllOtherParametersBut("nonDeterministicMotionSelfLoopLivenessAssumption",["sysInitRoboticsSemantics","interactiveStrategy","extractExplicitPermissiveStrategy","simpleSymbolicStrategy","symbolicStrategy","nonDeterministicMotion"]) + combineWithAllOtherParameters("computeWeakenedSafetyAssumptions")
 
 # Which ones require (one of) another parameter(s)
 requiredParameters = [
     ("restrictToReachableStates",["analyzeInitialPositions"]),
     ("simpleRecovery",["explicitStrategy","symbolicStrategy","simpleSymbolicStrategy"]),
     ("jsonOutput",["explicitStrategy"]),
+    ("nonDeterministicMotionSelfLoopLivenessAssumption",["nonDeterministicMotion"]),
 ]
 
 # -------------------------------------------------------
@@ -333,9 +346,10 @@ listOfCommandLineCombinationToClassInstantiationMappers.append(twoDimensionalCos
 # NonDeterministic Motion
 def nondeterministicMotion(params):
     sysIn = "sysInitRoboticsSemantics" in params
+    selfLoop = "nonDeterministicMotionSelfLoopLivenessAssumption" in params
     if "nonDeterministicMotion" in params:
-        ret = [("XNonDeterministicMotion","true" if sysIn else "false")]
-        params.difference_update(["nonDeterministicMotion","sysInitRoboticsSemantics"])
+        ret = [("XNonDeterministicMotion","true" if sysIn else "false","true" if selfLoop else "false")]
+        params.difference_update(["nonDeterministicMotion","sysInitRoboticsSemantics","nonDeterministicMotionSelfLoopLivenessAssumption"])
         return ret
     return []
 listOfCommandLineCombinationToClassInstantiationMappers.append(nondeterministicMotion)

@@ -118,7 +118,7 @@ bddinfile = specFile
 while bddinfile.rfind(".") > bddinfile.rfind(os.sep):
     bddinfile = bddinfile[0:bddinfile.rfind(".")]
 bddinfile = bddinfile+"*.bdd"
-bddinfile = " ".join(glob.glob(bddinfile))
+bddinfile = ":".join(glob.glob(bddinfile))
 print "Using BDD file: "+bddinfile
 slugsLink = sys.argv[0][0:sys.argv[0].rfind("pyGameNondeterministicMotionVisualizer.py")]+"../src/slugs"
 print slugsLink
@@ -136,7 +136,7 @@ def actionLoop():
     screenBuffer.fill((64, 64, 64)) # Dark Gray
 
     # Open Slugs
-    slugsProcess = subprocess.Popen(slugsLink+" --interactiveStrategy --nonDeterministicMotion "+slugsinfile+" "+bddinfile, shell=True, bufsize=1048000, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    slugsProcess = subprocess.Popen(slugsLink+" --interactiveStrategy --nonDeterministicMotion --nonDeterministicMotionSelfLoopLivenessAssumption "+slugsinfile+" "+bddinfile, shell=True, bufsize=1048000, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
     # Get input APs
     slugsProcess.stdin.write("XPRINTINPUTS\n")

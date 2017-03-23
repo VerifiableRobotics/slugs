@@ -485,7 +485,7 @@ def isValidRecursiveSlugsProperty(tokens):
 def performConversion(inputFile,thoroughly):
     specFile = open(inputFile,"r")
     mode = ""
-    lines = {"[ENV_TRANS]":[],"[ENV_INIT]":[],"[INPUT]":[],"[OUTPUT]":[],"[SYS_TRANS]":[],"[SYS_INIT]":[],"[ENV_LIVENESS]":[],"[SYS_LIVENESS]":[],"[OBSERVABLE_INPUT]":[],"[UNOBSERVABLE_INPUT]":[],"[CONTROLLABLE_INPUT]":[],"[MOTION STATE OUTPUT]":[],"[MOTION CONTROLLER OUTPUT]":[],"[OTHER OUTPUT]":[],"[ABSTRACTION_REGION_BDDS]":[] }
+    lines = {"[ENV_TRANS]":[],"[ENV_INIT]":[],"[INPUT]":[],"[OUTPUT]":[],"[SYS_TRANS]":[],"[SYS_INIT]":[],"[ENV_LIVENESS]":[],"[SYS_LIVENESS]":[],"[OBSERVABLE_INPUT]":[],"[UNOBSERVABLE_INPUT]":[],"[CONTROLLABLE_INPUT]":[],"[MOTION STATE OUTPUT]":[],"[MOTION CONTROLLER OUTPUT]":[],"[OTHER OUTPUT]":[],"[HELPER_BDDS]":[] }
 
     for line in specFile.readlines():
         line = line.strip()
@@ -507,18 +507,18 @@ def performConversion(inputFile,thoroughly):
     # Create information along the way that
     # encodes the possible values
     # ---------------------------------------    
-    translatedIOLines = {"[INPUT]":[],"[OUTPUT]":[],"[OBSERVABLE_INPUT]":[],"[UNOBSERVABLE_INPUT]":[],"[CONTROLLABLE_INPUT]":[],"[MOTION STATE OUTPUT]":[],"[MOTION CONTROLLER OUTPUT]":[],"[OTHER OUTPUT]":[],"[ABSTRACTION_REGION_BDDS]":[]}
+    translatedIOLines = {"[INPUT]":[],"[OUTPUT]":[],"[OBSERVABLE_INPUT]":[],"[UNOBSERVABLE_INPUT]":[],"[CONTROLLABLE_INPUT]":[],"[MOTION STATE OUTPUT]":[],"[MOTION CONTROLLER OUTPUT]":[],"[OTHER OUTPUT]":[],"[HELPER_BDDS]":[]}
     
     # First: Encoded BDDs
-    for line in lines["[ABSTRACTION_REGION_BDDS]"]:
+    for line in lines["[HELPER_BDDS]"]:
         if line=="" or line.startswith("#"):
-            translatedIOLines["[ABSTRACTION_REGION_BDDS]"].append(line.strip())
+            translatedIOLines["[HELPER_BDDS]"].append(line.strip())
         else:
             assert line.find(" ")!=-1
             apName = line[0:line.find(" ")]    
             booleanAPs.append(apName)
             booleanAPs.append(apName+"'")
-            translatedIOLines["[ABSTRACTION_REGION_BDDS]"].append(line)
+            translatedIOLines["[HELPER_BDDS]"].append(line)
     
     # Then: The other input/output variables
     for variableType in ["[INPUT]","[OUTPUT]","[OBSERVABLE_INPUT]","[UNOBSERVABLE_INPUT]","[CONTROLLABLE_INPUT]","[MOTION STATE OUTPUT]","[MOTION CONTROLLER OUTPUT]","[OTHER OUTPUT]"]: 
@@ -605,7 +605,7 @@ def performConversion(inputFile,thoroughly):
     # ---------------------------------------    
     # Output new input/output lines
     # ---------------------------------------    
-    for variableType in ["[MOTION STATE OUTPUT]","[MOTION CONTROLLER OUTPUT]","[INPUT]","[OUTPUT]","[OBSERVABLE_INPUT]","[UNOBSERVABLE_INPUT]","[CONTROLLABLE_INPUT]","[OTHER OUTPUT]","[ABSTRACTION_REGION_BDDS]"]: 
+    for variableType in ["[MOTION STATE OUTPUT]","[MOTION CONTROLLER OUTPUT]","[INPUT]","[OUTPUT]","[OBSERVABLE_INPUT]","[UNOBSERVABLE_INPUT]","[CONTROLLABLE_INPUT]","[OTHER OUTPUT]","[HELPER_BDDS]"]: 
         if len(translatedIOLines[variableType])>0:
             print variableType
             for a in translatedIOLines[variableType]:

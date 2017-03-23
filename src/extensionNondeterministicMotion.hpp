@@ -3,7 +3,7 @@
 
 #include "gr1context.hpp"
 
-template<class T, bool initSpecialRoboticsSemantics> class XNonDeterministicMotion : public T {
+template<class T, bool initSpecialRoboticsSemantics, bool addSelfLoopLivenessAssumptions> class XNonDeterministicMotion : public T {
 protected:
 
     // Inherited stuff used
@@ -46,10 +46,10 @@ protected:
 
 public:
     static GR1Context* makeInstance(std::list<std::string> &filenames) {
-        return new XNonDeterministicMotion<T,initSpecialRoboticsSemantics>(filenames);
+        return new XNonDeterministicMotion<T,initSpecialRoboticsSemantics,addSelfLoopLivenessAssumptions>(filenames);
     }
 
-    XNonDeterministicMotion<T,initSpecialRoboticsSemantics>(std::list<std::string> &filenames): T(filenames) {}
+    XNonDeterministicMotion<T,initSpecialRoboticsSemantics,addSelfLoopLivenessAssumptions>(std::list<std::string> &filenames): T(filenames) {}
 
     /**
      * @brief Recurse internal function to parse a Boolean formula from a line in the input file
@@ -210,7 +210,7 @@ public:
                         readMode = 8;
                     } else if (currentLine=="[SYS_LIVENESS]") {
                         readMode = 9;
-                    } else if (currentLine=="[ABSTRACTION_REGION_BDDS]") {
+                    } else if (currentLine=="[HELPER_BDDS]") {
                         readMode = 10;
                     } else {
                         std::cerr << "Sorry. Didn't recognize category " << currentLine << "\n";
@@ -307,7 +307,6 @@ public:
                         std::vector<BF> varsBDDread;
                         // Invert all order to get the least significant bit first
                         for (int i=variables.size()-1;i>=0;i--) {
-                            if (variableTypes[i]==PreMotionState)
                             varsBDDread.push_back(variables[i]);
                         }
                         /*for (int i=variables.size()-1;i>=0;i--) {
@@ -353,15 +352,26 @@ public:
         computeVariableInformation();
 
         robotBDD = mgr.constantFalse();
-        while (filenames.size()>0) {
-            std::string robotFileName = *(filenames.begin());
-            filenames.pop_front();
+        if (filenames.size()==0) throw "Error: No BDD file given.";
+        std::string allFilenames = *(filenames.begin());
+        filenames.pop_front();
 
-            BF newPart = mgr.readBDDFromFile(robotFileName.c_str(),variables,variableNames);
+        while (allFilenames.size()>0) {
+            std::string frontFilename;
+            size_t colonIndex = allFilenames.find(":");
+            if (colonIndex==std::string::npos) {
+                frontFilename = allFilenames;
+                allFilenames = "";
+            } else {
+                frontFilename = allFilenames.substr(0,colonIndex);
+                allFilenames = allFilenames.substr(colonIndex+1,std::string::npos);
+            }
+
+            BF newPart = mgr.readBDDFromFile(frontFilename.c_str(),variables,variableNames);
             if (!((newPart.ExistAbstract(varCubePostMotionState) & robotBDD.ExistAbstract(varCubePostMotionState)).isFalse())) {
                 std::cerr << "Warning: Partitioned Robot BDDs are not split up correctly\n";
             }
-            robotBDD |= mgr.readBDDFromFile(robotFileName.c_str(),variables,variableNames);
+            robotBDD |= newPart;
         }
 
         if (robotBDD.isConstant()) throw "Failed to read Robot Abstraction.";
@@ -515,7 +525,8 @@ public:
         */
 
         // Add liveness assumption
-        addAutomaticallyGeneratedLivenessAssumption();
+        if (addSelfLoopLivenessAssumptions)
+            addAutomaticallyGeneratedLivenessAssumption();
 
     }
 
