@@ -304,25 +304,19 @@ public:
                         }
                         std::string bddName = currentLine.substr(0,currentLine.find(" "));
                         std::string bddFile = currentLine.substr(currentLine.find(" ")+1,std::string::npos);
-                        std::vector<BF> varsBDDread;
-                        // Invert all order to get the least significant bit first
-                        for (int i=variables.size()-1;i>=0;i--) {
-                            varsBDDread.push_back(variables[i]);
-                        }
-                        /*for (int i=variables.size()-1;i>=0;i--) {
-                            if (variableTypes[i]==PostMotionControlOutput)
-                            varsBDDread.push_back(variables[i]);
-                        }
-                        for (int i=variables.size()-1;i>=0;i--) {
-                            if (variableTypes[i]==PostMotionState)
-                            varsBDDread.push_back(variables[i]);
-                        }*/
-                        BF newBDD = mgr.readBDDFromFile(bddFile.c_str(),varsBDDread);
+
+                        BF newBDD = mgr.readBDDFromFile(bddFile.c_str(),variables,variableNames);
                         if (readBDDs.count(bddName)>0) {
                             std::cerr << "Error with line " << lineNumberCurrentlyRead << "!";
                             throw "A BDD with that name already exists.";
                         }
                         readBDDs[bddName] = newBDD;
+
+                        /*computeVariableInformation();
+                        std::ostringstream readBDDOut;
+                        readBDDOut << "/tmp/" << bddName << ".dot";
+                        BF_newDumpDot(*this,newBDD,NULL,readBDDOut.str().c_str());*/
+
                         computeVariableInformation(); // Becuase varVectors are used below.
                         readBDDs[bddName+"'"] = newBDD.SwapVariables(varVectorPre,varVectorPost);
                     } else {
@@ -525,8 +519,13 @@ public:
         */
 
         // Add liveness assumption
-        if (addSelfLoopLivenessAssumptions)
+        if (addSelfLoopLivenessAssumptions) {
             addAutomaticallyGeneratedLivenessAssumption();
+        } else {
+            if (livenessAssumptions.size()==0) {
+                livenessAssumptions.push_back(mgr.constantTrue());
+            }
+        }
 
     }
 
@@ -534,6 +533,8 @@ public:
 
         // Compute first which moves by the robot are actually allowed.
         BF robotAllowedMoves = robotBDD.ExistAbstract(varCubePostMotionState);
+        // BF_newDumpDot(*this,robotAllowedMoves,NULL,"/tmp/allowedMoves.dot");
+        // BF_newDumpDot(*this,robotBDD,NULL,"/tmp/robotBDD.dot");
 
         // The greatest fixed point - called "Z" in the GR(1) synthesis paper
         BFFixedPoint nu2(mgr.constantTrue());
@@ -545,9 +546,9 @@ public:
 
             outerIteration++;
 
-            std::ostringstream os;
-            os << "/tmp/pfp" << outerIteration << ".dot";
-            BF_newDumpDot(*this,nu2.getValue(),NULL,os.str());
+            //std::ostringstream os;
+            //os << "/tmp/pfp" << outerIteration << ".dot";
+            //BF_newDumpDot(*this,nu2.getValue(),NULL,os.str());
 
             // To extract a strategy in case of realizability, we need to store a sequence of 'preferred' transitions in the
             // game structure. These preferred transitions only need to be computed during the last execution of the outermost
@@ -565,7 +566,7 @@ public:
                 // Start with the ones that actually represent reaching the goal (which is a transition in this implementation as we can have
                 // nexts in the goal descriptions).
                 BF livetransitions = livenessGuarantees[j] & (nu2.getValue().SwapVariables(varVectorPre,varVectorPost));
-                //BF_newDumpDot(*this,livetransitions,NULL,"/tmp/liveTransitions.dot");
+                // BF_newDumpDot(*this,livetransitions,NULL,"/tmp/liveTransitions.dot");
 
                 // Compute the middle least-fixed point (called 'Y' in the GR(1) paper)
                 BFFixedPoint mu1(mgr.constantFalse());
@@ -590,7 +591,7 @@ public:
                             // Compute a set of paths that are safe to take - used for the enforceable predecessor operator ('cox')
                             foundPaths = livetransitions | (nu0.getValue().SwapVariables(varVectorPre,varVectorPost) & !(livenessAssumptions[i]));
                             foundPaths &= safetySys;
-                            //BF_newDumpDot(*this,foundPaths,NULL,"/tmp/foundPathsPreRobot.dot");
+                            // BF_newDumpDot(*this,foundPaths,NULL,"/tmp/foundPathsPreRobot.dot");
                             foundPaths = robotAllowedMoves & robotBDD.Implies(foundPaths).UnivAbstract(varCubePostMotionState);
                             //BF_newDumpDot(*this,foundPaths,NULL,"/tmp/foundPathsPostRobot.dot");
 
@@ -640,6 +641,10 @@ public:
         }
 
         BF_newDumpDot(*this,(winningPositions & initSys),NULL,"/tmp/resultR.dot");
+        BF_newDumpDot(*this,result,NULL,"/tmp/result.dot");
+        BF_newDumpDot(*this,initEnv,NULL,"/tmp/initEnv.dot");
+
+
         BF_newDumpDot(*this,initEnv.Implies((winningPositions & initSys)).ExistAbstract(varCubePreOutput),NULL,"/tmp/resultA.dot");
 
         // Get rid of the PreMotionState
