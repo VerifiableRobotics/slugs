@@ -527,6 +527,10 @@ public:
             }
         }
 
+        // Make sure that there is at least one liveness assumption and one liveness guarantee
+        // The synthesis algorithm might be unsound otherwise
+        if (livenessGuarantees.size()==0) livenessGuarantees.push_back(mgr.constantTrue());
+        if (livenessAssumptions.size()==0) livenessAssumptions.push_back(mgr.constantTrue());
     }
 
     void checkRealizability() {
@@ -620,7 +624,7 @@ public:
             diffFileDot << "/tmp/diff" << outerIteration << ".dot";
             BF diff = nu2.getValue() & !nextContraintsForGoals;
             diff = determinize(diff,preVars);
-            BF_newDumpDot(*this,diff,"Pre",diffFileDot.str());
+            BF_newDumpDot(*this,diff,NULL,diffFileDot.str());
 
             nu2.update(nextContraintsForGoals);
 
@@ -675,14 +679,9 @@ public:
         if (!(newLivenessAssumption.isTrue())) {
             std::cerr << "Note: Added a liveness assumption that always eventually, we are moving if an action is taken that allows moving.\n";
         }
-        BF_newDumpDot(*this,newLivenessAssumption,"PreMotionState PostMotionControlOutput PostMotionState","/tmp/changeMotionStateLivenessAssumption.dot");
+        //BF_newDumpDot(*this,newLivenessAssumption,"PreMotionState PostMotionControlOutput PostMotionState","/tmp/changeMotionStateLivenessAssumption.dot");
 
-        // Make sure that there is at least one liveness assumption and one liveness guarantee
-        // The synthesis algorithm might be unsound otherwise
-        if (livenessGuarantees.size()==0) livenessGuarantees.push_back(mgr.constantTrue());
-        if (livenessAssumptions.size()==0) livenessAssumptions.push_back(mgr.constantTrue());
-
-        BF_newDumpDot(*this,robotBDD,"PreMotionState PostMotionControlOutput PostMotionState","/tmp/sometestbdd.dot");
+        //BF_newDumpDot(*this,robotBDD,"PreMotionState PostMotionControlOutput PostMotionState","/tmp/sometestbdd.dot");
     }
 
 
