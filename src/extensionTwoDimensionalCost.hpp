@@ -216,6 +216,12 @@ public:
      */
     void computeCostOptimalStrategy() {
 
+        // In the following, "livenessGuarantees" will be used as they are -- so conjunct them with
+        // the winning positions as post states
+        for (unsigned int i=0;i<livenessGuarantees.size();i++) {
+            livenessGuarantees[i] &= winningPositions.SwapVariables(varVectorPre,varVectorPost);;
+        }
+
         // First, check if the costly transitions made sense.
         for (auto it = transitionCosts.begin();it!=transitionCosts.end();it++) {
             for (auto it2 = it;it2!=transitionCosts.end();) {
