@@ -37,7 +37,6 @@ specFile = " ".join(sys.argv[1:])
 # Start slugs
 # ==================================
 slugsLink = sys.argv[0][0:sys.argv[0].rfind("cursesSimulator.py")]+"../src/slugs"
-print slugsLink
 slugsProcess = subprocess.Popen(slugsLink+" --interactiveStrategy "+specFile, shell=True, bufsize=1048000, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
 
 # Get input APs
