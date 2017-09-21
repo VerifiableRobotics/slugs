@@ -2,6 +2,7 @@
 #define __EXTENSION_NONTERMINISTIC_MOTION_HPP
 
 #include "gr1context.hpp"
+#include <limits>
 
 template<class T, bool initSpecialRoboticsSemantics, bool addSelfLoopLivenessAssumptions> class XNonDeterministicMotion : public T {
 protected:
@@ -662,6 +663,77 @@ public:
 
         // Return the result in Boolean form.
         realizable = result.isTrue();
+
+
+        // Compute degrees of nondeterminism -- ULTRASLOW!
+#ifdef COMPUTE_DEGREES_OF_NONDETERMINISM
+        std::cerr << "=============================================================\n";
+        std::cerr << " Computing degrees of non-determinism. Do not use        \n";
+        std::cerr << " in computation with computation time measurement. \n";
+        std::cerr << "=============================================================\n";
+
+        BF statesLeft = winningPositions;
+        double maxMinNondeterminism = 0.0;
+        double sumOfMinNondeterminism = 0.0;
+        double nofOfMinNondeterminism = 0.0;
+
+        while (!(statesLeft.isFalse())) {
+
+            // std::cerr << "o";
+
+            BF currentState = mgr.constantTrue();
+            for (auto it : static_cast<std::vector<BF>>(preMotionStateVars)) {
+                if ((currentState & it & statesLeft).isFalse()) {
+                    currentState &= !it;
+                } else {
+                    currentState &= it;
+                }
+            }
+
+            statesLeft &= !currentState;
+
+            BF theseTransitions = robotBDD & winningPositions.SwapVariables(varVectorPre,varVectorPost) & currentState;
+
+            // Iterate over inputs
+            double minNondeterminismInThisState = std::numeric_limits<double>::max();
+            while (!(theseTransitions.isFalse())) {
+
+                //std::cerr << "i";
+
+                BF currentInput = mgr.constantTrue();
+                for (auto it : static_cast<std::vector<BF>>(postMotionControlVars)) {
+                    if ((theseTransitions & it & currentInput).isFalse()) {
+                        currentInput &= !it;
+                    } else {
+                        currentInput &= it;
+                    }
+                }
+
+                BF thesePostStates = theseTransitions & currentInput;
+                theseTransitions &= !currentInput;
+
+                double nofPost = 0;
+                while (!(thesePostStates.isFalse())) {
+                    //std::cerr << "m";
+                    BF postState = determinize(thesePostStates,postMotionStateVars);
+                    thesePostStates &= !postState;
+                    nofPost += 1.0;
+                }
+
+                minNondeterminismInThisState = std::min(minNondeterminismInThisState,nofPost);
+                sumOfMinNondeterminism += nofPost;
+                nofOfMinNondeterminism += 1.0;
+            }
+
+            maxMinNondeterminism = std::max(maxMinNondeterminism,minNondeterminismInThisState);
+
+        }
+
+        std::cout << "MaxMinNondeterminism: " << maxMinNondeterminism << std::endl;
+        std::cout << "AvgMinNondeterminism: " << sumOfMinNondeterminism/nofOfMinNondeterminism << std::endl;
+
+#endif
+
 
     }
 
