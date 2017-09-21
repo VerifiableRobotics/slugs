@@ -729,8 +729,8 @@ public:
 
         }
 
-        std::cout << "MaxMinNondeterminism: " << maxMinNondeterminism << std::endl;
-        std::cout << "AvgMinNondeterminism: " << sumOfMinNondeterminism/nofOfMinNondeterminism << std::endl;
+        std::cerr << "MaxMinNondeterminism: " << maxMinNondeterminism << std::endl;
+        std::cerr << "AvgMinNondeterminism: " << sumOfMinNondeterminism/nofOfMinNondeterminism << std::endl;
 
 #endif
 
