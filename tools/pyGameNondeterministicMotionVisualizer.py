@@ -85,9 +85,9 @@ for line in slugsReader.readlines():
     if line=="[MOTION STATE OUTPUT]":
         motionStateOutputState = True
     elif motionStateOutputState and len(line)>0 and not line.startswith("#"):
-        if line.startswith("x"):
+        if line.startswith("x") and not line.upper().startswith("XSPEED"):
             xMotionStateVars.append(line)
-        elif line.startswith("y"):
+        elif line.startswith("y") and not line.upper().startswith("YSPEED"):
             yMotionStateVars.append(line)
         else:
             print >>sys.stderr, "Note: Auxiliary motion state variable "+line+" has been given."

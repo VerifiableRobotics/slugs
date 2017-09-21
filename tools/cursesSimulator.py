@@ -285,7 +285,7 @@ try:
                 successorElement = computeBinarySlugsStringFromStructuredLabeledTraceElementsForcedElements(trace[len(trace)-1])
                 dataForStrategyTransition = currentElement+successorElement+"\n"+str(traceGoalNumbers[len(trace)-2][0])+"\n"+str(traceGoalNumbers[len(trace)-2][1])
                 slugsProcess.stdin.write("XSTRATEGYTRANSITION\n"+dataForStrategyTransition+"\n")
-                print >> sys.stderr, "IPRINT: "+"XSTRATEGYTRANSITION\n"+writtenElement+"\n"
+                print >> sys.stderr, "IPRINT: "+"XSTRATEGYTRANSITION\n"+dataForStrategyTransition+"\n"
                 slugsProcess.stdin.flush()
                 print >> sys.stderr, "IREAD: "+slugsProcess.stdout.readline() # Skip the prompt
                 positionLine = slugsProcess.stdout.readline().strip()
