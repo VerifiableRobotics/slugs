@@ -44,6 +44,7 @@ protected:
     SlugsVarCube varCubePreMotionState{PreMotionState,this};
     SlugsVarCube varCubePostMotionState{PostMotionState,this};
     SlugsVarCube varCubePostControllerOutput{PostMotionControlOutput,this};
+    SlugsVarCube varCubePostControllerAndOtherOutput{PostMotionControlOutput,PostOtherOutput,this};
 
 public:
     static GR1Context* makeInstance(std::list<std::string> &filenames) {
@@ -601,7 +602,7 @@ public:
                             //BF_newDumpDot(*this,foundPaths,NULL,"/tmp/foundPathsPostRobot.dot");
 
                             // Update the inner-most fixed point with the result of applying the enforcable predecessor operator
-                            nu0.update(safetyEnv.Implies(foundPaths).ExistAbstract(varCubePostControllerOutput).UnivAbstract(varCubePostInput));
+                            nu0.update(safetyEnv.Implies(foundPaths).ExistAbstract(varCubePostControllerAndOtherOutput).UnivAbstract(varCubePostInput));
                         }
 
                         // Update the set of positions that are winning for some liveness assumption
