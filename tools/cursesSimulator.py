@@ -71,6 +71,8 @@ structuredVariablesBitPositions = []
 structuredVariablesMin = []
 structuredVariablesMax = []
 structuredVariablesIsOutput = []
+
+# First pass: Find the limits of all integer variables
 for (isOutput,source,startIndex) in [(False,inputAPs,0),(True,outputAPs,len(inputAPs))]:
     for i,a in enumerate(source):
         if "@" in a:
@@ -85,7 +87,13 @@ for (isOutput,source,startIndex) in [(False,inputAPs,0),(True,outputAPs,len(inpu
                 structuredVariablesMin.append(int(minimum))
                 structuredVariablesMax.append(int(maximum))
                 structuredVariablesIsOutput.append(isOutput)
-            else:
+
+# Second pass: parse all other variables
+for (isOutput,source,startIndex) in [(False,inputAPs,0),(True,outputAPs,len(inputAPs))]:
+    for i,a in enumerate(source):
+        if "@" in a:
+            (varName,suffix) = a.split("@")
+            if not "." in suffix:
                 # Is a slave variable
                 indexFound = False
                 for j,b in enumerate(structuredVariables):

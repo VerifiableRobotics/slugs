@@ -271,11 +271,11 @@ try:
                 if valveHistory[i:i+1] == [False,True]:
                     for j in range(1,3):
                         if valveHistory[i+j:i+1+j] == [True,False]:
-                            specFailures.add("Vale opened and closed too quickly.")
+                            specFailures.add("Valve opened and closed too quickly.")
                 if valveHistory[i:i+1] == [True,False]:
                     for j in range(1,3):
                         if valveHistory[i+j:i+1+j] == [False,True]:
-                            specFailures.add("Vale cloesed and opened too quickly.")
+                            specFailures.add("Valve closed and opened too quickly.")
 
         # =======================================
         # Draw current state
