@@ -41,13 +41,8 @@ protected:
     using T::postOutputVars;
     using T::doesVariableInheritType;
 
-    XExtractExplicitCounterStrategy<T>(std::list<std::string> &filenames) : T(filenames) { (void)filenames; }
-
-public:
-
-    void init(std::list<std::string> &filenames) {
-        T::init(filenames);
-        if (filenames.size()==0) {
+    XExtractExplicitCounterStrategy<T>(std::list<std::string> &filenames) : T(filenames) {
+        if (filenames.size()==1) {
             outputFilename = "";
         } else {
             outputFilename = filenames.front();
@@ -55,6 +50,7 @@ public:
         }
     }
 
+public:
 
 /**
  * @brief Compute and print out (to stdout) an explicit-state counter strategy that is winning for
