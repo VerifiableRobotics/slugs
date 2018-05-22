@@ -178,7 +178,7 @@ void computeAndPrintExplicitStateStrategy(std::ostream &outputStream) {
 
             // No deadlock in sight -> Do a normal transition
             BF remainingTransitions = currentPossibilities & positionalStrategiesForTheIndividualGoals[current.second.first][current.second.second];
-            assert(remainingTransition!= mgr.constantFalse());
+            assert(remainingTransitions!= mgr.constantFalse());
             remainingTransitions = determinize(remainingTransitions,postInputVars);
 
             // Switching goals
