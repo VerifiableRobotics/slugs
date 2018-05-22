@@ -37,6 +37,8 @@ protected:
 
     XExtractExplicitStrategy<T,oneStepRecovery,jsonOutput>(std::list<std::string> &filenames): T(filenames) {}
 
+public:
+
     void init(std::list<std::string> &filenames) {
         T::init(filenames);
         if (filenames.size()==0) {
@@ -46,8 +48,6 @@ protected:
             filenames.pop_front();
         }
     }
-
-public:
 
     void execute() {
         T::execute();

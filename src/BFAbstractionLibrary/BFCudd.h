@@ -41,6 +41,26 @@ public:
 			Cudd_Ref(node);
 	}
 
+    inline BFBdd(BFBdd &&bdd) : bfmanager(bdd.bfmanager), mgr(bdd.mgr), node(bdd.node) {
+        bdd.node = 0;
+    }
+
+    inline BFBdd& operator=(BFBdd &&other) {
+        if (this == &other)
+            return *this;
+
+        if ((mgr != 0) && (node != 0)) {
+            Cudd_RecursiveDeref(mgr, node);
+        }
+
+        bfmanager = other.bfmanager;
+        mgr = other.mgr;
+        node = other.node;
+        other.node = 0;
+
+        return *this;
+    }
+
 	inline bool isFalse() const {
 		return node == (Cudd_Not(Cudd_ReadOne(mgr)));
 	}
