@@ -88,7 +88,8 @@ for (isOutput,source,startIndex) in [(False,inputAPs,0),(True,outputAPs,len(inpu
                 structuredVariablesMax.append(int(maximum))
                 structuredVariablesIsOutput.append(isOutput)
 
-    # Second pass: parse all other variables for i,a in enumerate(source):
+    # Second pass: parse all other variables
+    for i,a in enumerate(source):
         if "@" in a:
             (varName,suffix) = a.split("@")
             if not "." in suffix:
