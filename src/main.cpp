@@ -58,6 +58,7 @@
 #include "extensionTwoDimensionalCost.hpp"
 #include "extensionCooperativeGR1Strategy.hpp"
 #include "extensionOptimisticRecovery.hpp"
+#include "extensionSynthesisProcessProfiling.hpp"
 
 //===================================================================================
 // List of command line arguments
@@ -90,6 +91,7 @@ const char *commandLineArguments[] = {
     "--nonDeterministicMotionSelfLoopLivenessAssumption","Adds a liveness assumption for the nondeterministic Motion plugin that prevents the abstraction from self-looping forever.",
     "--twoDimensionalCost","Computes a controller that optimizes for waiting and action cost at the same time.",
     "--cooperativeGR1Strategy","Computes a controller strategy that is cooperative with its environment.",
+    "--synthesisProfiling","Performs standard GR(1) synthesis but profiles the number of iterations and the computation times.",
     //-END-COMMAND-LINE-ARGUMENT-LIST
 };
 
@@ -262,6 +264,7 @@ OptionCombination optionCombinations[] = {
     OptionCombination("--symbolicStrategy --sysInitRoboticsSemantics",XExtractSymbolicStrategy<XRoboticsSemantics<GR1Context>,false,false>::makeInstance),
     OptionCombination("--symbolicStrategy --twoDimensionalCost",XExtractSymbolicStrategy<XTwoDimensionalCost<GR1Context,false,false>,false,false>::makeInstance),
     OptionCombination("--symbolicStrategy",XExtractSymbolicStrategy<GR1Context,false,false>::makeInstance),
+    OptionCombination("--synthesisProfiling",XSynthesisProfiling<GR1Context>::makeInstance),
     OptionCombination("--sysInitRoboticsSemantics --twoDimensionalCost",XTwoDimensionalCost<GR1Context,true,false>::makeInstance),
     OptionCombination("--sysInitRoboticsSemantics",XRoboticsSemantics<GR1Context>::makeInstance),
     OptionCombination("--twoDimensionalCost",XTwoDimensionalCost<GR1Context,false,false>::makeInstance),

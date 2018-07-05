@@ -71,7 +71,8 @@ listOfCommandLineParameters = [
     ("nonDeterministicMotion","Computes a controller using an non-deterministic motion abstraction."),
     ("nonDeterministicMotionSelfLoopLivenessAssumption","Adds a liveness assumption for the nondeterministic Motion plugin that prevents the abstraction from self-looping forever."),
     ("twoDimensionalCost","Computes a controller that optimizes for waiting and action cost at the same time."),
-    ("cooperativeGR1Strategy","Computes a controller strategy that is cooperative with its environment.")    
+    ("cooperativeGR1Strategy","Computes a controller strategy that is cooperative with its environment."),
+    ("synthesisProfiling","Performs standard GR(1) synthesis but profiles the number of iterations and the computation times."),
 ]
 
 # Which command line parameters can be combined?
@@ -233,7 +234,7 @@ uncombinableParameters = [
     ("extractExplicitPermissiveStrategy","cooperativeGR1Strategy"),
     ("twoDimensionalCost","cooperativeGR1Strategy"),
 
-] + combineWithAllOtherParameters("computeIncompleteInformationEstimator") + combineWithAllOtherParameters("computeAbstractWinningTrace") + combineWithAllOtherParameters("computeInterestingRunOfTheSystem") + combineWithAllOtherParameters("analyzeSafetyLivenessInteraction") + combineWithAllOtherParameters("analyzeAssumptions") + combineWithAllOtherParameters("computeCNFFormOfTheSpecification") + combineWithAllOtherParameters("analyzeInterleaving") + combineWithAllOtherParametersBut("analyzeInitialPositions",["restrictToReachableStates"]) + combineWithAllOtherParametersBut("restrictToReachableStates",["analyzeInitialPositions"]) + combineWithAllOtherParametersBut("nonDeterministicMotion",["sysInitRoboticsSemantics","interactiveStrategy","extractExplicitPermissiveStrategy","simpleSymbolicStrategy","symbolicStrategy","nonDeterministicMotionSelfLoopLivenessAssumption"]) + combineWithAllOtherParametersBut("nonDeterministicMotionSelfLoopLivenessAssumption",["sysInitRoboticsSemantics","interactiveStrategy","extractExplicitPermissiveStrategy","simpleSymbolicStrategy","symbolicStrategy","nonDeterministicMotion"]) + combineWithAllOtherParameters("computeWeakenedSafetyAssumptions")
+] + combineWithAllOtherParameters("computeIncompleteInformationEstimator") + combineWithAllOtherParameters("computeAbstractWinningTrace") + combineWithAllOtherParameters("computeInterestingRunOfTheSystem") + combineWithAllOtherParameters("analyzeSafetyLivenessInteraction") + combineWithAllOtherParameters("analyzeAssumptions") + combineWithAllOtherParameters("computeCNFFormOfTheSpecification") + combineWithAllOtherParameters("analyzeInterleaving") + combineWithAllOtherParametersBut("analyzeInitialPositions",["restrictToReachableStates"]) + combineWithAllOtherParametersBut("restrictToReachableStates",["analyzeInitialPositions"]) + combineWithAllOtherParametersBut("nonDeterministicMotion",["sysInitRoboticsSemantics","interactiveStrategy","extractExplicitPermissiveStrategy","simpleSymbolicStrategy","symbolicStrategy","nonDeterministicMotionSelfLoopLivenessAssumption"]) + combineWithAllOtherParametersBut("nonDeterministicMotionSelfLoopLivenessAssumption",["sysInitRoboticsSemantics","interactiveStrategy","extractExplicitPermissiveStrategy","simpleSymbolicStrategy","symbolicStrategy","nonDeterministicMotion"]) + combineWithAllOtherParameters("computeWeakenedSafetyAssumptions") + combineWithAllOtherParameters("synthesisProfiling")
 
 # Which ones require (one of) another parameter(s)
 requiredParameters = [
@@ -270,7 +271,8 @@ listOfPluginClasses = [
     ("XExtractPermissiveExplicitStrategy","extensionPermissiveExplicitStrategy.hpp"),
     ("XRoboticsSemantics","extensionRoboticsSemantics.hpp"),
     ("XTwoDimensionalCost","extensionTwoDimensionalCost.hpp"),
-    ("XComputeWeakenedSafetyAssumptions","extensionWeakenSafetyAssumptions.hpp")
+    ("XComputeWeakenedSafetyAssumptions","extensionWeakenSafetyAssumptions.hpp"),
+    ("XSynthesisProfiling","extensionSynthesisProcessProfiling.hpp")
 ]
 
 # In which order do they have to be instantiated?
@@ -420,6 +422,7 @@ listOfCommandLineCombinationToClassInstantiationMappers.append(lambda x: simpleI
 listOfCommandLineCombinationToClassInstantiationMappers.append(lambda x: simpleInstantiationMapper("biasForAction","XBiasForAction",x))
 listOfCommandLineCombinationToClassInstantiationMappers.append(lambda x: simpleInstantiationMapper("computeWeakenedSafetyAssumptions","XComputeWeakenedSafetyAssumptions",x))
 listOfCommandLineCombinationToClassInstantiationMappers.append(lambda x: simpleInstantiationMapper("sysInitRoboticsSemantics","XRoboticsSemantics",x))
+listOfCommandLineCombinationToClassInstantiationMappers.append(lambda x: simpleInstantiationMapper("synthesisProfiling","XSynthesisProfiling",x))
 
 #============================================================
 # Sanity checks
