@@ -72,8 +72,8 @@ structuredVariablesMin = []
 structuredVariablesMax = []
 structuredVariablesIsOutput = []
 
-# First pass: Find the limits of all integer variables
 for (isOutput,source,startIndex) in [(False,inputAPs,0),(True,outputAPs,len(inputAPs))]:
+    # First pass: Find the limits of all integer variables
     for i,a in enumerate(source):
         if "@" in a:
             # is Structured
@@ -88,8 +88,7 @@ for (isOutput,source,startIndex) in [(False,inputAPs,0),(True,outputAPs,len(inpu
                 structuredVariablesMax.append(int(maximum))
                 structuredVariablesIsOutput.append(isOutput)
 
-# Second pass: parse all other variables
-for (isOutput,source,startIndex) in [(False,inputAPs,0),(True,outputAPs,len(inputAPs))]:
+    # Second pass: parse all other variables
     for i,a in enumerate(source):
         if "@" in a:
             (varName,suffix) = a.split("@")
@@ -184,6 +183,15 @@ def parseBinaryStateTupleIntoStructuredTuple(structuredTuple):
 # ==================================
 # Prepare visualization
 # ==================================
+print "Out:",structuredVariables
+print "Out:",structuredVariablesBitPositions
+print "Out:",structuredVariablesMin
+print "Out:",structuredVariablesMax
+print "Out:",structuredVariablesIsOutput
+
+print "inputAPs:",inputAPs
+print "outputAPs:",outputAPs
+
 maxLenInputOrOutputName = 15 # Minimium size
 for a in structuredVariables:
     maxLenInputOrOutputName = max(maxLenInputOrOutputName,len(a))
