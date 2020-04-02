@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Translates a structured specification into an unstructured one that is suitable to be read by the slugs synthesis tool
 
@@ -10,7 +10,6 @@ import subprocess
 import signal
 from Parser import Parser
 from re import match
-import StringIO
 
 # =====================================================
 # Allocate global parser and parser context variables:
@@ -208,17 +207,17 @@ def parseLTL(ltlTxt,reasonForNotBeingASlugsFormula):
         # print >>sys.stderr, input
         tree = p.parse(input)
 
-    except p.ParseErrors, exception:
+    except p.ParseErrors as exception:
         for t,e in exception.errors:
             if t[0] == p.EOF:
                 print >>sys.stderr, "Formula end not expected here"
                 continue
 
             found = repr(t[0])
-            print >>sys.stderr, "Error in the property line: "+ltlTxt
-            print >>sys.stderr, "... which could not have been a slugs Polish notation line because of: "+ reasonForNotBeingASlugsFormula
-            print >>sys.stderr, "Could not parse %s, "%found
-            print >>sys.stderr, "Wanted a token of one of the following forms: "+", ".join([ repr(s) for s in e ])
+            print("Error in the property line: "+ltlTxt,file=sys.stderr)
+            print("... which could not have been a slugs Polish notation line because of: "+ reasonForNotBeingASlugsFormula,file=sys.stderr)
+            print("Could not parse %s, "%found,file=sys.stderr)
+            print("Wanted a token of one of the following forms: "+", ".join([ repr(s) for s in e ]),file=sys.stderr)
         raise
 
     # Convert to a tree
@@ -252,17 +251,17 @@ def recurseCalculationSubformula(tree,memoryStructureParts, isPrimed):
             memoryStructureParts.append(["^",part1MemoryStructurePointers[0],part2MemoryStructurePointers[0]])
             memoryStructureParts.append(["&",part1MemoryStructurePointers[0],part2MemoryStructurePointers[0]])
             # First part: Joint part of the word
-            for i in xrange(1,len(part1MemoryStructurePointers)):
+            for i in range(1,len(part1MemoryStructurePointers)):
                 memoryStructureParts.append(["^ ^",part1MemoryStructurePointers[i],part2MemoryStructurePointers[i],"?",str(len(memoryStructureParts)-1)])
                 memoryStructureParts.append(["| | &",part1MemoryStructurePointers[i],part2MemoryStructurePointers[i],"& ?",str(len(memoryStructureParts)-2),part1MemoryStructurePointers[i],"& ?",str(len(memoryStructureParts)-2),part2MemoryStructurePointers[i]])
            
             # Second part: Part of the word where j1 is shorter than j2
-            for i in xrange(len(part1MemoryStructurePointers),len(part2MemoryStructurePointers)):
+            for i in range(len(part1MemoryStructurePointers),len(part2MemoryStructurePointers)):
                 memoryStructureParts.append(["^",part2MemoryStructurePointers[i],"?",str(len(memoryStructureParts)-1)])
                 memoryStructureParts.append(["&",part2MemoryStructurePointers[i],"?",str(len(memoryStructureParts)-2)])
 
             # Return new value including the final bit
-            return ["? "+str(i*2+startingPosition) for i in xrange(0,len(part2MemoryStructurePointers))]+["? "+str(len(memoryStructureParts)-1)]
+            return ["? "+str(i*2+startingPosition) for i in range(0,len(part2MemoryStructurePointers))]+["? "+str(len(memoryStructureParts)-1)]
 
         # Subtraction?
         elif tree[2][0]=="SubtractionOperator":
@@ -349,33 +348,33 @@ def computeCalculationSubformula(tree, isPrimed):
     # ->    Greater or Greater-Equal
     if (tree[2][1][0]=="GreaterOperator") or (tree[2][1][0]=="GreaterEqualOperator"):
         thisParts = ["0"] if tree[2][1][0]=="GreaterOperator" else ["1"]
-        for i in xrange(0,min(len(part1MemoryStructurePointers),len(part2MemoryStructurePointers))):
+        for i in range(0,min(len(part1MemoryStructurePointers),len(part2MemoryStructurePointers))):
             thisParts = ["|","&",part1MemoryStructurePointers[i],"!",part2MemoryStructurePointers[i],"& | !",part2MemoryStructurePointers[i],part1MemoryStructurePointers[i]]+thisParts
-        for i in xrange(len(part1MemoryStructurePointers),len(part2MemoryStructurePointers)):
+        for i in range(len(part1MemoryStructurePointers),len(part2MemoryStructurePointers)):
             thisParts = ["& !",part2MemoryStructurePointers[i]]+thisParts
-        for i in xrange(len(part2MemoryStructurePointers),len(part1MemoryStructurePointers)):
+        for i in range(len(part2MemoryStructurePointers),len(part1MemoryStructurePointers)):
             thisParts = ["|",part1MemoryStructurePointers[i]]+thisParts
         memoryStructureParts.append(thisParts)
 
     # ->    Smaller or Smaller-Equal
     elif (tree[2][1][0]=="SmallerOperator") or (tree[2][1][0]=="SmallerEqualOperator"):
         thisParts = ["0"] if tree[2][1][0]=="SmallerOperator" else ["1"]
-        for i in xrange(0,min(len(part1MemoryStructurePointers),len(part2MemoryStructurePointers))):
+        for i in range(0,min(len(part1MemoryStructurePointers),len(part2MemoryStructurePointers))):
             thisParts = ["|","& !",part1MemoryStructurePointers[i],part2MemoryStructurePointers[i],"& |",part2MemoryStructurePointers[i],"!",part1MemoryStructurePointers[i]]+thisParts
-        for i in xrange(len(part2MemoryStructurePointers),len(part1MemoryStructurePointers)):
+        for i in range(len(part2MemoryStructurePointers),len(part1MemoryStructurePointers)):
             thisParts = ["& !",part1MemoryStructurePointers[i]]+thisParts
-        for i in xrange(len(part1MemoryStructurePointers),len(part2MemoryStructurePointers)):
+        for i in range(len(part1MemoryStructurePointers),len(part2MemoryStructurePointers)):
             thisParts = ["|",part2MemoryStructurePointers[i]]+thisParts
         memoryStructureParts.append(thisParts)
 
     # ->    Equal Operator or Unequal Operator
     elif (tree[2][1][0]=="EqualOperator") or (tree[2][1][0]=="UnequalOperator"):
         thisParts = ["1"]
-        for i in xrange(0,min(len(part1MemoryStructurePointers),len(part2MemoryStructurePointers))):
+        for i in range(0,min(len(part1MemoryStructurePointers),len(part2MemoryStructurePointers))):
             thisParts = ["&","! ^",part1MemoryStructurePointers[i],part2MemoryStructurePointers[i]]+thisParts
-        for i in xrange(len(part2MemoryStructurePointers),len(part1MemoryStructurePointers)):
+        for i in range(len(part2MemoryStructurePointers),len(part1MemoryStructurePointers)):
             thisParts = ["& !",part1MemoryStructurePointers[i]]+thisParts
-        for i in xrange(len(part1MemoryStructurePointers),len(part2MemoryStructurePointers)):
+        for i in range(len(part1MemoryStructurePointers),len(part2MemoryStructurePointers)):
             thisParts = ["& !",part2MemoryStructurePointers[i]]+thisParts
         if (tree[2][1][0]=="UnequalOperator"):
             memoryStructureParts.append(["!"]+thisParts)
@@ -434,9 +433,10 @@ def parseSimpleFormula(tree, isPrimed):
     if (tree[0]=="CalculationSubformula"):
         assert len(tree)==4
         return computeCalculationSubformula(tree,isPrimed)
-
-    print >>sys.stderr, "Cannot parse sub-tree!"
-    print >>sys.stderr, tree
+    if (tree[0]=="BinaryTemporalFormula") or (tree[0]=="UnaryTemporalFormula"):
+        raise Exception("Cannot parse input formula: Only GR(1) specification parts are supported by Slugs and the structured Slugs compiler - no temperal operators such as 'G', 'F', 'U', and 'W' can be used.")
+    print("Cannot parse sub-tree!",file=sys.stderr)
+    print(tree,file=sys.stderr)
     raise Exception("Slugs parsing error")
     
 
@@ -457,7 +457,7 @@ def isValidRecursiveSlugsProperty(tokens):
     if "$" in tokens:
         return (True,"Found a '$' in the property.")
     stacksize = 0
-    for i in xrange(len(tokens)-1,-1,-1):
+    for i in range(len(tokens)-1,-1,-1):
         currentToken = tokens[i]
         if currentToken=="|" or currentToken=="&" or currentToken=="^":
             if stacksize<2:
@@ -526,29 +526,29 @@ def performConversion(inputFile,thoroughly):
             if line=="" or line.startswith("#"):
                 translatedIOLines[variableType].append(line.strip())
             elif "'" in line:
-                print >>sys.stderr, "Error with atomic signal name "+line+": the name must not contain any \"'\" characters"
+                print("Error with atomic signal name "+line+": the name must not contain any \"'\" characters",file=sys.stderr)
                 raise Exception("Translation error")
             elif "@" in line:
-                print >>sys.stderr, "Error with atomic signal name "+line+": the name must not contain any \"@\" characters"
+                print("Error with atomic signal name "+line+": the name must not contain any \"@\" characters",file=sys.stderr)
                 raise Exception("Translation error")
             elif ":" in line:
                 parts = line.split(":")
                 parts = [a.strip() for a in parts]
                 if len(parts)!=2:
-                    print >>sys.stderr, "Error reading line '"+line+"' in section "+variableType+": Too many ':'s!"
+                    print("Error reading line '"+line+"' in section "+variableType+": Too many ':'s!",file=sys.stderr)
                     raise Exception("Failed to translate file.")
                 parts2 = parts[1].split("...")
                 if len(parts2)!=2:
-                    print >>sys.stderr, "Error reading line '"+line+"' in section "+variableType+": Syntax should be name:from...to, where the latter two are numbers"
+                    print("Error reading line '"+line+"' in section "+variableType+": Syntax should be name:from...to, where the latter two are numbers",file=sys.stderr)
                     raise Exception("Failed to translate file.")
                 try:
                     minValue = int(parts2[0])
                     maxValue = int(parts2[1])
                 except ValueError:
-                    print >>sys.stderr, "Error reading line '"+line+"' in section "+variableType+": the minimal and maximal values are not given as numbers"
+                    print("Error reading line '"+line+"' in section "+variableType+": the minimal and maximal values are not given as numbers",file=sys.stderr)
                     raise Exception("Failed to translate file.")
                 if minValue>maxValue:
-                    print >>sys.stderr, "Error reading line '"+line+"' in section "+variableType+": the minimal value should be smaller than the maximum one (or at least equal)"
+                    print("Error reading line '"+line+"' in section "+variableType+": the minimal value should be smaller than the maximum one (or at least equal)",file=sys.stderr)
                     raise Exception("Failed to translate file.")
                 
                 # Fill the dictionaries numberAPLimits, translatedNames with information
@@ -561,7 +561,7 @@ def performConversion(inputFile,thoroughly):
                     nofBits += 1
                 numberAPNofBits[variable] = nofBits
                 # Translate name into bits in a way such that the first bit carries not only the original name, but also min and max information
-                translatedNames[parts[0]] = [parts[0]+"@"+str(i)+("."+str(minValue)+"."+str(maxValue) if i==0 else "") for i in xrange(0,nofBits)]
+                translatedNames[parts[0]] = [parts[0]+"@"+str(i)+("."+str(minValue)+"."+str(maxValue) if i==0 else "") for i in range(0,nofBits)]
                 translatedIOLines[variableType] = translatedIOLines[variableType] + translatedNames[parts[0]]
                 booleanAPs.extend(translatedNames[parts[0]])
 
@@ -572,7 +572,7 @@ def performConversion(inputFile,thoroughly):
                     propertyDestination = "ENV" if variableType.endswith("INPUT]") else "SYS"
                     # Init constraint
                     tokens = ["0"]
-                    for i in xrange(0,numberAPNofBits[variable]):
+                    for i in range(0,numberAPNofBits[variable]):
                         if 2**i & limitDiff:
                             tokens = ["| !",translatedNames[variable][i]]+tokens
                         else:
@@ -587,7 +587,7 @@ def performConversion(inputFile,thoroughly):
 
                     # Trans constraint for next states
                     tokens = ["0"]
-                    for i in xrange(0,numberAPNofBits[variable]):
+                    for i in range(0,numberAPNofBits[variable]):
                         if 2**i & limitDiff:
                             tokens = ["| !",translatedNames[variable][i]+"'"]+tokens
                         else:
@@ -607,35 +607,35 @@ def performConversion(inputFile,thoroughly):
     # ---------------------------------------    
     for variableType in ["[MOTION STATE OUTPUT]","[MOTION CONTROLLER OUTPUT]","[INPUT]","[OUTPUT]","[OBSERVABLE_INPUT]","[UNOBSERVABLE_INPUT]","[CONTROLLABLE_INPUT]","[OTHER OUTPUT]","[HELPER_BDDS]"]: 
         if len(translatedIOLines[variableType])>0:
-            print variableType
+            print(variableType)
             for a in translatedIOLines[variableType]:
-                print a
-            print ""
+                print(a)
+            print("")
 
     # ---------------------------------------    
     # Go through the properties and translate
     # ---------------------------------------    
     for propertyType in ["[ENV_TRANS]","[ENV_INIT]","[SYS_TRANS]","[SYS_INIT]","[ENV_LIVENESS]","[SYS_LIVENESS]"]:
         if len(lines[propertyType])>0:
-            print propertyType
+            print(propertyType)
 
             # Test for conformance with recursive definition
             for a in lines[propertyType]:
                 # print >>sys.stderr, a.strip().split(" ")
                 if (len(a.strip())==0) or a.strip()[0:1] == "#":
-                    print a
+                    print(a)
                 else:
                     (isSlugsFormula,reasonForNotBeingASlugsFormula) = isValidRecursiveSlugsProperty(a.strip().split(" "))
                     if isSlugsFormula:
-                        print a
+                        print(a)
                     else:
                         # print >>sys.stderr,a
                         # Try to parse!
                         tree = parseLTL(a,reasonForNotBeingASlugsFormula)            
                         # printTree(tree)
                         currentLine = translateToSlugsFormat(tree)
-                        print currentLine
-            print ""
+                        print(currentLine)
+            print("")
         
 
 
@@ -645,7 +645,7 @@ def performConversion(inputFile,thoroughly):
 # ==================================
 if __name__ == "__main__":
     if len(sys.argv)<2:
-        print >>sys.stderr, "Error: Need input file parameter"
+        print("Error: Need input file parameter",file=sys.stderr)
         sys.exit(1)
 
     inputFile = None
@@ -655,11 +655,11 @@ if __name__ == "__main__":
             if parameter=="--thorougly":
                 thoroughly = True
             else:
-                print >>sys.stderr, "Error: did not understand parameter '"+parameter+"'"
+                print("Error: did not understand parameter '"+parameter+"'",file=sys.stderr)
                 sys.exit(1)
         else:
             if inputFile!=None:
-                print >>sys.stderr, "Error: more than one file name given."
+                print("Error: more than one file name given.",file=sys.stderr)
                 sys.exit(1)
             inputFile = parameter
 
