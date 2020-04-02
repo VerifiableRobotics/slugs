@@ -2,6 +2,10 @@
 #define __EXTENSION_INTERACTIVE_STRATEGY_HPP
 
 #include <boost/algorithm/string.hpp>
+#include "BF.h"
+#include "variableTypes.hpp"
+#include <iostream>
+#include "gr1context.hpp"
 
 
 /**
@@ -132,6 +136,7 @@ public:
 
         BF currentPosition = mgr.constantFalse();
         unsigned int currentLivenessGuarantee = 0;
+        assert(positionalStrategiesForTheIndividualGoals.size()>=1);
 
         while(true) {
 
@@ -417,6 +422,7 @@ public:
             //========================================
             else if (command=="XMAKETRANS") {
                 std::cout << "\n"; // Get rid of the prompt
+                if (!realizable) throw "Error: XMAKETRANS is only supported for realizable specifications";
                 BF postInput = mgr.constantTrue();
                 for (unsigned int i=0;i<variables.size();i++) {
                     if (doesVariableInheritType(i,PostInput)) {
@@ -451,6 +457,7 @@ public:
                     }
 
                     currentLivenessGuarantee = nextLivenessGuarantee;
+                    assert(currentLivenessGuarantee<positionalStrategiesForTheIndividualGoals.size());
                     currentPosition = newCombination.ExistAbstract(varCubePre).SwapVariables(varVectorPre,varVectorPost);
 
                     // Print position

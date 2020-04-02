@@ -35,7 +35,7 @@ protected:
     std::string message;
 public:
     BFDumpDotException(const std::string &msg) : message(msg) {};
-	virtual ~BFDumpDotException() {};
+	~BFDumpDotException() {};
 	BFDumpDotException(const char* file, int line) {
 		std::ostringstream s;
 		s << "BFDumpDotException thrown: " << file << ", line " << line;
