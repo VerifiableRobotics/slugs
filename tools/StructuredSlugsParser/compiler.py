@@ -278,7 +278,7 @@ def recurseCalculationSubformula(tree,memoryStructureParts, isPrimed):
                 result.append("1")
             else:
                 result.append("0")
-            parameter = parameter / 2
+            parameter = parameter // 2
         return result
 
     # Work on NumID
