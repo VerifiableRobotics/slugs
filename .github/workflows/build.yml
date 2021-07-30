@@ -19,6 +19,10 @@ jobs:
             os: ubuntu-latest,
             cc: "gcc", cxx: "g++"
           }
+        - {
+            name: "MacOs Latest", 
+            os: macos-latest,
+          }
 
 
     steps:
@@ -30,7 +34,18 @@ jobs:
     - name: Update submodule.
       run: git submodule update --remote
     - name: Install various packages needed 
-      run: sudo apt-get install build-essential libboost-all-dev
+      run: |
+         if [ "$RUNNER_OS" == "Linux" ]; then
+              sudo apt-get install build-essential libboost-all-dev
+         elif [ "$RUNNER_OS" == "Windows" ]; then
+              # Unsupported as of now.
+              choco install stuff
+         elif [ "$RUNNER_OS" == "macOS" ]; then
+              brew install boost
+         else
+              echo "$RUNNER_OS not supported"
+              exit 1
+         fi
     - name: Make the slugs executable
       run: cd src; make
     - name: Test a simple slugs run
