@@ -34,5 +34,5 @@ jobs:
     - name: Make the slugs executable
       run: cd src; make
     - name: Test a simple slugs run
-      run: time src/slugs examples/water_reservoir.slugsin
+      run: time src/slugs examples/firefighting.slugsin
 
