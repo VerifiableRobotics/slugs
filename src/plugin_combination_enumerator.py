@@ -73,10 +73,18 @@ listOfCommandLineParameters = [
     ("twoDimensionalCost","Computes a controller that optimizes for waiting and action cost at the same time."),
     ("cooperativeGR1Strategy","Computes a controller strategy that is cooperative with its environment."),
     ("synthesisProfiling","Performs standard GR(1) synthesis but profiles the number of iterations and the computation times."),
+    ("environmentFriendlyStrategy","Computes an environment-friendly strategy according to the construction from the TACAS 2019 paper 'Environmentally-friendly GR(1) Synthesis' by Majumdar, Piterman, and Schmuck"),
+    ("environmentFriendlySynthesis","Performs environment-friendly realizability checking according to the construction from the TACAS 2019 paper 'Environmentally-friendly GR(1) Synthesis' by Majumdar, Piterman, and Schmuck, using a quadruply nested fixpoint."),
+    ("useHeuristic","Modifier for --environmentFriendlySynthesis: When computing winningPositions for environment-friendly strategies a sound but incomplete heuristic is used which only explores b==a within EnvironmentFriendlySynthesis."),
 ]
 
 # Which command line parameters can be combined?
 combinableParameters = [
+
+    # Environment-friendly synthesis
+    ("environmentFriendlyStrategy","jsonOutput"),
+    ("environmentFriendlyStrategy","useHeuristic"),
+    ("environmentFriendlySynthesis","useHeuristic"),
     
     # SysInitRoboticsSemantics works with pretty much everything
     # where realizability is checked in the classical sense
@@ -172,6 +180,9 @@ combinableParameters = [
 # Which ones cannot be combined?
 uncombinableParameters = [
 
+    # Environment-friendly.
+    ("environmentFriendlyStrategy","environmentFriendlySynthesis"),
+
     # Interactive Strategy
     ("interactiveStrategy","sysInitRoboticsSemantics"),
     ("interactiveStrategy","explicitStrategy"),
@@ -234,14 +245,15 @@ uncombinableParameters = [
     ("extractExplicitPermissiveStrategy","cooperativeGR1Strategy"),
     ("twoDimensionalCost","cooperativeGR1Strategy"),
 
-] + combineWithAllOtherParameters("computeIncompleteInformationEstimator") + combineWithAllOtherParameters("computeAbstractWinningTrace") + combineWithAllOtherParameters("computeInterestingRunOfTheSystem") + combineWithAllOtherParameters("analyzeSafetyLivenessInteraction") + combineWithAllOtherParameters("analyzeAssumptions") + combineWithAllOtherParameters("computeCNFFormOfTheSpecification") + combineWithAllOtherParameters("analyzeInterleaving") + combineWithAllOtherParametersBut("analyzeInitialPositions",["restrictToReachableStates"]) + combineWithAllOtherParametersBut("restrictToReachableStates",["analyzeInitialPositions"]) + combineWithAllOtherParametersBut("nonDeterministicMotion",["sysInitRoboticsSemantics","interactiveStrategy","extractExplicitPermissiveStrategy","simpleSymbolicStrategy","symbolicStrategy","nonDeterministicMotionSelfLoopLivenessAssumption"]) + combineWithAllOtherParametersBut("nonDeterministicMotionSelfLoopLivenessAssumption",["sysInitRoboticsSemantics","interactiveStrategy","extractExplicitPermissiveStrategy","simpleSymbolicStrategy","symbolicStrategy","nonDeterministicMotion"]) + combineWithAllOtherParameters("computeWeakenedSafetyAssumptions") + combineWithAllOtherParameters("synthesisProfiling")
+] + combineWithAllOtherParameters("computeIncompleteInformationEstimator") + combineWithAllOtherParameters("computeAbstractWinningTrace") + combineWithAllOtherParameters("computeInterestingRunOfTheSystem") + combineWithAllOtherParameters("analyzeSafetyLivenessInteraction") + combineWithAllOtherParameters("analyzeAssumptions") + combineWithAllOtherParameters("computeCNFFormOfTheSpecification") + combineWithAllOtherParameters("analyzeInterleaving") + combineWithAllOtherParametersBut("analyzeInitialPositions",["restrictToReachableStates"]) + combineWithAllOtherParametersBut("restrictToReachableStates",["analyzeInitialPositions"]) + combineWithAllOtherParametersBut("nonDeterministicMotion",["sysInitRoboticsSemantics","interactiveStrategy","extractExplicitPermissiveStrategy","simpleSymbolicStrategy","symbolicStrategy","nonDeterministicMotionSelfLoopLivenessAssumption"]) + combineWithAllOtherParametersBut("nonDeterministicMotionSelfLoopLivenessAssumption",["sysInitRoboticsSemantics","interactiveStrategy","extractExplicitPermissiveStrategy","simpleSymbolicStrategy","symbolicStrategy","nonDeterministicMotion"]) + combineWithAllOtherParameters("computeWeakenedSafetyAssumptions") + combineWithAllOtherParameters("synthesisProfiling") + combineWithAllOtherParametersBut("environmentFriendlyStrategy",["useHeuristic","jsonOutput"]) + combineWithAllOtherParametersBut("environmentFriendlySynthesis",["useHeuristic"]) +  combineWithAllOtherParametersBut("useHeuristic",["environmentFriendlySynthesis","environmentFriendlyStrategy","jsonOutput"])
 
 # Which ones require (one of) another parameter(s)
 requiredParameters = [
     ("restrictToReachableStates",["analyzeInitialPositions"]),
     ("simpleRecovery",["explicitStrategy","symbolicStrategy","simpleSymbolicStrategy"]),
-    ("jsonOutput",["explicitStrategy"]),
+    ("jsonOutput",["explicitStrategy","environmentFriendlyStrategy"]),
     ("nonDeterministicMotionSelfLoopLivenessAssumption",["nonDeterministicMotion"]),
+    ("useHeuristic",["environmentFriendlySynthesis","environmentFriendlyStrategy"]),
 ]
 
 # -------------------------------------------------------
@@ -272,7 +284,13 @@ listOfPluginClasses = [
     ("XRoboticsSemantics","extensionRoboticsSemantics.hpp"),
     ("XTwoDimensionalCost","extensionTwoDimensionalCost.hpp"),
     ("XComputeWeakenedSafetyAssumptions","extensionWeakenSafetyAssumptions.hpp"),
-    ("XSynthesisProfiling","extensionSynthesisProcessProfiling.hpp")
+    ("XSynthesisProfiling","extensionSynthesisProcessProfiling.hpp"),
+    ("XEnvironmentFriendlySynthesis","extensionEnvironmentFriendlySynthesis.hpp"),
+    ("XExtractEnvironmentFriendlyStrategy","extensionExtractEnvironmentFriendlyStrategy.hpp")
+    
+    #include "extensionEnvironmentFriendlySynthesis.hpp"
+#include "extensionExtractEnvironmentFriendlyStrategy.hpp"
+
 ]
 
 # In which order do they have to be instantiated?
@@ -322,7 +340,8 @@ orderOfPluginClassesInInstantiations = [
     ("XInteractiveStrategy","XFixedPointRecycling"),
     ("XExtractPermissiveExplicitStrategy","XBiasForAction"),
     ("XExtractSymbolicStrategy","XTwoDimensionalCost"),
-    ("XExtractSymbolicStrategy","XFixedPointRecycling")
+    ("XExtractSymbolicStrategy","XFixedPointRecycling"),
+    ("XExtractEnvironmentFriendlyStrategy","XEnvironmentFriendlySynthesis")
     
 ]
 
@@ -332,6 +351,27 @@ orderOfPluginClassesInInstantiations = [
 # Mapping Plugin combinations to class instantiations
 # -------------------------------------------------------    
 listOfCommandLineCombinationToClassInstantiationMappers = []
+
+# Environment friendly synthesis
+def envFriendlySynthesis(params):
+    heuristic = "useHeuristic" in params
+    if "environmentFriendlySynthesis" in params:
+        ret = [("XEnvironmentFriendlySynthesis","true" if heuristic else "false") ]
+        params.difference_update(["environmentFriendlySynthesis","useHeuristic"])
+        return ret
+    return []
+listOfCommandLineCombinationToClassInstantiationMappers.append(envFriendlySynthesis)
+
+# Environment friendly synthesis
+def envFriendlyStrategy(params):
+    json = "jsonOutput" in params
+    heuristic = "useHeuristic" in params
+    if "environmentFriendlyStrategy" in params:
+        ret = [("XExtractEnvironmentFriendlyStrategy","true" if json else "false"),("XEnvironmentFriendlySynthesis","true" if heuristic else "false") ]
+        params.difference_update(["jsonOutput","environmentFriendlyStrategy","useHeuristic"])
+        return ret
+    return []
+listOfCommandLineCombinationToClassInstantiationMappers.append(envFriendlyStrategy)
 
 # Two dimensional cost Motion (needs to know if robotics Semantics has been selected and if simple recovery is active or not)
 def twoDimensionalCost(params):

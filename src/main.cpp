@@ -59,6 +59,8 @@
 #include "extensionCooperativeGR1Strategy.hpp"
 #include "extensionOptimisticRecovery.hpp"
 #include "extensionSynthesisProcessProfiling.hpp"
+#include "extensionEnvironmentFriendlySynthesis.hpp"
+#include "extensionExtractEnvironmentFriendlyStrategy.hpp"
 
 //===================================================================================
 // List of command line arguments
@@ -92,6 +94,9 @@ const char *commandLineArguments[] = {
     "--twoDimensionalCost","Computes a controller that optimizes for waiting and action cost at the same time.",
     "--cooperativeGR1Strategy","Computes a controller strategy that is cooperative with its environment.",
     "--synthesisProfiling","Performs standard GR(1) synthesis but profiles the number of iterations and the computation times.",
+    "--environmentFriendlyStrategy","Computes an environment-friendly strategy according to the construction from the TACAS 2019 paper 'Environmentally-friendly GR(1) Synthesis' by Majumdar, Piterman, and Schmuck",
+    "--environmentFriendlySynthesis","Performs environment-friendly realizability checking according to the construction from the TACAS 2019 paper 'Environmentally-friendly GR(1) Synthesis' by Majumdar, Piterman, and Schmuck, using a quadruply nested fixpoint.",
+    "--useHeuristic","Modifier for --environmentFriendlySynthesis: When computing winningPositions for environment-friendly strategies a sound but incomplete heuristic is used which only explores b==a within EnvironmentFriendlySynthesis.",
     //-END-COMMAND-LINE-ARGUMENT-LIST
 };
 
@@ -187,6 +192,12 @@ OptionCombination optionCombinations[] = {
     OptionCombination("--cooperativeGR1Strategy",XCooperativeGR1Strategy<GR1Context>::makeInstance),
     OptionCombination("--counterStrategy --sysInitRoboticsSemantics",XExtractExplicitCounterStrategy<XCounterStrategy<GR1Context,true>>::makeInstance),
     OptionCombination("--counterStrategy",XExtractExplicitCounterStrategy<XCounterStrategy<GR1Context,false>>::makeInstance),
+    OptionCombination("--environmentFriendlyStrategy --jsonOutput --useHeuristic",XExtractEnvironmentFriendlyStrategy<XEnvironmentFriendlySynthesis<GR1Context,true>,true>::makeInstance),
+    OptionCombination("--environmentFriendlyStrategy --jsonOutput",XExtractEnvironmentFriendlyStrategy<XEnvironmentFriendlySynthesis<GR1Context,false>,true>::makeInstance),
+    OptionCombination("--environmentFriendlyStrategy --useHeuristic",XExtractEnvironmentFriendlyStrategy<XEnvironmentFriendlySynthesis<GR1Context,true>,false>::makeInstance),
+    OptionCombination("--environmentFriendlyStrategy",XExtractEnvironmentFriendlyStrategy<XEnvironmentFriendlySynthesis<GR1Context,false>,false>::makeInstance),
+    OptionCombination("--environmentFriendlySynthesis --useHeuristic",XEnvironmentFriendlySynthesis<GR1Context,true>::makeInstance),
+    OptionCombination("--environmentFriendlySynthesis",XEnvironmentFriendlySynthesis<GR1Context,false>::makeInstance),
     OptionCombination("--explicitStrategy --fixedPointRecycling --jsonOutput --simpleRecovery --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<XFixedPointRecycling<GR1Context>>,true,true>::makeInstance),
     OptionCombination("--explicitStrategy --fixedPointRecycling --jsonOutput --simpleRecovery",XExtractExplicitStrategy<XFixedPointRecycling<GR1Context>,true,true>::makeInstance),
     OptionCombination("--explicitStrategy --fixedPointRecycling --jsonOutput --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<XFixedPointRecycling<GR1Context>>,false,true>::makeInstance),
