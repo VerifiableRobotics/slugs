@@ -215,7 +215,7 @@ public:
         // Extract strategy by investigating one state at the time from the todoList and queue newly encountered post states to the bottom of the list
         while (todoList.size()>0) {
 	    // we take the first state from the todoList
-            std::tuple<size_t, unsigned int, unsigned int, unsigned int, unsigned int> (current) = todoList.front();
+            std::tuple<size_t, unsigned int, unsigned int, unsigned int, unsigned int> current = todoList.front();
 	    // and delete it from the list
             todoList.pop_front();
 	    

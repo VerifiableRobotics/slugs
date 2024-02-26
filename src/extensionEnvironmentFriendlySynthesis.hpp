@@ -90,9 +90,9 @@ public:
      To enable debugging, we add an input parameter specifying that we print to the console. 
      */
     
-     void computeWinningPositions() {    
+     void computeWinningPositions() {
                   
-        std::ostream &outputStream = std::cout; //only used for debugging, defines that everything is printed to the console 
+        // NOT USED: std::ostream &outputStream = std::cout; //only used for debugging, defines that everything is printed to the console
 	    
 	//  vectors to store intermediate results of the fixed-point computations used to construct strategyDumpingDataFourFP
 	std::vector<std::vector<std::vector<BF>>> subvectorI;
@@ -185,9 +185,9 @@ public:
 
 		    for (unsigned int b=0;b<livenessAssumptions.size();b++) {
 		        
-                       // if we use the Heuristic, we should only evaluate the two innermost fixed points if a==b. 
-                       // Otherwise we evaluate every combination of a and b. 
-		       if (b==a | (b!=a & !(UseHeuristic))) { 
+                       // if we use the Heuristic, we should only evaluate the two innermost fixed points if a==b.
+                       // Otherwise we evaluate every combination of a and b.
+                        if ((b==a) | ((b!=a) & !(UseHeuristic))) {
 
 			// (5) The greatest fixed point - called '^abX' in the paper
 			BFFixedPoint nu0(mgr.constantTrue()); // initializing ^abX to the full state set
