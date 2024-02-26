@@ -6,9 +6,11 @@ If you want to cite slugs in a scientific paper, please cite its tool paper:
 
 - Rüdiger Ehlers and Vasumathi Raman: _Slugs: Extensible GR(1) Synthesis_. 28th International Conference on Computer Aided Verification (CAV 2016), Volume 2, p.333-339
 
-You can find an author-archived version of the paper [here](http://motesy.cs.uni-bremen.de/pdfs/cav2016.pdf). The paper has an appendix that contains an introduction to using slugs and its input language.
+You can find an author-archived version of the paper [here](https://www.ruediger-ehlers.de/papers/cav2016.pdf). The paper has an appendix that contains an introduction to using slugs and its input language.
 
 The slugs distribution comes with the CUDD library for manipulating binary decision diagrams (BDDs), written by Fabio Somenzi. Please see the README and LICENSE files in the `lib/cudd-3.0.0` folder for details. The _dddmp_ library for loading and saving BDDs that comes with CUDD has other licensing terms than CUDD that permit only academic and educational use. Please consult the source files in the `lib/cudd-3.0.0/dddmp` folder for details.
+
+An introduction video to reactive synthesis with a focus on generalized reactivity(1) synthesis [here](https://www.ruediger-ehlers.de/blog/introtoreactivesynthesis.html). It also contains a Slugs tool demo.
 
 
 Installation

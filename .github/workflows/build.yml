@@ -1,0 +1,53 @@
+name: Testing compiling slugs
+
+on: [push]
+
+env:
+  BUILD_TYPE: Release
+  CCACHE_VERSION: 4.2.1
+
+jobs:
+  build:
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+        - {
+            name: "Ubuntu Latest GCC", 
+            os: ubuntu-latest,
+            cc: "gcc", cxx: "g++"
+          }
+        - {
+            name: "MacOs Latest", 
+            os: macos-latest,
+          }
+
+
+    steps:
+      # SRC: https://stackoverflow.com/questions/67457510/git-submodule-update-remote-merge-yields-fatal-needed-a-single-revision
+    - uses: actions/checkout@main
+      with:
+         # we need the submodules.
+         submodules: recursive
+    - name: Update submodule.
+      run: git submodule update --remote
+    - name: Install various packages needed 
+      run: |
+         if [ "$RUNNER_OS" == "Linux" ]; then
+              sudo apt-get install build-essential libboost-all-dev
+         elif [ "$RUNNER_OS" == "Windows" ]; then
+              # Unsupported as of now.
+              choco install stuff
+         elif [ "$RUNNER_OS" == "macOS" ]; then
+              brew install boost
+         else
+              echo "$RUNNER_OS not supported"
+              exit 1
+         fi
+    - name: Make the slugs executable
+      run: cd src; make
+    - name: Test a simple slugs run
+      run: time src/slugs examples/firefighting.slugsin
+
