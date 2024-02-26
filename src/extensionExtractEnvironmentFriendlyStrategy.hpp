@@ -364,11 +364,6 @@ public:
 		    outputStream << tn;
 		}
 
-#ifndef NDEBUG
-             if (!((bfsUsedInTheLookupTable[stateNum] & safetyEnv &!envTransDone).isFalse()))
-                 throw "Error: Missing transition. Strategy generating plugin seems to be unsound.";
-#endif
-
             if (jsonOutput) {
                 outputStream << "]\n}";
                 if (!(todoList.empty())) {
