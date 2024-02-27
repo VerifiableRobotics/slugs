@@ -22,6 +22,7 @@ jobs:
         - {
             name: "MacOs Latest", 
             os: macos-latest,
+            cc: "gcc", cxx: "g++"
           }
 
 
