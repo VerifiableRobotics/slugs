@@ -160,8 +160,8 @@ BFBdd BFBddManager::readBDDFromFile(const char *filename, std::vector<BFBdd> &va
     }
 
     const char *idMatcher[Cudd_ReadSize(mgr)];
-    for (unsigned int i=0;i<Cudd_ReadSize(mgr);i++) { idMatcher[i] = ""; }
-    for (unsigned int i=0;i<Cudd_ReadSize(mgr);i++) { idMatcher[vars[i].readNodeIndex()] = varNames[i].c_str(); }
+    for (unsigned int i=0;i<static_cast<unsigned int>(Cudd_ReadSize(mgr));i++) { idMatcher[i] = ""; }
+    for (unsigned int i=0;i<static_cast<unsigned int>(Cudd_ReadSize(mgr));i++) { idMatcher[vars[i].readNodeIndex()] = varNames[i].c_str(); }
 
     DdNode *node = Dddmp_cuddBddLoad(mgr, DDDMP_VAR_MATCHNAMES, const_cast<char**>(idMatcher), NULL, NULL, DDDMP_MODE_DEFAULT,NULL,file);
     fclose(file);

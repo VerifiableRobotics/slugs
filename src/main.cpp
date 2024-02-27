@@ -61,6 +61,7 @@
 #include "extensionSynthesisProcessProfiling.hpp"
 #include "extensionEnvironmentFriendlySynthesis.hpp"
 #include "extensionExtractEnvironmentFriendlyStrategy.hpp"
+#include "extensionComputeInvariants.hpp"
 
 //===================================================================================
 // List of command line arguments
@@ -97,6 +98,7 @@ const char *commandLineArguments[] = {
     "--environmentFriendlyStrategy","Computes an environment-friendly strategy according to the construction from the TACAS 2019 paper 'Environmentally-friendly GR(1) Synthesis' by Majumdar, Piterman, and Schmuck",
     "--environmentFriendlySynthesis","Performs environment-friendly realizability checking according to the construction from the TACAS 2019 paper 'Environmentally-friendly GR(1) Synthesis' by Majumdar, Piterman, and Schmuck, using a quadruply nested fixpoint.",
     "--useHeuristic","Modifier for --environmentFriendlySynthesis: When computing winningPositions for environment-friendly strategies a sound but incomplete heuristic is used which only explores b==a within EnvironmentFriendlySynthesis.",
+    "--computeInvariants","Compute invariants that explain a synthesized strategy and/or the strategic choices that need to be made by an implementation of the specification",
     //-END-COMMAND-LINE-ARGUMENT-LIST
 };
 
@@ -170,6 +172,7 @@ OptionCombination optionCombinations[] = {
     OptionCombination("--computeCNFFormOfTheSpecification",XComputeCNFFormOfTheSpecification<GR1Context>::makeInstance),
     OptionCombination("--computeIncompleteInformationEstimator",XIncompleteInformationEstimatorSynthesis<GR1Context>::makeInstance),
     OptionCombination("--computeInterestingRunOfTheSystem",XComputeInterestingRunOfTheSystem<GR1Context>::makeInstance),
+    OptionCombination("--computeInvariants",XComputeInvariants<GR1Context>::makeInstance),
     OptionCombination("--computeWeakenedSafetyAssumptions",XComputeWeakenedSafetyAssumptions<GR1Context>::makeInstance),
     OptionCombination("--cooperativeGR1Strategy --explicitStrategy --jsonOutput --simpleRecovery --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<XCooperativeGR1Strategy<GR1Context>>,true,true>::makeInstance),
     OptionCombination("--cooperativeGR1Strategy --explicitStrategy --jsonOutput --simpleRecovery",XExtractExplicitStrategy<XCooperativeGR1Strategy<GR1Context>,true,true>::makeInstance),

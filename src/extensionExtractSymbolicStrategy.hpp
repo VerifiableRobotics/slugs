@@ -192,10 +192,10 @@ public:
         fileExtraHeader << "# For information about how this file is generated, please see the SLUGS source.\n#\n";
 
 #ifndef NDEBUG
-        std::string tempFilename(tmpnam(NULL));
-        tempFilename = tempFilename + "_strategyBdd.dot";
-        std::cerr << "Writing DOT file of the BDD to: " << tempFilename << std::endl;
-        BF_newDumpDot(*this,combinedStrategy,"SymbolicStrategyCounterVarPre PreInput PreOutput SymbolicStrategyCounterVarPost PostInput PostOutput", tempFilename.c_str());
+        //std::string tempFilename(tmpnam(NULL));
+        //tempFilename = tempFilename + "_strategyBdd.dot";
+        //std::cerr << "Writing DOT file of the BDD to: " << tempFilename << std::endl;
+        //BF_newDumpDot(*this,combinedStrategy,"SymbolicStrategyCounterVarPre PreInput PreOutput SymbolicStrategyCounterVarPost PostInput PostOutput", tempFilename.c_str());
 #endif
 
         mgr.writeBDDToFile(filename.c_str(),fileExtraHeader.str(),combinedStrategy,variables,variableNames);
@@ -220,10 +220,10 @@ public:
             BF careSet = reachable.getValue();
             mgr.writeBDDToFile((filename+".reachableCombinations").c_str(),"",careSet,variables,variableNames);
 #ifndef NDEBUG
-            std::string tempFilename(tmpnam(NULL));
-            tempFilename = tempFilename + "_caresetBdd.dot";
-            std::cerr << "Writing DOT file of the BDD to: " << tempFilename << std::endl;
-            BF_newDumpDot(*this,careSet,"SymbolicStrategyCounterVarPre SymbolicStrategyCounterVarPost PreInput PreOutput PostInput PostOutput", tempFilename.c_str());
+            //std::string tempFilename(tmpnam(NULL));
+            //tempFilename = tempFilename + "_caresetBdd.dot";
+            //std::cerr << "Writing DOT file of the BDD to: " << tempFilename << std::endl;
+            //BF_newDumpDot(*this,careSet,"SymbolicStrategyCounterVarPre SymbolicStrategyCounterVarPost PreInput PreOutput PostInput PostOutput", tempFilename.c_str());
 #endif
         }
 
