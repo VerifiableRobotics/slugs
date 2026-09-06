@@ -24,7 +24,6 @@ jobs:
             os: macos-latest,
           }
 
-
     steps:
       # SRC: https://stackoverflow.com/questions/67457510/git-submodule-update-remote-merge-yields-fatal-needed-a-single-revision
     - uses: actions/checkout@main
@@ -42,6 +41,7 @@ jobs:
               choco install stuff
          elif [ "$RUNNER_OS" == "macOS" ]; then
               brew install boost
+              echo "CPATH=$(brew --prefix boost)/include" >> "$GITHUB_ENV"
          else
               echo "$RUNNER_OS not supported"
               exit 1
