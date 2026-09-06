@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 #
 # This python script containts lists of all plugins
 # and computes the code for main.cpp that lists all allowed parameter combinations
@@ -70,7 +70,8 @@ listOfCommandLineParameters = [
     ("computeIncompleteInformationEstimator","Computes a imcomplete-information state estimation controller."),
     ("nonDeterministicMotion","Computes a controller using an non-deterministic motion abstraction."),
     ("twoDimensionalCost","Computes a controller that optimizes for waiting and action cost at the same time."),
-    ("cooperativeGR1Strategy","Computes a controller strategy that is cooperative with its environment.")    
+    ("cooperativeGR1Strategy","Computes a controller strategy that is cooperative with its environment."),
+    ("mixedMealyMoore","Uses a mixed Mealy/Moore semantics. Some output variables that are defined as of Moore type are set before the inputs in each round.")    
 ]
 
 # Which command line parameters can be combined?
@@ -112,6 +113,9 @@ combinableParameters = [
     ("simpleSymbolicStrategy","twoDimensionalCost"),
     ("symbolicStrategy","twoDimensionalCost"),
     ("symbolicStrategy","fixedPointRecycling"),
+    ("explicitStrategy","mixedMealyMoore"),
+    ("symbolicStrategy","mixedMealyMoore"),
+    ("simpleSymbolicStrategy","mixedMealyMoore"),
     
     
     # Permissive Strategies
@@ -218,7 +222,7 @@ uncombinableParameters = [
     ("extractExplicitPermissiveStrategy","cooperativeGR1Strategy"),
     ("twoDimensionalCost","cooperativeGR1Strategy"),
 
-] + combineWithAllOtherParameters("computeIncompleteInformationEstimator") + combineWithAllOtherParameters("computeAbstractWinningTrace") + combineWithAllOtherParameters("computeInterestingRunOfTheSystem") + combineWithAllOtherParameters("analyzeSafetyLivenessInteraction") + combineWithAllOtherParameters("analyzeAssumptions") + combineWithAllOtherParameters("computeCNFFormOfTheSpecification") + combineWithAllOtherParameters("analyzeInterleaving") + combineWithAllOtherParametersBut("analyzeInitialPositions",["restrictToReachableStates"]) + combineWithAllOtherParametersBut("restrictToReachableStates",["analyzeInitialPositions"]) + combineWithAllOtherParametersBut("nonDeterministicMotion",["sysInitRoboticsSemantics","interactiveStrategy"]) + combineWithAllOtherParameters("computeWeakenedSafetyAssumptions")
+] + combineWithAllOtherParameters("computeIncompleteInformationEstimator") + combineWithAllOtherParameters("computeAbstractWinningTrace") + combineWithAllOtherParameters("computeInterestingRunOfTheSystem") + combineWithAllOtherParameters("analyzeSafetyLivenessInteraction") + combineWithAllOtherParameters("analyzeAssumptions") + combineWithAllOtherParameters("computeCNFFormOfTheSpecification") + combineWithAllOtherParameters("analyzeInterleaving") + combineWithAllOtherParametersBut("analyzeInitialPositions",["restrictToReachableStates"]) + combineWithAllOtherParametersBut("restrictToReachableStates",["analyzeInitialPositions"]) + combineWithAllOtherParametersBut("nonDeterministicMotion",["sysInitRoboticsSemantics","interactiveStrategy"]) + combineWithAllOtherParameters("computeWeakenedSafetyAssumptions") + combineWithAllOtherParametersBut("mixedMealyMoore",["simpleSymbolicStrategy","explicitStrategy","symbolicStrategy","jsonOutput"])
 
 # Which ones require (one of) another parameter(s)
 requiredParameters = [
@@ -254,7 +258,8 @@ listOfPluginClasses = [
     ("XExtractPermissiveExplicitStrategy","extensionPermissiveExplicitStrategy.hpp"),
     ("XRoboticsSemantics","extensionRoboticsSemantics.hpp"),
     ("XTwoDimensionalCost","extensionTwoDimensionalCost.hpp"),
-    ("XComputeWeakenedSafetyAssumptions","extensionWeakenSafetyAssumptions.hpp")
+    ("XComputeWeakenedSafetyAssumptions","extensionWeakenSafetyAssumptions.hpp"),
+    ("XMixedMealyMoore","extensionMixedMealyMoore.hpp")
 ]
 
 # In which order do they have to be instantiated?
@@ -302,7 +307,9 @@ orderOfPluginClassesInInstantiations = [
     ("XInteractiveStrategy","XFixedPointRecycling"),
     ("XExtractPermissiveExplicitStrategy","XBiasForAction"),
     ("XExtractSymbolicStrategy","XTwoDimensionalCost"),
-    ("XExtractSymbolicStrategy","XFixedPointRecycling")
+    ("XExtractSymbolicStrategy","XFixedPointRecycling"),
+    ("XExtractExplicitStrategy","XMixedMealyMoore"),
+    ("XExtractSymbolicStrategy","XMixedMealyMoore"),
     
 ]
 
@@ -401,6 +408,7 @@ listOfCommandLineCombinationToClassInstantiationMappers.append(lambda x: simpleI
 listOfCommandLineCombinationToClassInstantiationMappers.append(lambda x: simpleInstantiationMapper("biasForAction","XBiasForAction",x))
 listOfCommandLineCombinationToClassInstantiationMappers.append(lambda x: simpleInstantiationMapper("computeWeakenedSafetyAssumptions","XComputeWeakenedSafetyAssumptions",x))
 listOfCommandLineCombinationToClassInstantiationMappers.append(lambda x: simpleInstantiationMapper("sysInitRoboticsSemantics","XRoboticsSemantics",x))
+listOfCommandLineCombinationToClassInstantiationMappers.append(lambda x: simpleInstantiationMapper("mixedMealyMoore","XMixedMealyMoore",x))
 
 #============================================================
 # Sanity checks

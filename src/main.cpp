@@ -58,6 +58,7 @@
 #include "extensionTwoDimensionalCost.hpp"
 #include "extensionCooperativeGR1Strategy.hpp"
 #include "extensionOptimisticRecovery.hpp"
+#include "extensionMixedMealyMoore.hpp"
 
 //===================================================================================
 // List of command line arguments
@@ -89,6 +90,7 @@ const char *commandLineArguments[] = {
     "--nonDeterministicMotion","Computes a controller using an non-deterministic motion abstraction.",
     "--twoDimensionalCost","Computes a controller that optimizes for waiting and action cost at the same time.",
     "--cooperativeGR1Strategy","Computes a controller strategy that is cooperative with its environment.",
+    "--mixedMealyMoore","Uses a mixed Mealy/Moore semantics. Some output variables that are defined as of Moore type are set before the inputs in each round.",
     //-END-COMMAND-LINE-ARGUMENT-LIST
 };
 
@@ -192,6 +194,7 @@ OptionCombination optionCombinations[] = {
     OptionCombination("--explicitStrategy --fixedPointRecycling --simpleRecovery",XExtractExplicitStrategy<XFixedPointRecycling<GR1Context>,true,false>::makeInstance),
     OptionCombination("--explicitStrategy --fixedPointRecycling --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<XFixedPointRecycling<GR1Context>>,false,false>::makeInstance),
     OptionCombination("--explicitStrategy --fixedPointRecycling",XExtractExplicitStrategy<XFixedPointRecycling<GR1Context>,false,false>::makeInstance),
+    OptionCombination("--explicitStrategy --jsonOutput --mixedMealyMoore",XExtractExplicitStrategy<XMixedMealyMoore<GR1Context>,false,true>::makeInstance),
     OptionCombination("--explicitStrategy --jsonOutput --simpleRecovery --sysInitRoboticsSemantics --twoDimensionalCost",XExtractExplicitStrategy<XTwoDimensionalCost<GR1Context,true,true>,true,true>::makeInstance),
     OptionCombination("--explicitStrategy --jsonOutput --simpleRecovery --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<GR1Context>,true,true>::makeInstance),
     OptionCombination("--explicitStrategy --jsonOutput --simpleRecovery --twoDimensionalCost",XExtractExplicitStrategy<XTwoDimensionalCost<GR1Context,false,true>,true,true>::makeInstance),
@@ -200,6 +203,7 @@ OptionCombination optionCombinations[] = {
     OptionCombination("--explicitStrategy --jsonOutput --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<GR1Context>,false,true>::makeInstance),
     OptionCombination("--explicitStrategy --jsonOutput --twoDimensionalCost",XExtractExplicitStrategy<XTwoDimensionalCost<GR1Context,false,false>,false,true>::makeInstance),
     OptionCombination("--explicitStrategy --jsonOutput",XExtractExplicitStrategy<GR1Context,false,true>::makeInstance),
+    OptionCombination("--explicitStrategy --mixedMealyMoore",XExtractExplicitStrategy<XMixedMealyMoore<GR1Context>,false,false>::makeInstance),
     OptionCombination("--explicitStrategy --simpleRecovery --sysInitRoboticsSemantics --twoDimensionalCost",XExtractExplicitStrategy<XTwoDimensionalCost<GR1Context,true,true>,true,false>::makeInstance),
     OptionCombination("--explicitStrategy --simpleRecovery --sysInitRoboticsSemantics",XExtractExplicitStrategy<XRoboticsSemantics<GR1Context>,true,false>::makeInstance),
     OptionCombination("--explicitStrategy --simpleRecovery --twoDimensionalCost",XExtractExplicitStrategy<XTwoDimensionalCost<GR1Context,false,true>,true,false>::makeInstance),
@@ -228,6 +232,9 @@ OptionCombination optionCombinations[] = {
     OptionCombination("--interactiveStrategy --nonDeterministicMotion",XInteractiveStrategy<XNonDeterministicMotion<GR1Context,false>>::makeInstance),
     OptionCombination("--interactiveStrategy --twoDimensionalCost",XInteractiveStrategy<XTwoDimensionalCost<GR1Context,false,false>>::makeInstance),
     OptionCombination("--interactiveStrategy",XInteractiveStrategy<GR1Context>::makeInstance),
+    OptionCombination("--mixedMealyMoore --simpleSymbolicStrategy",XExtractSymbolicStrategy<XMixedMealyMoore<GR1Context>,false,true>::makeInstance),
+    OptionCombination("--mixedMealyMoore --symbolicStrategy",XExtractSymbolicStrategy<XMixedMealyMoore<GR1Context>,false,false>::makeInstance),
+    OptionCombination("--mixedMealyMoore",XMixedMealyMoore<GR1Context>::makeInstance),
     OptionCombination("--nonDeterministicMotion --sysInitRoboticsSemantics",XNonDeterministicMotion<GR1Context,true>::makeInstance),
     OptionCombination("--nonDeterministicMotion",XNonDeterministicMotion<GR1Context,false>::makeInstance),
     OptionCombination("--simpleRecovery --simpleSymbolicStrategy --sysInitRoboticsSemantics --twoDimensionalCost",XExtractSymbolicStrategy<XTwoDimensionalCost<GR1Context,true,true>,true,true>::makeInstance),
